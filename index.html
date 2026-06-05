@@ -304,22 +304,18 @@ function showUI() {
 }
 
 async function enterFs() {
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-    if (container.requestFullscreen) {
-      await container.requestFullscreen();
-    } else if (container.webkitRequestFullscreen) {
-      container.webkitRequestFullscreen();
-    } else if (video.webkitEnterFullscreen) {
-      video.webkitEnterFullscreen();
-      isExpanded = true;
-      fsBtn.textContent = t.exitFs;
-      showUI();
-      return;
+  try {
+    if (window.Telegram?.WebApp?.requestFullscreen) {
+      Telegram.WebApp.requestFullscreen();
+      isExpanded = true; fsBtn.textContent = t.exitFs; showUI(); return;
     }
-  }
-  isExpanded = true;
-  fsBtn.textContent = t.exitFs;
-  showUI();
+  } catch(e) {}
+  try {
+    if (container.requestFullscreen) { await container.requestFullscreen(); isExpanded = true; fsBtn.textContent = t.exitFs; showUI(); return; }
+    if (container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); isExpanded = true; fsBtn.textContent = t.exitFs; showUI(); return; }
+    if (video.webkitEnterFullscreen) { video.webkitEnterFullscreen(); isExpanded = true; fsBtn.textContent = t.exitFs; showUI(); return; }
+  } catch(e) {}
+  isExpanded = true; fsBtn.textContent = t.exitFs; showUI();
 }
 
 async function exitFs() {
