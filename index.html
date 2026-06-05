@@ -57,6 +57,7 @@
     #pip-btn     { background:#1a1a2e; border:1px solid #333; display:none; }
 
     /* CSS fullscreen fallback */
+    #video-container.css-fs .overlay { display:none !important; }
     #video-container.css-fs {
       position: fixed !important;
       inset: 0 !important;
@@ -73,6 +74,7 @@
       object-fit: contain;
     }
     /* fullscreen */
+    #video-container:fullscreen .overlay, #video-container:-webkit-full-screen .overlay { display:none !important; }
     #video-container:fullscreen, #video-container:-webkit-full-screen {
       width:100vw!important; height:100vh!important; max-width:none!important; background:#000;
     }
@@ -401,6 +403,7 @@ window.addEventListener('orientationchange', () => {
 });
 
 // ── PiP ──────────────────────────────────────────────────────────
+pipBtn.style.touchAction = "manipulation";
 pipBtn.onclick = async () => {
   try {
     if (document.pictureInPictureElement) { await document.exitPictureInPicture(); }
