@@ -118,14 +118,14 @@ if (window.Telegram?.WebApp) { Telegram.WebApp.ready(); Telegram.WebApp.expand()
 
 // ── LOCALISATION ───────────────────────────────────────────────
 const T = {
-  ru:{ loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР 🔴', pressPlay:'Нажмите ▶', error:'Ошибка — переподключаемся...', errUrl:'Не удалось получить URL', errSrv:'Ошибка сервера', reload:'🔄 Переподключиться', unmute:'🔊 Включить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', backToFull:'📺 Видео', back:'← Каналы', audioHint:'🎧 Аудио режим — закройте экран' },
-  bg:{ loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО 🔴', pressPlay:'Натиснете ▶', error:'Грешка...', errUrl:'Неуспешно', errSrv:'Грешка', reload:'🔄 Свържи', unmute:'🔊 Звук', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Само звук', backToFull:'📺 Видео', back:'← Канали', audioHint:'🎧 Аудио' },
-  en:{ loading:'Loading...', connecting:'Connecting...', live:'LIVE 🔴', pressPlay:'Press ▶', error:'Error — reconnecting...', errUrl:'Failed to get URL', errSrv:'Server error', reload:'🔄 Reconnect', unmute:'🔊 Unmute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', backToFull:'📺 Video', back:'← Channels', audioHint:'🎧 Audio mode — lock screen' },
-  de:{ loading:'Laden...', connecting:'Verbinden...', live:'LIVE 🔴', pressPlay:'▶ Drücken', error:'Fehler...', errUrl:'Fehler', errSrv:'Serverfehler', reload:'🔄 Neu', unmute:'🔊 Ton', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Nur Ton', backToFull:'📺 Video', back:'← Kanäle', audioHint:'🎧 Audio' },
-  fr:{ loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT 🔴', pressPlay:'Appuyez ▶', error:'Erreur...', errUrl:'Erreur URL', errSrv:'Erreur serveur', reload:'🔄 Reconnecter', unmute:'🔊 Son', fullscreen:'🔳 Plein écran', exitFs:'✕', audioMode:'🎧 Audio', backToFull:'📺 Vidéo', back:'← Chaînes', audioHint:'🎧 Mode audio' },
-  es:{ loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO 🔴', pressPlay:'Presione ▶', error:'Error...', errUrl:'Error', errSrv:'Error', reload:'🔄 Reconectar', unmute:'🔊 Sonido', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', backToFull:'📺 Video', back:'← Canales', audioHint:'🎧 Audio' },
-  uk:{ loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР 🔴', pressPlay:'Натисніть ▶', error:'Помилка...', errUrl:'Помилка URL', errSrv:'Помилка', reload:'🔄 Повторити', unmute:'🔊 Звук', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', backToFull:'📺 Відео', back:'← Канали', audioHint:'🎧 Аудіо режим' },
-  tr:{ loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI 🔴', pressPlay:'▶ Basın', error:'Hata...', errUrl:'URL hatası', errSrv:'Sunucu hatası', reload:'🔄 Bağlan', unmute:'🔊 Ses', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', backToFull:'📺 Video', back:'← Kanallar', audioHint:'🎧 Ses modu' },
+  ru:{ loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР 🔴', pressPlay:'Нажмите ▶', error:'Ошибка — переподключаемся...', errUrl:'Не удалось получить URL', errSrv:'Ошибка сервера', reload:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', backToFull:'📺 Видео', back:'← Каналы', audioHint:'🎧 Аудио режим — закройте экран' },
+  bg:{ loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО 🔴', pressPlay:'Натиснете ▶', error:'Грешка...', errUrl:'Неуспешно', errSrv:'Грешка', reload:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Само звук', backToFull:'📺 Видео', back:'← Канали', audioHint:'🎧 Аудио' },
+  en:{ loading:'Loading...', connecting:'Connecting...', live:'LIVE 🔴', pressPlay:'Press ▶', error:'Error — reconnecting...', errUrl:'Failed to get URL', errSrv:'Server error', reload:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', backToFull:'📺 Video', back:'← Channels', audioHint:'🎧 Audio mode — lock screen' },
+  de:{ loading:'Laden...', connecting:'Verbinden...', live:'LIVE 🔴', pressPlay:'▶ Drücken', error:'Fehler...', errUrl:'Fehler', errSrv:'Serverfehler', reload:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Stumm', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Nur Ton', backToFull:'📺 Video', back:'← Kanäle', audioHint:'🎧 Audio' },
+  fr:{ loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT 🔴', pressPlay:'Appuyez ▶', error:'Erreur...', errUrl:'Erreur URL', errSrv:'Erreur serveur', reload:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein écran', exitFs:'✕', audioMode:'🎧 Audio', backToFull:'📺 Vidéo', back:'← Chaînes', audioHint:'🎧 Mode audio' },
+  es:{ loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO 🔴', pressPlay:'Presione ▶', error:'Error...', errUrl:'Error', errSrv:'Error', reload:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', backToFull:'📺 Video', back:'← Canales', audioHint:'🎧 Audio' },
+  uk:{ loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР 🔴', pressPlay:'Натисніть ▶', error:'Помилка...', errUrl:'Помилка URL', errSrv:'Помилка', reload:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', backToFull:'📺 Відео', back:'← Канали', audioHint:'🎧 Аудіо режим' },
+  tr:{ loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI 🔴', pressPlay:'▶ Basın', error:'Hata...', errUrl:'URL hatası', errSrv:'Sunucu hatası', reload:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', backToFull:'📺 Video', back:'← Kanallar', audioHint:'🎧 Ses modu' },
 };
 function getLang() {
   try { const s=(Telegram.WebApp.initDataUnsafe?.user?.language_code||'').split('-')[0].toLowerCase(); if(T[s]) return s; } catch(e) {}
@@ -282,7 +282,16 @@ amBtn.onclick = () => {
 };
 
 // ── UNMUTE ────────────────────────────────────────────────────────
-unmuteBtn.onclick = () => { video.muted=false; video.volume=1; unmuteBtn.style.display='none'; };
+unmuteBtn.onclick = () => {
+  if (video.muted) {
+    video.muted = false;
+    video.volume = 1;
+    unmuteBtn.textContent = '🔇 ' + t.mute;
+  } else {
+    video.muted = true;
+    unmuteBtn.textContent = '🔊 ' + t.unmute;
+  }
+};
 
 // ── FULLSCREEN ────────────────────────────────────────────────────
 let isExpanded = false;
