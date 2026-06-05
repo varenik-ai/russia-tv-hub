@@ -138,12 +138,15 @@ const lang=getLang(), t=T[lang];
 const CHANNELS = [
   { id:'perviy', name:'Первый Канал', desc:'Прямой эфир из-за рубежа', icon:'1', iconBg:'#D52B1E' },
   // Добавить сюда новые каналы:
-  // { id:'rossiya1', name:'Россия 1', desc:'НТВ прямой эфир', icon:'Р', iconBg:'#003893' },
+  { id:'rossiya1', name:'Россия 1', desc:'Прямой эфир', icon:'Р', iconBg:'#003893' },
 ];
 
 // ── PROXY URLS (заменяются скриптом set-proxy-url.js) ──────────
-const STREAM_API = 'https://russia-tv-proxy.vercel.app/api/stream';
-const PROXY_BASE = 'https://russia-tv-proxy.vercel.app/api/proxy?url=';
+const CHANNEL_APIS = {
+  perviy:   { stream: 'https://russia-tv-proxy.vercel.app/api/stream',   proxy: 'https://russia-tv-proxy.vercel.app/api/proxy?url=' },
+  rossiya1: { stream: 'https://rossiya1-proxy.vercel.app/api/stream',    proxy: 'https://rossiya1-proxy.vercel.app/api/proxy?url=' },
+};
+function getAPI(id) { return CHANNEL_APIS[id] || CHANNEL_APIS.perviy; }
 
 // ── CACHE ────────────────────────────────────────────────────────
 const CACHE_KEY = 'russia_tv_last_url_v1';
@@ -332,9 +335,10 @@ function stopStream() {
   if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
 }
 
-function loadStream(url) {
+function loadStream(url, proxyBase) {
   if (!currentCh) return;
-  const proxied = PROXY_BASE + encodeURIComponent(url);
+  const _proxy = proxyBase || getAPI(currentCh.id).proxy;
+  const proxied = _proxy + encodeURIComponent(url);
   setStatus(t.connecting);
   unmuteBtn.style.display = 'none';
 
@@ -387,9 +391,10 @@ async function init() {
   } catch(e) {}
 
   try {
-    const r = await fetch(STREAM_API + '?ch=' + currentCh.id + '&t=' + Date.now());
+    const api = getAPI(currentCh.id);
+    const r = await fetch(api.stream + '?t=' + Date.now());
     const d = await r.json();
-    if (d.url) { loadStream(d.url); }
+    if (d.url) { loadStream(d.url, api.proxy); }
     else { setStatus(t.errUrl, true); }
   } catch(e) {
     setStatus(t.errSrv, true);
@@ -399,7 +404,8 @@ async function init() {
 async function refresh() {
   if (!currentCh) return;
   try {
-    const r = await fetch(STREAM_API + '?ch=' + currentCh.id + '&t=' + Date.now());
+    const api = getAPI(currentCh.id);
+    const r = await fetch(api.stream + '?t=' + Date.now());
     const d = await r.json();
     if (d.url) try { localStorage.setItem(CACHE_KEY + '_' + currentCh.id, d.url); } catch(e){}
   } catch(e) {}
