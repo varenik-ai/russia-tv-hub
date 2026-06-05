@@ -363,6 +363,8 @@ function loadStream(url, proxyBase) {
       setStatus(t.live);
       liveBadge.style.display = 'inline';
       video.muted = isIOS();
+      unmuteBtn.style.display = 'block';
+      unmuteBtn.textContent = video.muted ? ('🔊 ' + t.unmute) : ('🔇 ' + t.mute);
       video.play().then(() => {
         unmuteBtn.style.display = 'block';
         unmuteBtn.textContent = video.muted ? ('🔊 ' + t.unmute) : ('🔇 ' + t.mute);
