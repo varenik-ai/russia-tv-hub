@@ -295,8 +295,6 @@ unmuteBtn.onclick = () => {
 
 // ── FULLSCREEN ────────────────────────────────────────────────────
 let isExpanded = false;
-let hideTimer = null;
-
 function showUI() {
   overlay.classList.remove('hidden');
   if (hideTimer) clearTimeout(hideTimer);
