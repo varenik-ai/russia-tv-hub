@@ -322,10 +322,11 @@ function showUI() {
 
 
 function enterFs() {
+  try { if (window.Telegram?.WebApp?.requestFullscreen) Telegram.WebApp.requestFullscreen(); } catch(e) {}
   try {
     if (container.requestFullscreen) container.requestFullscreen().catch(()=>{});
     else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
-    else if (video.webkitEnterFullscreen) { video.webkitEnterFullscreen(); }
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
   } catch(e) {}
   container.classList.add('css-fs');
   document.body.style.overflow = 'hidden';
