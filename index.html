@@ -364,7 +364,8 @@ function loadStream(url, proxyBase) {
       liveBadge.style.display = 'inline';
       video.muted = isIOS();
       video.play().then(() => {
-        if (isIOS()) unmuteBtn.style.display = 'block';
+        unmuteBtn.style.display = 'block';
+        unmuteBtn.textContent = video.muted ? ('🔊 ' + t.unmute) : ('🔇 ' + t.mute);
         setupMediaSession();
         if (!isIOS()) requestWakeLock();
         if ('pictureInPictureEnabled' in document) pipBtn.style.display = 'block';
@@ -377,7 +378,8 @@ function loadStream(url, proxyBase) {
     video.src = proxied;
     video.muted = isIOS();
     video.play().then(() => {
-      if (isIOS()) unmuteBtn.style.display = 'block';
+      unmuteBtn.style.display = 'block';
+      unmuteBtn.textContent = video.muted ? ('🔊 ' + t.unmute) : ('🔇 ' + t.mute);
       setupMediaSession();
       if (!isIOS()) requestWakeLock();
       setStatus(t.live);
