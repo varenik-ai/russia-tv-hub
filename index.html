@@ -297,6 +297,12 @@ unmuteBtn.onclick = () => {
 let isExpanded = false;
 async function enterFs() {
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    try {
+      if (window.Telegram?.WebApp?.requestFullscreen) {
+        await Telegram.WebApp.requestFullscreen();
+        isExpanded=true; fsBtn.textContent=t.exitFs; return;
+      }
+    } catch(e) {}
     if (container.requestFullscreen)        { await container.requestFullscreen(); return; }
     if (container.webkitRequestFullscreen)  { container.webkitRequestFullscreen(); return; }
     if (video.webkitEnterFullscreen)        { video.webkitEnterFullscreen(); isExpanded=true; fsBtn.textContent=t.exitFs; return; }
