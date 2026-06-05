@@ -322,14 +322,27 @@ function showUI() {
 
 
 function enterFs() {
+  // iOS
+  if (video.webkitEnterFullscreen && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    try { video.webkitEnterFullscreen(); } catch(e) {}
+    isExpanded = true; fsBtn.textContent = t.exitFs; showUI(); return;
+  }
+  // Android: native fullscreen removes Telegram header
   try { if (window.Telegram?.WebApp?.requestFullscreen) Telegram.WebApp.requestFullscreen(); } catch(e) {}
-  try {
-    if (container.requestFullscreen) container.requestFullscreen().catch(()=>{});
-    else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
-    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-  } catch(e) {}
-  container.classList.add('css-fs');
-  document.body.style.overflow = 'hidden';
+  if (container.requestFullscreen) {
+    container.requestFullscreen().then(() => {
+      container.classList.remove('css-fs');
+      document.body.style.overflow = '';
+    }).catch(() => {
+      container.classList.add('css-fs');
+      document.body.style.overflow = 'hidden';
+    });
+  } else if (container.webkitRequestFullscreen) {
+    container.webkitRequestFullscreen();
+  } else {
+    container.classList.add('css-fs');
+    document.body.style.overflow = 'hidden';
+  }
   isExpanded = true;
   fsBtn.textContent = t.exitFs;
   showUI();
