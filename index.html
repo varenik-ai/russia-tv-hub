@@ -320,31 +320,22 @@ function showUI() {
 }
 
 async function enterFs() {
-  // iOS Safari
-  if (isIOS() && video.webkitEnterFullscreen) {
-    video.webkitEnterFullscreen(); isExpanded = true; fsBtn.textContent = t.exitFs; showUI(); return;
-  }
-  // Android — try native, fallback to CSS
-  let nativeDone = false;
-  try {
-    if (container.requestFullscreen) { await container.requestFullscreen(); nativeDone = true; }
-    else if (container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); nativeDone = true; }
-  } catch(e) {}
-  if (!nativeDone) {
-    // CSS fullscreen fallback
-    container.classList.add('css-fs');
-    document.body.style.overflow = 'hidden';
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    if (container.requestFullscreen) {
+      await container.requestFullscreen();
+    } else if (container.webkitRequestFullscreen) {
+      container.webkitRequestFullscreen();
+    } else if (video.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen();
+      isExpanded = true; fsBtn.textContent = t.exitFs; showUI(); return;
+    }
   }
   isExpanded = true; fsBtn.textContent = t.exitFs; showUI();
 }
 
 async function exitFs() {
-  container.classList.remove('css-fs');
-  document.body.style.overflow = '';
-  try {
-    if (document.exitFullscreen) await document.exitFullscreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  } catch(e) {}
+  if (document.exitFullscreen) await document.exitFullscreen();
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
   isExpanded = false;
   fsBtn.textContent = t.fullscreen;
   overlay.classList.remove('hidden');
