@@ -348,9 +348,14 @@ function enterFs() {
   showUI();
 }
 
-async function exitFs() {
-  if (document.exitFullscreen) await document.exitFullscreen();
-  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+function exitFs() {
+  try { if (window.Telegram?.WebApp?.exitFullscreen) Telegram.WebApp.exitFullscreen(); } catch(e) {}
+  try {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  } catch(e) {}
+  container.classList.remove('css-fs');
+  document.body.style.overflow = '';
   isExpanded = false;
   fsBtn.textContent = t.fullscreen;
   overlay.classList.remove('hidden');
