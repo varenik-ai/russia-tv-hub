@@ -295,42 +295,93 @@ unmuteBtn.onclick = () => {
 
 // ── FULLSCREEN ────────────────────────────────────────────────────
 let isExpanded = false;
+let hideTimer = null;
+
+function showUI() {
+  overlay.classList.remove('hidden');
+  if (hideTimer) clearTimeout(hideTimer);
+  if (isExpanded) {
+    hideTimer = setTimeout(() => overlay.classList.add('hidden'), 4000);
+  }
+}
+
 async function enterFs() {
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-    try {
-      if (window.Telegram?.WebApp?.requestFullscreen) {
-        await Telegram.WebApp.requestFullscreen();
-        isExpanded=true; fsBtn.textContent=t.exitFs; return;
-      }
-    } catch(e) {}
-    if (container.requestFullscreen)        { await container.requestFullscreen(); return; }
-    if (container.webkitRequestFullscreen)  { container.webkitRequestFullscreen(); return; }
-    if (video.webkitEnterFullscreen)        { video.webkitEnterFullscreen(); isExpanded=true; fsBtn.textContent=t.exitFs; return; }
+    if (container.requestFullscreen) {
+      await container.requestFullscreen();
+    } else if (container.webkitRequestFullscreen) {
+      container.webkitRequestFullscreen();
+    } else if (video.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen();
+      isExpanded = true;
+      fsBtn.textContent = t.exitFs;
+      showUI();
+      return;
+    }
   }
-  isExpanded=true; fsBtn.textContent=t.exitFs;
+  isExpanded = true;
+  fsBtn.textContent = t.exitFs;
+  showUI();
 }
+
 async function exitFs() {
-  if (document.exitFullscreen)       await document.exitFullscreen();
+  if (document.exitFullscreen) await document.exitFullscreen();
   else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  isExpanded=false; fsBtn.textContent=t.fullscreen;
+  isExpanded = false;
+  fsBtn.textContent = t.fullscreen;
+  overlay.classList.remove('hidden');
+  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
 }
+
 fsBtn.onclick = () => isExpanded ? exitFs() : enterFs();
+
 function onFsChange() {
   const el = document.fullscreenElement || document.webkitFullscreenElement;
-  if (el) { isExpanded=true; fsBtn.textContent=t.exitFs; autoHideOverlay(); } 
-  else    { isExpanded=false; fsBtn.textContent=t.fullscreen; overlay.classList.remove('hidden'); clearTimeout(hideTimer); }
-  video.style.objectFit = window.innerWidth>window.innerHeight ? 'cover' : 'contain';
+  if (el) {
+    isExpanded = true;
+    fsBtn.textContent = t.exitFs;
+    overlay.classList.remove('hidden');
+    if (hideTimer) clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => overlay.classList.add('hidden'), 3000);
+    const isLandscape = window.innerWidth > window.innerHeight;
+    video.style.objectFit = isLandscape ? 'cover' : 'contain';
+  } else {
+    isExpanded = false;
+    fsBtn.textContent = t.fullscreen;
+    overlay.classList.remove('hidden');
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    video.style.objectFit = 'contain';
+  }
 }
 document.addEventListener('fullscreenchange', onFsChange);
 document.addEventListener('webkitfullscreenchange', onFsChange);
-video.addEventListener('webkitendfullscreen', () => { isExpanded=false; fsBtn.textContent=t.fullscreen; if(video.paused) video.play().catch(()=>{}); });
-
-function autoHideOverlay() {
-  clearTimeout(hideTimer);
+video.addEventListener('webkitendfullscreen', () => {
+  if (video.paused) video.play().catch(() => {});
+  isExpanded = false;
+  fsBtn.textContent = t.fullscreen;
   overlay.classList.remove('hidden');
-  hideTimer = setTimeout(() => overlay.classList.add('hidden'), 3000);
-}
-container.addEventListener('click', () => { overlay.classList.remove('hidden'); if (isExpanded) autoHideOverlay(); });
+});
+
+// Двойной тап — переключить fullscreen
+let lastTap = 0;
+container.addEventListener('pointerup', e => {
+  if (e.target.closest('button')) return;
+  const now = Date.now();
+  if (now - lastTap < 280) { isExpanded ? exitFs() : enterFs(); lastTap = 0; return; }
+  lastTap = now;
+  setTimeout(() => { if (Date.now() - lastTap >= 270) showUI(); }, 290);
+});
+container.addEventListener('pointermove', () => { if (isExpanded) showUI(); });
+container.addEventListener('touchstart', () => { if (isExpanded) showUI(); }, { passive: true });
+
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    if (isExpanded) {
+      const isLandscape = window.innerWidth > window.innerHeight;
+      video.style.objectFit = isLandscape ? 'cover' : 'contain';
+    }
+  }, 300);
+});
 
 // ── PiP ──────────────────────────────────────────────────────────
 pipBtn.onclick = async () => {
