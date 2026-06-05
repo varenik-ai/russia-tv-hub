@@ -58,6 +58,8 @@
 
     /* fullscreen */
     #video-container:fullscreen, #video-container:-webkit-full-screen {
+    touch-action: none;
+    overflow: hidden;
       width:100vw!important; height:100vh!important; max-width:none!important; background:#000;
     }
     #video-container:fullscreen video, #video-container:-webkit-full-screen video {
@@ -373,6 +375,7 @@ container.addEventListener('pointerup', e => {
 });
 container.addEventListener('pointermove', () => { if (isExpanded) showUI(); });
 container.addEventListener('touchstart', () => { if (isExpanded) showUI(); }, { passive: true });
+container.addEventListener('touchmove', (e) => { if (isExpanded) e.preventDefault(); }, { passive: false });
 
 window.addEventListener('orientationchange', () => {
   setTimeout(() => {
