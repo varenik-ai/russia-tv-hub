@@ -406,8 +406,21 @@ window.addEventListener('orientationchange', () => {
 pipBtn.style.touchAction = "manipulation";
 pipBtn.onclick = async () => {
   try {
-    if (document.pictureInPictureElement) { await document.exitPictureInPicture(); }
-    else { await video.requestPictureInPicture(); }
+    // iOS Safari
+    if (video.webkitSupportsPresentationMode && video.webkitSupportsPresentationMode('picture-in-picture')) {
+      video.webkitSetPresentationMode(
+        video.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture'
+      );
+      return;
+    }
+    // Android / Desktop
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+    } else if (document.pictureInPictureEnabled && !video.paused) {
+      await video.requestPictureInPicture();
+    } else if (!video.paused) {
+      await video.requestPictureInPicture();
+    }
   } catch(e) {}
 };
 video.addEventListener('leavepictureinpicture', () => { if (video.paused) video.play().catch(()=>{}); });
