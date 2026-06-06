@@ -189,7 +189,7 @@ container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:t
 // PiP
 video.disablePictureInPicture = false;
 pipBtn.textContent = "🎥 PiP";
-pipBtn.style.display = "block";
+if (isIOS()) pipBtn.style.display = "block";
 pipBtn.onclick = async () => {
   try {
     if (document.pictureInPictureElement) {
