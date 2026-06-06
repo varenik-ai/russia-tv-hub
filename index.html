@@ -193,21 +193,25 @@ container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:t
 pipBtn.style.display = 'block';
 pipBtn.textContent = '🎥 PiP';
 pipBtn.onclick = async () => {
-  const st = document.getElementById('status');
   try {
-    st.textContent = 'rPiP:' + typeof video.requestPictureInPicture + ' wPiP:' + typeof video.webkitSetPresentationMode;
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
       pipBtn.textContent = '🎥 PiP';
     } else if (video.requestPictureInPicture) {
-      st.textContent = 'calling requestPiP...';
-      await video.requestPictureInPicture();
-      pipBtn.textContent = '✕ PiP';
+      try {
+        await video.requestPictureInPicture();
+        pipBtn.textContent = '✕ PiP';
+      } catch(e) {
+        if (video.webkitSetPresentationMode) {
+          video.webkitSetPresentationMode('picture-in-picture');
+          pipBtn.textContent = '✕ PiP';
+        }
+      }
     } else if (video.webkitSetPresentationMode) {
-      st.textContent = 'calling webkit...';
       video.webkitSetPresentationMode('picture-in-picture');
+      pipBtn.textContent = '✕ PiP';
     }
-  } catch(e) { st.textContent = 'PiP err: ' + e.name + ': ' + e.message; }
+  } catch(e) { console.log('PiP:', e); }
 };
 video.addEventListener('enterpictureinpicture', () => { pipBtn.textContent = '✕ PiP'; });
 video.addEventListener('leavepictureinpicture', async () => {
