@@ -195,7 +195,11 @@ pipBtn.onclick=async()=>{
     } else if(video.webkitSetPresentationMode){
       video.webkitSetPresentationMode("picture-in-picture");
     } else if(video.requestPictureInPicture){
-      await video.requestPictureInPicture(); pipBtn.textContent="✕ PiP";
+      const wasMuted=video.muted;
+      if(wasMuted){ video.muted=false; video.volume=1; }
+      await video.requestPictureInPicture();
+      if(wasMuted && !userUnmuted){ video.muted=true; }
+      pipBtn.textContent="✕ PiP";
     }
   } catch(e){}
 };
@@ -278,7 +282,7 @@ function openChannel(ch) {
   modeBtn.textContent=t.audioMode; stopStream(); init();
 }
 function goToHub() { stopStream(); playerScreen.style.display="none"; hubScreen.style.display="flex"; currentCh=null; }
-backBtn.onclick=()=>{ try{ window.Telegram.WebApp.openTelegramLink("https://t.me/RussiaTV_Hub_Live"); }catch(e){ try{ window.Telegram.WebApp.openLink("https://t.me/RussiaTV_Hub_Live"); }catch(e2){ window.location.href="https://t.me/RussiaTV_Hub_Live"; } } };
+backBtn.onclick=()=>{ window.location.href="tg://resolve?domain=RussiaTV_Hub_Live"; };
 
 buildHub();
 </script>
