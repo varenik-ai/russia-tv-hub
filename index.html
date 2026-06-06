@@ -29,6 +29,7 @@
     .live-badge-top { background:#D52B1E; color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:none; }
     #video-container { width:100%; flex:1; background:#000; position:relative; overflow:visible; touch-action:pinch-zoom; }
     #video-container.css-fs { position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important; z-index:9999 !important; }
+    #video-container.css-fs .live-badge, #video-container:fullscreen .live-badge, #video-container:-webkit-full-screen .live-badge { display:none !important; }
     #video-container.css-fs video { width:100vw !important; height:100vh !important; }
     #video-container.css-fs .overlay { display:none !important; }
     #video-container:fullscreen .overlay, #video-container:-webkit-full-screen .overlay { display:none !important; }
@@ -96,7 +97,7 @@ const CHANNELS = [
 ];
 
 const T = {
-  ru:{ loading:"Получаем поток...", connecting:"Подключение...", live:"ПРЯМОЙ ЭФИР 🔴", pressPlay:"Нажмите ▶", errorStream:"Ошибка — переподключаемся...", errorUrl:"Не удалось получить URL", errorServer:"Ошибка сервера", reconnect:"🔄 Переподключиться", unmute:"🔊 Включить звук", fullscreen:"🔳 Полный экран", exitFs:"✕ Выйти", audioMode:"🎧 Только звук", videoMode:"🎥 Видео" },
+  ru:{ loading:"Получаем поток...", connecting:"Подключение...", live:"ПРЯМОЙ ЭФИР 🔴", pressPlay:"Нажмите ▶", errorStream:"Ошибка — переподключаемся...", errorUrl:"Не удалось получить URL", errorServer:"Ошибка сервера", reconnect:"🔄 Переподключиться", unmute:"🔊 Включить звук", mute:"🔇 Выключить звук", fullscreen:"🔳 Полный экран", exitFs:"✕ Выйти", audioMode:"🎧 Только звук", videoMode:"🎥 Видео" },
   bg:{ loading:"Зареждаме...", connecting:"Свързване...", live:"НА ЖИВО 🔴", pressPlay:"Натиснете ▶", errorStream:"Грешка...", errorUrl:"Неуспешно", errorServer:"Грешка", reconnect:"🔄 Свържи", unmute:"🔊 Звук", fullscreen:"🔳 Екран", exitFs:"✕", audioMode:"🎧 Аудио", videoMode:"🎥 Видео" },
   en:{ loading:"Loading...", connecting:"Connecting...", live:"LIVE 🔴", pressPlay:"Press ▶", errorStream:"Error — reconnecting...", errorUrl:"Failed to get URL", errorServer:"Server error", reconnect:"🔄 Reconnect", unmute:"🔊 Unmute", fullscreen:"🔳 Fullscreen", exitFs:"✕ Exit", audioMode:"🎧 Audio only", videoMode:"🎥 Video" },
   de:{ loading:"Laden...", connecting:"Verbinden...", live:"LIVE 🔴", pressPlay:"▶ drücken", errorStream:"Fehler...", errorUrl:"Fehler", errorServer:"Serverfehler", reconnect:"🔄 Neu", unmute:"🔊 Ton", fullscreen:"🔳 Vollbild", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Video" },
@@ -194,7 +195,6 @@ pipBtn.onclick=async()=>{
     } else if(video.webkitSetPresentationMode){
       video.webkitSetPresentationMode("picture-in-picture");
     } else if(video.requestPictureInPicture){
-      if(video.muted){ video.muted=false; video.volume=1; }
       await video.requestPictureInPicture(); pipBtn.textContent="✕ PiP";
     }
   } catch(e){}
@@ -260,7 +260,7 @@ async function init() {
 }
 
 reloadBtn.onclick=()=>{userPaused=false;init();};
-unmuteBtn.onclick=()=>{userUnmuted=true;video.muted=false;video.volume=1;unmuteBtn.style.display="none";};
+unmuteBtn.onclick=()=>{ if(video.muted){ video.muted=false; video.volume=1; userUnmuted=true; unmuteBtn.textContent="🔇 "+t.mute; } else { video.muted=true; userUnmuted=false; unmuteBtn.textContent="🔊 "+t.unmute; } };
 modeBtn.onclick=()=>setAudioMode(!audioOnly);
 
 // Hub
@@ -278,7 +278,7 @@ function openChannel(ch) {
   modeBtn.textContent=t.audioMode; stopStream(); init();
 }
 function goToHub() { stopStream(); playerScreen.style.display="none"; hubScreen.style.display="flex"; currentCh=null; }
-backBtn.onclick=()=>{ try{ tg.openTelegramLink("https://t.me/RussiaTV_Hub_Live"); }catch(e){ window.open("https://t.me/RussiaTV_Hub_Live","_blank"); } };
+backBtn.onclick=()=>{ try{ window.Telegram.WebApp.openTelegramLink("https://t.me/RussiaTV_Hub_Live"); }catch(e){ try{ window.Telegram.WebApp.openLink("https://t.me/RussiaTV_Hub_Live"); }catch(e2){ window.location.href="https://t.me/RussiaTV_Hub_Live"; } } };
 
 buildHub();
 </script>
