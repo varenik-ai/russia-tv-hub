@@ -216,12 +216,6 @@ video.addEventListener('leavepictureinpicture', async () => {
   video.muted = true;
   if (video.paused) { try { await video.play(); } catch(e){} }
 });
-  pipBtn.textContent = '🎥 PiP';
-  if (!userUnmuted) { video.muted = true; }
-  if (video.paused) { try { await video.play(); } catch(e){} }
-});
-  if (video.webkitPresentationMode === 'inline' && !userUnmuted) video.muted = true;
-});
 
 // Wake Lock
 async function requestWakeLock() { try{if(!isIOS()&&"wakeLock"in navigator&&!wakeLockSentinel)wakeLockSentinel=await navigator.wakeLock.request("screen");}catch(e){} }
