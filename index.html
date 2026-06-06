@@ -414,7 +414,7 @@ pipBtn.onclick = async () => {
     } else if (video.webkitSetPresentationMode) {
       video.webkitSetPresentationMode('picture-in-picture');
     }
-  } catch(e) {}
+  } catch(e) { document.getElementById('status').textContent = 'PiP: ' + e.message; }
 };
 video.addEventListener('leavepictureinpicture', async () => {
   pipBtn.textContent = '⧉ Картинка в картинке';
