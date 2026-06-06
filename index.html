@@ -305,7 +305,7 @@ function openChannel(ch) {
   modeBtn.textContent=t.audioMode; stopStream(); init();
 }
 function goToHub() { stopStream(); playerScreen.style.display="none"; hubScreen.style.display="flex"; currentCh=null; }
-backBtn.onclick=()=>{ try{ Telegram.WebApp.openLink("https://t.me/RussiaTV_Hub_Live"); }catch(e){ window.open("https://t.me/RussiaTV_Hub_Live","_blank"); } };
+backBtn.onclick=()=>{ try{ Telegram.WebApp.close(); }catch(e){} };
 
 buildHub();
 </script>
