@@ -238,7 +238,7 @@ document.addEventListener('visibilitychange', async () => {
     setTimeout(async () => {
       if (video.paused) { try { await video.play(); } catch(e) {} }
       const a = document.getElementById('audio-bg');
-      if (isAndroid() && a) { a.muted = false; if (a.paused) { try { await a.play(); } catch(e) {} } }
+      if (isAndroid() && a) { a.muted = false; if (a.paused) { try { await a.play(); } catch(e) {} } video.muted = true; }
     }, 300);
   } else {
     enforceMute();
