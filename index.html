@@ -203,8 +203,11 @@ pipBtn.onclick = async () => {
         pipBtn.textContent = '✕ PiP';
       } catch(e) {
         if (video.webkitSetPresentationMode) {
+          const wasMuted = video.muted;
+          video.muted = false;
           video.webkitSetPresentationMode('picture-in-picture');
           pipBtn.textContent = '✕ PiP';
+          if (wasMuted && !userUnmuted) video.muted = true;
         }
       }
     } else if (video.webkitSetPresentationMode) {
