@@ -404,6 +404,7 @@ window.addEventListener('orientationchange', () => {
 
 // ── PiP ──────────────────────────────────────────────────────────
 pipBtn.onclick = async () => {
+  document.getElementById('status').textContent = 'req=' + typeof video.requestPictureInPicture + ' webkit=' + typeof video.webkitSetPresentationMode + ' enabled=' + document.pictureInPictureEnabled;
   try {
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
