@@ -404,7 +404,6 @@ window.addEventListener('orientationchange', () => {
 
 // ── PiP ──────────────────────────────────────────────────────────
 pipBtn.onclick = async () => {
-  document.getElementById('status').textContent = 'req=' + typeof video.requestPictureInPicture + ' webkit=' + typeof video.webkitSetPresentationMode + ' enabled=' + document.pictureInPictureEnabled;
   try {
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
@@ -457,7 +456,7 @@ function loadStream(url, proxyBase) {
         unmuteBtn.textContent = video.muted ? ('🔊 ' + t.unmute) : ('🔇 ' + t.mute);
         setupMediaSession();
         if (!isIOS()) requestWakeLock();
-        if ('pictureInPictureEnabled' in document) pipBtn.style.display = 'block';
+        if ('pictureInPictureEnabled' in document && !isAndroid()) pipBtn.style.display = 'block';
       }).catch(() => setStatus(t.pressPlay));
     });
     hls.on(Hls.Events.ERROR, (e, d) => {
