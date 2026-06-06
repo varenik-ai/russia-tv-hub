@@ -273,7 +273,7 @@ function loadStream(url) {
   if(Hls.isSupported()) {
     hls=new Hls({liveSyncDurationCount:3,lowLatencyMode:true,enableWorker:true,backBufferLength:30});
     hls.loadSource(proxied); hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED,async()=>{ setStatus("live"); liveBadge.style.display="flex"; liveBadgeTop.style.display="inline"; try{await video.play(); unmuteBtn.style.display=audioOnly?"none":"block"; pipBtn.style.display="block"; pipBtn.textContent="🎥 PiP"; setupMediaSession(); if(!isIOS())requestWakeLock();}catch(e){setStatus("pressPlay");} });
+    hls.on(Hls.Events.MANIFEST_PARSED,async()=>{ setStatus("live"); liveBadge.style.display="flex"; liveBadgeTop.style.display="inline"; try{await video.play(); unmuteBtn.style.display=audioOnly?"none":"block"; if(isIOS()){ pipBtn.style.display="block"; pipBtn.textContent="🎥 PiP"; } setupMediaSession(); if(!isIOS())requestWakeLock();}catch(e){setStatus("pressPlay");} });
     hls.on(Hls.Events.ERROR,(e,data)=>{ if(!data.fatal)return; if(data.type===Hls.ErrorTypes.NETWORK_ERROR){try{hls.startLoad();}catch(err){}return;} if(data.type===Hls.ErrorTypes.MEDIA_ERROR){try{hls.recoverMediaError();}catch(err){}return;} setStatus("errorStream",true); setTimeout(()=>init(),5000); });
   } else if(video.canPlayType("application/vnd.apple.mpegurl")) {
     video.src=proxied; setStatus("live"); liveBadge.style.display="flex"; liveBadgeTop.style.display="inline";
