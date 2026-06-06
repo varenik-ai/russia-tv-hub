@@ -101,14 +101,14 @@ const CHANNELS = [
 ];
 
 const T = {
-  ru:{ loading:"Получаем поток...", connecting:"Подключение...", live:"ПРЯМОЙ ЭФИР 🔴", pressPlay:"Нажмите ▶", errorStream:"Ошибка — переподключаемся...", errorUrl:"Не удалось получить URL", errorServer:"Ошибка сервера", reconnect:"🔄 Переподключиться", unmute:"🔊 Включить звук", mute:"🔇 Выключить звук", fullscreen:"🔳 Полный экран", exitFs:"✕ Выйти", audioMode:"🎧 Только звук", videoMode:"🎥 Видео" },
-  bg:{ loading:"Зареждаме...", connecting:"Свързване...", live:"НА ЖИВО 🔴", pressPlay:"Натиснете ▶", errorStream:"Грешка...", errorUrl:"Неуспешно", errorServer:"Грешка", reconnect:"🔄 Свържи", unmute:"🔊 Звук", fullscreen:"🔳 Екран", exitFs:"✕", audioMode:"🎧 Аудио", videoMode:"🎥 Видео" },
-  en:{ loading:"Loading...", connecting:"Connecting...", live:"LIVE 🔴", pressPlay:"Press ▶", errorStream:"Error — reconnecting...", errorUrl:"Failed to get URL", errorServer:"Server error", reconnect:"🔄 Reconnect", unmute:"🔊 Unmute", fullscreen:"🔳 Fullscreen", exitFs:"✕ Exit", audioMode:"🎧 Audio only", videoMode:"🎥 Video" },
-  de:{ loading:"Laden...", connecting:"Verbinden...", live:"LIVE 🔴", pressPlay:"▶ drücken", errorStream:"Fehler...", errorUrl:"Fehler", errorServer:"Serverfehler", reconnect:"🔄 Neu", unmute:"🔊 Ton", fullscreen:"🔳 Vollbild", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Video" },
-  fr:{ loading:"Chargement...", connecting:"Connexion...", live:"EN DIRECT 🔴", pressPlay:"▶", errorStream:"Erreur...", errorUrl:"Erreur URL", errorServer:"Erreur", reconnect:"🔄 Reconnecter", unmute:"🔊 Son", fullscreen:"🔳 Plein écran", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Vidéo" },
-  es:{ loading:"Cargando...", connecting:"Conectando...", live:"EN VIVO 🔴", pressPlay:"▶", errorStream:"Error...", errorUrl:"Error", errorServer:"Error", reconnect:"🔄 Reconectar", unmute:"🔊 Sonido", fullscreen:"🔳 Pantalla", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Video" },
-  uk:{ loading:"Отримуємо...", connecting:"Підключення...", live:"ПРЯМИЙ ЕФІР 🔴", pressPlay:"Натисніть ▶", errorStream:"Помилка...", errorUrl:"Помилка URL", errorServer:"Помилка", reconnect:"🔄 Повторити", unmute:"🔊 Звук", fullscreen:"🔳 Екран", exitFs:"✕", audioMode:"🎧 Аудіо", videoMode:"🎥 Відео" },
-  tr:{ loading:"Yükleniyor...", connecting:"Bağlanıyor...", live:"CANLI 🔴", pressPlay:"▶", errorStream:"Hata...", errorUrl:"Hata", errorServer:"Hata", reconnect:"🔄 Bağlan", unmute:"🔊 Ses", fullscreen:"🔳 Tam ekran", exitFs:"✕", audioMode:"🎧 Ses", videoMode:"🎥 Video" },
+  ru:{ loading:"Получаем поток...", connecting:"Подключение...", live:"ПРЯМОЙ ЭФИР", pressPlay:"Нажмите ▶", errorStream:"Ошибка — переподключаемся...", errorUrl:"Не удалось получить URL", errorServer:"Ошибка сервера", reconnect:"🔄 Переподключиться", unmute:"🔊 Включить звук", mute:"🔇 Выключить звук", fullscreen:"🔳 Полный экран", exitFs:"✕ Выйти", audioMode:"🎧 Только звук", videoMode:"🎥 Видео" },
+  bg:{ loading:"Зареждаме...", connecting:"Свързване...", live:"НА ЖИВО", pressPlay:"Натиснете ▶", errorStream:"Грешка...", errorUrl:"Неуспешно", errorServer:"Грешка", reconnect:"🔄 Свържи", unmute:"🔊 Звук", fullscreen:"🔳 Екран", exitFs:"✕", audioMode:"🎧 Аудио", videoMode:"🎥 Видео" },
+  en:{ loading:"Loading...", connecting:"Connecting...", live:"LIVE", pressPlay:"Press ▶", errorStream:"Error — reconnecting...", errorUrl:"Failed to get URL", errorServer:"Server error", reconnect:"🔄 Reconnect", unmute:"🔊 Unmute", fullscreen:"🔳 Fullscreen", exitFs:"✕ Exit", audioMode:"🎧 Audio only", videoMode:"🎥 Video" },
+  de:{ loading:"Laden...", connecting:"Verbinden...", live:"LIVE", pressPlay:"▶ drücken", errorStream:"Fehler...", errorUrl:"Fehler", errorServer:"Serverfehler", reconnect:"🔄 Neu", unmute:"🔊 Ton", fullscreen:"🔳 Vollbild", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Video" },
+  fr:{ loading:"Chargement...", connecting:"Connexion...", live:"EN DIRECT", pressPlay:"▶", errorStream:"Erreur...", errorUrl:"Erreur URL", errorServer:"Erreur", reconnect:"🔄 Reconnecter", unmute:"🔊 Son", fullscreen:"🔳 Plein écran", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Vidéo" },
+  es:{ loading:"Cargando...", connecting:"Conectando...", live:"EN VIVO", pressPlay:"▶", errorStream:"Error...", errorUrl:"Error", errorServer:"Error", reconnect:"🔄 Reconectar", unmute:"🔊 Sonido", fullscreen:"🔳 Pantalla", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Video" },
+  uk:{ loading:"Отримуємо...", connecting:"Підключення...", live:"ПРЯМИЙ ЕФІР", pressPlay:"Натисніть ▶", errorStream:"Помилка...", errorUrl:"Помилка URL", errorServer:"Помилка", reconnect:"🔄 Повторити", unmute:"🔊 Звук", fullscreen:"🔳 Екран", exitFs:"✕", audioMode:"🎧 Аудіо", videoMode:"🎥 Відео" },
+  tr:{ loading:"Yükleniyor...", connecting:"Bağlanıyor...", live:"CANLI", pressPlay:"▶", errorStream:"Hata...", errorUrl:"Hata", errorServer:"Hata", reconnect:"🔄 Bağlan", unmute:"🔊 Ses", fullscreen:"🔳 Tam ekran", exitFs:"✕", audioMode:"🎧 Ses", videoMode:"🎥 Video" },
 };
 
 function getLang() {
@@ -138,7 +138,7 @@ modeBtn.textContent=t.audioMode; fullscreenBtn.textContent=t.fullscreen;
 
 function setStatus(key,isError) {
   const msg=t[key]||key;
-  statusEl.innerHTML=isError?"⚠️ "+msg:msg;
+  statusEl.innerHTML=isError?"⚠️ "+msg:"<span class=\"dot\"></span>"+msg;
   reloadBtn.style.display=isError?"block":"none";
 }
 function enforceMute() { if(!userUnmuted) video.muted=true; }
@@ -198,6 +198,8 @@ pipBtn.onclick = async () => {
   try {
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture(); pipBtn.textContent = "🎥 PiP";
+    } else if (isIOS() && video.webkitSetPresentationMode) {
+      video.webkitSetPresentationMode("picture-in-picture"); pipBtn.textContent = "✕ PiP";
     } else {
       await video.requestPictureInPicture(); pipBtn.textContent = "✕ PiP";
     }
