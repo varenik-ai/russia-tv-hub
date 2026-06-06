@@ -187,19 +187,32 @@ container.addEventListener("pointermove",()=>{if(isExpanded)showUI();});
 container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:true});
 
 // PiP
-pipBtn.textContent="🎥 PiP"; pipBtn.style.display="block";
-pipBtn.onclick=async()=>{
+video.disablePictureInPicture = false;
+pipBtn.textContent = "🎥 PiP";
+pipBtn.style.display = "block";
+pipBtn.onclick = async () => {
   try {
-    if(document.pictureInPictureElement){
-      await document.exitPictureInPicture(); pipBtn.textContent="🎥 PiP";
-    } else if(video.requestPictureInPicture){
-      await video.requestPictureInPicture(); pipBtn.textContent="✕ PiP";
-    } else if(video.webkitSetPresentationMode){
-      video.webkitSetPresentationMode("picture-in-picture");
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture(); pipBtn.textContent = "🎥 PiP"; return;
     }
-  } catch(e){ console.log("PiP:",e.message); }
+    if (video.paused) { await video.play(); }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    if (video.webkitSetPresentationMode) {
+      video.webkitSetPresentationMode("picture-in-picture");
+    } else {
+      await video.requestPictureInPicture();
+    }
+    pipBtn.textContent = "✕ PiP";
+  } catch(e) {
+    console.log("PiP error:", e.name, e.message);
+    alert("PiP error\n\n" + e.name + "\n" + e.message);
+  }
 };
-video.addEventListener("leavepictureinpicture",async()=>{ pipBtn.textContent="🎥 PiP"; if(video.paused){try{await video.play();}catch(e){}} });
+video.addEventListener("enterpictureinpicture", () => { pipBtn.textContent = "✕ PiP"; });
+video.addEventListener("leavepictureinpicture", async () => {
+  pipBtn.textContent = "🎥 PiP";
+  if (video.paused) { try { await video.play(); } catch(e){} }
+});
 
 // Wake Lock
 async function requestWakeLock() { try{if(!isIOS()&&"wakeLock"in navigator&&!wakeLockSentinel)wakeLockSentinel=await navigator.wakeLock.request("screen");}catch(e){} }
