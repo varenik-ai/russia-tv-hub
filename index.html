@@ -149,11 +149,18 @@ function showUI() {
 }
 
 // Fullscreen
-async function enterFs() {
+function enterFs() {
   if(video.webkitEnterFullscreen && isIOS()) { video.webkitEnterFullscreen(); isExpanded=true; fullscreenBtn.textContent=t.exitFs; return; }
-  if(container.requestFullscreen) { await container.requestFullscreen().catch(()=>{ container.classList.add("css-fs"); document.body.style.overflow="hidden"; }); }
-  else if(container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); }
-  else { container.classList.add("css-fs"); document.body.style.overflow="hidden"; }
+  try { if(tg?.requestFullscreen) tg.requestFullscreen(); } catch(e) {}
+  if(container.requestFullscreen) {
+    container.requestFullscreen()
+      .then(()=>{ container.classList.remove("css-fs"); document.body.style.overflow=""; })
+      .catch(()=>{ container.classList.add("css-fs"); document.body.style.overflow="hidden"; });
+  } else if(container.webkitRequestFullscreen) {
+    container.webkitRequestFullscreen();
+  } else {
+    container.classList.add("css-fs"); document.body.style.overflow="hidden";
+  }
   isExpanded=true; fullscreenBtn.textContent=t.exitFs;
 }
 function exitFs() {
@@ -180,7 +187,18 @@ container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:t
 
 // PiP
 pipBtn.textContent="🎥 PiP"; pipBtn.style.display="block";
-pipBtn.onclick=async()=>{ try { if(document.pictureInPictureElement){await document.exitPictureInPicture();pipBtn.textContent="🎥 PiP";} else if(video.requestPictureInPicture){await video.requestPictureInPicture();pipBtn.textContent="✕ PiP";} else if(video.webkitSetPresentationMode){video.webkitSetPresentationMode("picture-in-picture");} } catch(e){} };
+pipBtn.onclick=async()=>{
+  try {
+    if(document.pictureInPictureElement){
+      await document.exitPictureInPicture(); pipBtn.textContent="🎥 PiP";
+    } else if(video.webkitSetPresentationMode){
+      video.webkitSetPresentationMode("picture-in-picture");
+    } else if(video.requestPictureInPicture){
+      if(video.muted){ video.muted=false; video.volume=1; }
+      await video.requestPictureInPicture(); pipBtn.textContent="✕ PiP";
+    }
+  } catch(e){}
+};
 video.addEventListener("leavepictureinpicture",async()=>{ pipBtn.textContent="🎥 PiP"; if(video.paused){try{await video.play();}catch(e){}} });
 
 // Wake Lock
@@ -260,7 +278,7 @@ function openChannel(ch) {
   modeBtn.textContent=t.audioMode; stopStream(); init();
 }
 function goToHub() { stopStream(); playerScreen.style.display="none"; hubScreen.style.display="flex"; currentCh=null; }
-backBtn.onclick=()=>{ window.location.href="https://t.me/RussiaTV_Hub_Live"; };
+backBtn.onclick=()=>{ try{ tg.openTelegramLink("https://t.me/RussiaTV_Hub_Live"); }catch(e){ window.open("https://t.me/RussiaTV_Hub_Live","_blank"); } };
 
 buildHub();
 </script>
