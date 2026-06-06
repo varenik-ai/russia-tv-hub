@@ -84,7 +84,7 @@
     </div>
     <audio id="audio-bg" muted></audio>
   </div>
-  <div id="status"><span class="dot"></span>...</div>
+  <div id="status">...</div>
 </div>
 
 <script>
@@ -138,7 +138,7 @@ modeBtn.textContent=t.audioMode; fullscreenBtn.textContent=t.fullscreen;
 
 function setStatus(key,isError) {
   const msg=t[key]||key;
-  statusEl.innerHTML=isError?"⚠️ "+msg:"<span class=\"dot\"></span>"+msg;
+  statusEl.innerHTML=isError?"⚠️ "+msg:msg;
   reloadBtn.style.display=isError?"block":"none";
 }
 function enforceMute() { if(!userUnmuted) video.muted=true; }
