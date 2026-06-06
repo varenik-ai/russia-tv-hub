@@ -192,16 +192,12 @@ pipBtn.onclick=async()=>{
   try {
     if(document.pictureInPictureElement){
       await document.exitPictureInPicture(); pipBtn.textContent="🎥 PiP";
+    } else if(video.requestPictureInPicture){
+      await video.requestPictureInPicture(); pipBtn.textContent="✕ PiP";
     } else if(video.webkitSetPresentationMode){
       video.webkitSetPresentationMode("picture-in-picture");
-    } else if(video.requestPictureInPicture){
-      const wasMuted=video.muted;
-      if(wasMuted){ video.muted=false; video.volume=1; }
-      await video.requestPictureInPicture();
-      if(wasMuted && !userUnmuted){ video.muted=true; }
-      pipBtn.textContent="✕ PiP";
     }
-  } catch(e){}
+  } catch(e){ console.log("PiP:",e.message); }
 };
 video.addEventListener("leavepictureinpicture",async()=>{ pipBtn.textContent="🎥 PiP"; if(video.paused){try{await video.play();}catch(e){}} });
 
