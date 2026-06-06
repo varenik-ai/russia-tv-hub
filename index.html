@@ -196,7 +196,7 @@ pipBtn.textContent = "🎥 PiP";
 
 pipBtn.onclick = async () => {
   try {
-    if (video.webkitSupportsPresentationMode && video.webkitSupportsPresentationMode("picture-in-picture")) {
+    if (video.webkitSetPresentationMode) {
       if (video.webkitPresentationMode === "picture-in-picture") {
         video.webkitSetPresentationMode("inline"); pipBtn.textContent = "🎥 PiP";
       } else {
