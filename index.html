@@ -403,27 +403,23 @@ window.addEventListener('orientationchange', () => {
 });
 
 // ── PiP ──────────────────────────────────────────────────────────
-pipBtn.style.touchAction = "manipulation";
 pipBtn.onclick = async () => {
   try {
-    // iOS Safari
-    if (video.webkitSupportsPresentationMode && video.webkitSupportsPresentationMode('picture-in-picture')) {
-      video.webkitSetPresentationMode(
-        video.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture'
-      );
-      return;
-    }
-    // Android / Desktop
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
-    } else if (document.pictureInPictureEnabled && !video.paused) {
+      pipBtn.textContent = '⧉ Картинка в картинке';
+    } else if (video.requestPictureInPicture) {
       await video.requestPictureInPicture();
-    } else if (!video.paused) {
-      await video.requestPictureInPicture();
+      pipBtn.textContent = '✕ PiP';
+    } else if (video.webkitSetPresentationMode) {
+      video.webkitSetPresentationMode('picture-in-picture');
     }
   } catch(e) {}
 };
-video.addEventListener('leavepictureinpicture', () => { if (video.paused) video.play().catch(()=>{}); });
+video.addEventListener('leavepictureinpicture', async () => {
+  pipBtn.textContent = '⧉ Картинка в картинке';
+  if (video.paused) { try { await video.play(); } catch(e) {} }
+});
 
 // ── STREAM ────────────────────────────────────────────────────────
 function stopStream() {
