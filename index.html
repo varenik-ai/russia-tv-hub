@@ -202,10 +202,17 @@ pipBtn.onclick = async () => {
         await video.requestPictureInPicture();
         pipBtn.textContent = '✕ PiP';
       } catch(e) {
-        if (video.webkitSetPresentationMode) {
+        if (video.requestPictureInPicture || video.webkitSetPresentationMode) {
           video.muted = false;
-          video.webkitSetPresentationMode('picture-in-picture');
-          pipBtn.textContent = '✕ PiP';
+          try {
+            await video.requestPictureInPicture();
+            pipBtn.textContent = '✕ PiP';
+          } catch(e2) {
+            if (video.webkitSetPresentationMode) {
+              video.webkitSetPresentationMode('picture-in-picture');
+              pipBtn.textContent = '✕ PiP';
+            }
+          }
         }
       }
     } else if (video.webkitSetPresentationMode) {
