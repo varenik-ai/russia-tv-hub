@@ -193,20 +193,11 @@ pipBtn.style.display = "block";
 pipBtn.onclick = async () => {
   try {
     if (document.pictureInPictureElement) {
-      await document.exitPictureInPicture(); pipBtn.textContent = "🎥 PiP"; return;
+      await document.exitPictureInPicture(); pipBtn.textContent = "🎥 PiP";
+    } else {
+      await video.requestPictureInPicture(); pipBtn.textContent = "✕ PiP";
     }
-    if (video.paused) { await video.play(); }
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    if (isIOS() && video.webkitSetPresentationMode) {
-      video.webkitSetPresentationMode("picture-in-picture");
-    } else if (video.requestPictureInPicture) {
-      await video.requestPictureInPicture();
-    }
-    pipBtn.textContent = "✕ PiP";
-  } catch(e) {
-    console.log("PiP error:", e.name, e.message);
-    alert("PiP error\n\n" + e.name + "\n" + e.message);
-  }
+  } catch(e) { console.log("PiP:", e.message); }
 };
 video.addEventListener("enterpictureinpicture", () => { pipBtn.textContent = "✕ PiP"; });
 video.addEventListener("leavepictureinpicture", async () => {
@@ -232,15 +223,27 @@ let pauseByUser=false;
 video.addEventListener("mousedown",()=>{pauseByUser=true;});
 video.addEventListener("touchstart",()=>{pauseByUser=true;},{passive:true});
 video.addEventListener("pause",()=>{ if(isIOS()||(isAndroid()&&pauseByUser)) userPaused=true; pauseByUser=false; });
-video.addEventListener("play",()=>{ setTimeout(enforceMute,300); userPaused=false; });
-document.addEventListener("visibilitychange",async()=>{
-  if(document.visibilityState==="hidden") {
-    if(isIOS()||userPaused) return;
-    setTimeout(async()=>{ if(video.paused){try{await video.play();}catch(e){}} },300);
+video.addEventListener("play",()=>{
+  setTimeout(enforceMute,300);
+  userPaused=false;
+  if(isAndroid()){ const a=document.getElementById("audio-bg"); if(a) a.muted=true; }
+});
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') {
+    if (isIOS() || userPaused) return;
+    setTimeout(async () => {
+      if (video.paused) { try { await video.play(); } catch(e) {} }
+      const a = document.getElementById('audio-bg');
+      if (isAndroid() && a) { a.muted = false; if (a.paused) { try { await a.play(); } catch(e) {} } }
+    }, 300);
   } else {
     enforceMute();
-    if(!userPaused&&video.paused){try{await video.play();}catch(e){}}
+    if (isAndroid()) { const a = document.getElementById('audio-bg'); if (a) a.muted = true; }
+    if (!userPaused && video.paused) { try { await video.play(); } catch(e) {} }
   }
+});
+window.addEventListener('pageshow', async () => {
+  if (!userPaused && video.paused) { try { await video.play(); } catch(e) {} }
 });
 
 // Stream
@@ -254,7 +257,15 @@ function loadStream(url) {
   userUnmuted=false;
   const proxied=currentCh.proxy+encodeURIComponent(url);
   stopStream(); setStatus("connecting"); unmuteBtn.style.display="none";
-  // Android audio-bg disabled
+  if (isAndroid()) {
+    const audioBg = document.getElementById('audio-bg');
+    if (audioBg && Hls.isSupported()) {
+      hlsAudio = new Hls({ liveSyncDurationCount: 3, enableWorker: true });
+      hlsAudio.loadSource(proxied);
+      hlsAudio.attachMedia(audioBg);
+      hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => { audioBg.muted = true; audioBg.play().catch(() => {}); });
+    }
+  }
   video.muted=true;
   if(Hls.isSupported()) {
     hls=new Hls({liveSyncDurationCount:3,lowLatencyMode:true,enableWorker:true,backBufferLength:30});
