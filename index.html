@@ -203,11 +203,9 @@ pipBtn.onclick = async () => {
         pipBtn.textContent = '✕ PiP';
       } catch(e) {
         if (video.webkitSetPresentationMode) {
-          const wasMuted = video.muted;
           video.muted = false;
           video.webkitSetPresentationMode('picture-in-picture');
           pipBtn.textContent = '✕ PiP';
-          if (wasMuted && !userUnmuted) video.muted = true;
         }
       }
     } else if (video.webkitSetPresentationMode) {
@@ -219,7 +217,11 @@ pipBtn.onclick = async () => {
 video.addEventListener('enterpictureinpicture', () => { pipBtn.textContent = '✕ PiP'; });
 video.addEventListener('leavepictureinpicture', async () => {
   pipBtn.textContent = '🎥 PiP';
+  if (!userUnmuted) video.muted = true;
   if (video.paused) { try { await video.play(); } catch(e){} }
+});
+video.addEventListener('webkitpresentationmodechanged', () => {
+  if (video.webkitPresentationMode === 'inline' && !userUnmuted) video.muted = true;
 });
 
 // Wake Lock
