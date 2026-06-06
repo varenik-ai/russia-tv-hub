@@ -197,9 +197,9 @@ pipBtn.onclick = async () => {
     }
     if (video.paused) { await video.play(); }
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    if (video.webkitSetPresentationMode) {
+    if (isIOS() && video.webkitSetPresentationMode) {
       video.webkitSetPresentationMode("picture-in-picture");
-    } else {
+    } else if (video.requestPictureInPicture) {
       await video.requestPictureInPicture();
     }
     pipBtn.textContent = "✕ PiP";
