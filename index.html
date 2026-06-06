@@ -198,9 +198,9 @@ pipBtn.onclick = async () => {
   try {
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture(); pipBtn.textContent = "🎥 PiP";
-    } else if (isIOS() && video.webkitSetPresentationMode) {
+    } else if (video.webkitSetPresentationMode) {
       video.webkitSetPresentationMode("picture-in-picture"); pipBtn.textContent = "✕ PiP";
-    } else {
+    } else if (video.requestPictureInPicture) {
       await video.requestPictureInPicture(); pipBtn.textContent = "✕ PiP";
     }
   } catch(e) { console.log("PiP:", e.message); }
