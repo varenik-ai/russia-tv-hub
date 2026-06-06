@@ -151,13 +151,12 @@ function showUI() {
 // Fullscreen
 function enterFs() {
   if(video.webkitEnterFullscreen && isIOS()) { video.webkitEnterFullscreen(); isExpanded=true; fullscreenBtn.textContent=t.exitFs; return; }
-  try { if(window.Telegram?.WebApp?.requestFullscreen) Telegram.WebApp.requestFullscreen(); } catch(e) {}
-  if(container.requestFullscreen) {
-    container.requestFullscreen().then(()=>{ container.classList.remove("css-fs"); }).catch(()=>{ container.classList.add("css-fs"); document.body.style.overflow="hidden"; });
-  } else if(container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); }
-  else { container.classList.add("css-fs"); document.body.style.overflow="hidden"; }
+  if(!document.fullscreenElement && !document.webkitFullscreenElement) {
+    if(container.requestFullscreen) { container.requestFullscreen(); }
+    else if(container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); }
+    else { container.classList.add("css-fs"); document.body.style.overflow="hidden"; }
+  }
   isExpanded=true; fullscreenBtn.textContent=t.exitFs;
-  overlay.classList.add("hidden");
 }
 function exitFs() {
   try { if(document.exitFullscreen) document.exitFullscreen(); else if(document.webkitExitFullscreen) document.webkitExitFullscreen(); } catch(e) {}
@@ -204,13 +203,13 @@ let pauseByUser=false;
 video.addEventListener("mousedown",()=>{pauseByUser=true;});
 video.addEventListener("touchstart",()=>{pauseByUser=true;},{passive:true});
 video.addEventListener("pause",()=>{ if(isIOS()||(isAndroid()&&pauseByUser)) userPaused=true; pauseByUser=false; });
-video.addEventListener("play",()=>{ setTimeout(enforceMute,300); userPaused=false; const a=document.getElementById("audio-bg"); if(a&&isAndroid()) a.muted=true; });
+video.addEventListener("play",()=>{ setTimeout(enforceMute,300); userPaused=false; });
 document.addEventListener("visibilitychange",async()=>{
   if(document.visibilityState==="hidden") {
     if(isIOS()||userPaused) return;
-    setTimeout(async()=>{ if(video.paused){try{await video.play();}catch(e){}} const a=document.getElementById("audio-bg"); if(isAndroid()&&a){a.muted=false;if(a.paused){try{await a.play();}catch(e){}}} },300);
+    setTimeout(async()=>{ if(video.paused){try{await video.play();}catch(e){}} },300);
   } else {
-    enforceMute(); const a=document.getElementById("audio-bg"); if(a&&isAndroid()) a.muted=true;
+    enforceMute();
     if(!userPaused&&video.paused){try{await video.play();}catch(e){}}
   }
 });
