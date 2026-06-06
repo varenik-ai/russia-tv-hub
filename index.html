@@ -196,10 +196,14 @@ pipBtn.textContent = "🎥 PiP";
 
 pipBtn.onclick = async () => {
   try {
-    if (document.pictureInPictureElement) {
+    if (video.webkitSupportsPresentationMode && video.webkitSupportsPresentationMode("picture-in-picture")) {
+      if (video.webkitPresentationMode === "picture-in-picture") {
+        video.webkitSetPresentationMode("inline"); pipBtn.textContent = "🎥 PiP";
+      } else {
+        video.webkitSetPresentationMode("picture-in-picture"); pipBtn.textContent = "✕ PiP";
+      }
+    } else if (document.pictureInPictureElement) {
       await document.exitPictureInPicture(); pipBtn.textContent = "🎥 PiP";
-    } else if (video.webkitSetPresentationMode) {
-      video.webkitSetPresentationMode("picture-in-picture"); pipBtn.textContent = "✕ PiP";
     } else if (video.requestPictureInPicture) {
       await video.requestPictureInPicture(); pipBtn.textContent = "✕ PiP";
     }
