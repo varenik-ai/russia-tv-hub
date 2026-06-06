@@ -201,6 +201,7 @@ pipBtn.onclick = async () => {
       await video.requestPictureInPicture();
       pipBtn.textContent = '✕ PiP';
     } else if (video.webkitSetPresentationMode) {
+      userUnmuted = true;
       video.muted = false;
       video.volume = 1;
       video.webkitSetPresentationMode('picture-in-picture');
@@ -210,6 +211,11 @@ pipBtn.onclick = async () => {
 };
 video.addEventListener('enterpictureinpicture', () => { pipBtn.textContent = '✕ PiP'; });
 video.addEventListener('leavepictureinpicture', async () => {
+  pipBtn.textContent = '🎥 PiP';
+  userUnmuted = false;
+  video.muted = true;
+  if (video.paused) { try { await video.play(); } catch(e){} }
+});
   pipBtn.textContent = '🎥 PiP';
   if (!userUnmuted) { video.muted = true; }
   if (video.paused) { try { await video.play(); } catch(e){} }
