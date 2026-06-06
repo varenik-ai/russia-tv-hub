@@ -197,21 +197,12 @@ pipBtn.onclick = async () => {
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
       pipBtn.textContent = '🎥 PiP';
-    } else if (video.requestPictureInPicture) {
-      try {
-        await video.requestPictureInPicture();
-        pipBtn.textContent = '✕ PiP';
-      } catch(e) {
-        if (video.webkitSetPresentationMode) {
-          video.muted = false;
-          video.pause();
-          await new Promise(r => setTimeout(r, 100));
-          await video.play();
-          video.webkitSetPresentationMode('picture-in-picture');
-          pipBtn.textContent = '✕ PiP';
-        }
-      }
+    } else if (!isIOS() && video.requestPictureInPicture) {
+      await video.requestPictureInPicture();
+      pipBtn.textContent = '✕ PiP';
     } else if (video.webkitSetPresentationMode) {
+      video.muted = false;
+      video.volume = 1;
       video.webkitSetPresentationMode('picture-in-picture');
       pipBtn.textContent = '✕ PiP';
     }
@@ -220,10 +211,9 @@ pipBtn.onclick = async () => {
 video.addEventListener('enterpictureinpicture', () => { pipBtn.textContent = '✕ PiP'; });
 video.addEventListener('leavepictureinpicture', async () => {
   pipBtn.textContent = '🎥 PiP';
-  if (!userUnmuted) video.muted = true;
+  if (!userUnmuted) { video.muted = true; }
   if (video.paused) { try { await video.play(); } catch(e){} }
 });
-video.addEventListener('webkitpresentationmodechanged', () => {
   if (video.webkitPresentationMode === 'inline' && !userUnmuted) video.muted = true;
 });
 
