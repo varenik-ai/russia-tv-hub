@@ -149,13 +149,11 @@ function showUI() {
 }
 
 // Fullscreen
-function enterFs() {
+async function enterFs() {
   if(video.webkitEnterFullscreen && isIOS()) { video.webkitEnterFullscreen(); isExpanded=true; fullscreenBtn.textContent=t.exitFs; return; }
-  if(!document.fullscreenElement && !document.webkitFullscreenElement) {
-    if(container.requestFullscreen) { container.requestFullscreen(); }
-    else if(container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); }
-    else { container.classList.add("css-fs"); document.body.style.overflow="hidden"; }
-  }
+  if(container.requestFullscreen) { await container.requestFullscreen().catch(()=>{ container.classList.add("css-fs"); document.body.style.overflow="hidden"; }); }
+  else if(container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); }
+  else { container.classList.add("css-fs"); document.body.style.overflow="hidden"; }
   isExpanded=true; fullscreenBtn.textContent=t.exitFs;
 }
 function exitFs() {
@@ -181,7 +179,7 @@ container.addEventListener("pointermove",()=>{if(isExpanded)showUI();});
 container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:true});
 
 // PiP
-pipBtn.textContent="🎥 PiP";
+pipBtn.textContent="🎥 PiP"; pipBtn.style.display="block";
 pipBtn.onclick=async()=>{ try { if(document.pictureInPictureElement){await document.exitPictureInPicture();pipBtn.textContent="🎥 PiP";} else if(video.requestPictureInPicture){await video.requestPictureInPicture();pipBtn.textContent="✕ PiP";} else if(video.webkitSetPresentationMode){video.webkitSetPresentationMode("picture-in-picture");} } catch(e){} };
 video.addEventListener("leavepictureinpicture",async()=>{ pipBtn.textContent="🎥 PiP"; if(video.paused){try{await video.play();}catch(e){}} });
 
@@ -262,7 +260,7 @@ function openChannel(ch) {
   modeBtn.textContent=t.audioMode; stopStream(); init();
 }
 function goToHub() { stopStream(); playerScreen.style.display="none"; hubScreen.style.display="flex"; currentCh=null; }
-backBtn.onclick=()=>{ try { Telegram.WebApp.openTelegramLink("https://t.me/RussiaTV_Hub_Live"); } catch(e) { window.open("https://t.me/RussiaTV_Hub_Live","_blank"); } };
+backBtn.onclick=()=>{ window.location.href="https://t.me/RussiaTV_Hub_Live"; };
 
 buildHub();
 </script>
