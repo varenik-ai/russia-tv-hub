@@ -202,17 +202,13 @@ pipBtn.onclick = async () => {
         await video.requestPictureInPicture();
         pipBtn.textContent = '✕ PiP';
       } catch(e) {
-        if (video.requestPictureInPicture || video.webkitSetPresentationMode) {
+        if (video.webkitSetPresentationMode) {
           video.muted = false;
-          try {
-            await video.requestPictureInPicture();
-            pipBtn.textContent = '✕ PiP';
-          } catch(e2) {
-            if (video.webkitSetPresentationMode) {
-              video.webkitSetPresentationMode('picture-in-picture');
-              pipBtn.textContent = '✕ PiP';
-            }
-          }
+          video.pause();
+          await new Promise(r => setTimeout(r, 100));
+          await video.play();
+          video.webkitSetPresentationMode('picture-in-picture');
+          pipBtn.textContent = '✕ PiP';
         }
       }
     } else if (video.webkitSetPresentationMode) {
