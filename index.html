@@ -130,7 +130,7 @@ function getLang() {
 }
 const t = T[getLang()];
 
-function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1); }
+function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)||(window.Telegram?.WebApp?.platform==="ios"); }
 function isAndroid() { return /Android/i.test(navigator.userAgent); }
 
 const hubScreen=document.getElementById("hub-screen"),playerScreen=document.getElementById("player-screen");
