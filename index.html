@@ -317,11 +317,7 @@ function openChannel(ch) {
       .then(d => {
         if (d.url) {
           const proxiedUrl = ch.proxy + encodeURIComponent(d.url);
-          if (window.Telegram?.WebApp?.openLink) {
-            Telegram.WebApp.openLink(proxiedUrl);
-          } else {
-            window.location.href = proxiedUrl;
-          }
+          window.open(proxiedUrl, '_blank');
         }
       })
       .catch(() => {
