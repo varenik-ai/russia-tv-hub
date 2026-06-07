@@ -181,7 +181,18 @@ function onFsChange() {
 }
 document.addEventListener("fullscreenchange",onFsChange);
 document.addEventListener("webkitfullscreenchange",onFsChange);
-video.addEventListener("webkitendfullscreen",async()=>{ if(video.paused){try{await video.play();}catch(e){}} isExpanded=false; fullscreenBtn.textContent=t.fullscreen; overlay.classList.remove("hidden"); });
+video.addEventListener("webkitendfullscreen", async () => {
+  isExpanded = false;
+  fullscreenBtn.textContent = t.fullscreen;
+  overlay.classList.remove("hidden");
+  if (video.paused) {
+    try {
+      await video.play();
+    } catch(e) {
+      setTimeout(() => init(), 500);
+    }
+  }
+});
 
 // Gestures
 let lastTap=0;
