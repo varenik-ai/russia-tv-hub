@@ -177,7 +177,7 @@ fullscreenBtn.onclick=()=>isExpanded?exitFs():enterFs();
 function onFsChange() {
   const fsEl=document.fullscreenElement||document.webkitFullscreenElement;
   if(fsEl) { isExpanded=true; fullscreenBtn.textContent=t.exitFs; overlay.classList.remove("hidden"); if(hideTimeout)clearTimeout(hideTimeout); hideTimeout=setTimeout(()=>overlay.classList.add("hidden"),3000); video.style.objectFit=window.innerWidth>window.innerHeight?"cover":"contain"; }
-  else { isExpanded=false; fullscreenBtn.textContent=t.fullscreen; overlay.classList.remove("hidden"); if(hideTimeout){clearTimeout(hideTimeout);hideTimeout=null;} video.style.objectFit="contain"; }
+  else { isExpanded=false; fullscreenBtn.textContent=t.fullscreen; overlay.classList.remove("hidden"); if(hideTimeout){clearTimeout(hideTimeout);hideTimeout=null;} video.style.objectFit="contain"; if(!userUnmuted) video.muted=true; }
 }
 document.addEventListener("fullscreenchange",onFsChange);
 document.addEventListener("webkitfullscreenchange",onFsChange);
