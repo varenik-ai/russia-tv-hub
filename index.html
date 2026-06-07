@@ -78,7 +78,7 @@
         <button id="unmute-btn" class="btn danger" style="display:none"></button>
         <button id="mode-btn" class="btn"></button>
         <button id="fullscreen-btn" class="btn"></button>
-        <button id="pip-btn" class="btn" style="display:none;visibility:hidden;pointer-events:none;width:0;height:0;padding:0;margin:0;border:none;overflow:hidden"></button>
+        <button id="pip-btn" class="btn" style="display:none"></button>
       </div>
     </div>
     <audio id="audio-bg" muted></audio>
@@ -198,7 +198,7 @@ container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:t
 
 // PiP
 
-if (!isIOS() && !isAndroid()) pipBtn.style.display = 'block';
+if (!isIOS() && !isAndroid()) { pipBtn.style.cssText = ''; pipBtn.style.display = 'block'; }
 pipBtn.textContent = '🎥 PiP';
 pipBtn.onclick = async () => {
   try {
