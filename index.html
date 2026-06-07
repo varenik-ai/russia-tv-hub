@@ -198,6 +198,7 @@ container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:t
 
 // PiP
 
+if (!isIOS() && !isAndroid()) pipBtn.style.display = 'block';
 pipBtn.textContent = '🎥 PiP';
 pipBtn.onclick = async () => {
   try {
