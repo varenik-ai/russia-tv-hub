@@ -190,7 +190,7 @@ container.addEventListener("pointermove",()=>{if(isExpanded)showUI();});
 container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:true});
 
 // PiP
-pipBtn.style.display = 'block';
+if (!isIOS()) pipBtn.style.display = 'block';
 pipBtn.textContent = '🎥 PiP';
 pipBtn.onclick = async () => {
   try {
@@ -310,23 +310,6 @@ function buildHub() {
   });
 }
 function openChannel(ch) {
-  const isTelegramIOS = isIOS() && window.Telegram?.WebApp;
-  if (isTelegramIOS) {
-    fetch(ch.stream + "?t=" + Date.now(), { cache: "no-store" })
-      .then(r => r.json())
-      .then(d => {
-        if (d.url) {
-          const proxiedUrl = ch.proxy + encodeURIComponent(d.url);
-          window.open(proxiedUrl, '_blank');
-        }
-      })
-      .catch(() => {
-        currentCh=ch; hubScreen.style.display="none"; playerScreen.style.display="flex";
-        chTitle.textContent=ch.name; audioOnly=false; document.body.classList.remove("audio-only");
-        modeBtn.textContent=t.audioMode; stopStream(); init();
-      });
-    return;
-  }
   currentCh=ch; hubScreen.style.display="none"; playerScreen.style.display="flex";
   chTitle.textContent=ch.name; audioOnly=false; document.body.classList.remove("audio-only");
   modeBtn.textContent=t.audioMode; stopStream(); init();
