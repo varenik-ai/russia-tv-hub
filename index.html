@@ -89,7 +89,7 @@
 <script>
 const tg = window.Telegram?.WebApp;
 
-if (tg) { tg.ready(); tg.expand(); try { tg.disableVerticalSwipes(); } catch(e) {} try { tg.setHeaderColor('#000000'); } catch(e) {} try { tg.setBackgroundColor('#000000'); } catch(e) {} }
+if (tg) { tg.ready(); tg.expand(); try { tg.disableVerticalSwipes(); } catch(e) {} try { tg.setHeaderColor('#000000'); } catch(e) {} try { tg.setBackgroundColor('#000000'); } catch(e) {} try { tg.requestFullscreen(); } catch(e) {} }
 
 const CHANNELS = [
   { id:"rossiya1", name:"Россия 1", desc:"Прямой эфир", icon:"Р", iconBg:"#003893",
