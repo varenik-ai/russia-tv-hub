@@ -93,7 +93,16 @@ function updateSafeArea() {
   const top = tg?.contentSafeAreaInsets?.top || tg?.safeAreaInsets?.top || 0;
   document.documentElement.style.setProperty('--tg-safe-top', top + 'px');
 }
-if (tg) { tg.ready(); tg.expand(); try { tg.disableVerticalSwipes(); } catch(e) {} try { tg.setHeaderColor('#000000'); } catch(e) {} try { tg.setBackgroundColor('#000000'); } catch(e) {} try { tg.requestFullscreen(); } catch(e) {} }
+if (tg) {
+  tg.ready(); tg.expand();
+  try { tg.disableVerticalSwipes(); } catch(e) {}
+  try { tg.setHeaderColor('#000000'); } catch(e) {}
+  try { tg.setBackgroundColor('#000000'); } catch(e) {}
+  setTimeout(() => { try { tg.requestFullscreen(); } catch(e) {} }, 300);
+  try { tg.onEvent('safeAreaChanged', updateSafeArea); } catch(e) {}
+  try { tg.onEvent('contentSafeAreaChanged', updateSafeArea); } catch(e) {}
+  setTimeout(updateSafeArea, 500);
+}
 
 const CHANNELS = [
   { id:"rossiya1", name:"Россия 1", desc:"Прямой эфир", icon:"Р", iconBg:"#003893",
