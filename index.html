@@ -99,7 +99,7 @@ if (tg) {
   try { tg.disableVerticalSwipes(); } catch(e) {}
   try { tg.setHeaderColor('#000000'); } catch(e) {}
   try { tg.setBackgroundColor('#000000'); } catch(e) {}
-  setTimeout(() => { try { tg.requestFullscreen(); } catch(e) {} }, 300);
+  if (isAndroid() || isIOS()) setTimeout(() => { try { tg.requestFullscreen(); } catch(e) {} }, 300);
   try { tg.onEvent('safeAreaChanged', updateSafeArea); } catch(e) {}
   try { tg.onEvent('contentSafeAreaChanged', updateSafeArea); } catch(e) {}
   setTimeout(updateSafeArea, 500);
