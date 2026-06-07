@@ -275,7 +275,15 @@ document.addEventListener('visibilitychange', async () => {
   } else {
     enforceMute();
     if (isAndroid()) { const a = document.getElementById('audio-bg'); if (a) a.muted = true; }
-    if (!userPaused && video.paused) { try { await video.play(); } catch(e) {} }
+    if (!userPaused && video.paused) {
+      try {
+        await video.play();
+      } catch(e) {
+        if (currentCh) { stopStream(); init(); }
+      }
+    } else if (!userPaused && video.readyState < 2) {
+      if (currentCh) { stopStream(); init(); }
+    }
   }
 });
 window.addEventListener('pageshow', async () => {
@@ -305,14 +313,13 @@ function loadStream(url) {
   video.muted=true;
   if(isIOS()) {
     const audioBg = document.getElementById('audio-bg');
-    if (audioBg && Hls.isSupported()) {
-      hlsAudio = new Hls({ liveSyncDurationCount: 3, enableWorker: true });
-      hlsAudio.loadSource(proxied);
-      hlsAudio.attachMedia(audioBg);
-      hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => {
-        audioBg.volume = 0.001;
-        audioBg.muted = false;
-        audioBg.play().catch(() => {});
+    if (audioBg) {
+      if (Hls.isSupported()) {
+        hlsAudio = new Hls({ liveSyncDurationCount: 3, enableWorker: true });
+        hlsAudio.loadSource(proxied);
+        hlsAudio.attachMedia(audioBg);
+        hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => {
+          audioBg.volume = 0.001; audioBg.muted = false; audioBg.play().catch(() => {});
       });
     }
   }
