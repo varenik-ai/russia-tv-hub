@@ -185,13 +185,9 @@ video.addEventListener("webkitendfullscreen", async () => {
   isExpanded = false;
   fullscreenBtn.textContent = t.fullscreen;
   overlay.classList.remove("hidden");
-  if (video.paused) {
-    try {
-      await video.play();
-    } catch(e) {
-      setTimeout(() => init(), 500);
-    }
-  }
+  setTimeout(() => {
+    if (currentCh) { stopStream(); init(); }
+  }, 300);
 });
 
 // Gestures
