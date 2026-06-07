@@ -204,6 +204,7 @@ pipBtn.onclick = async () => {
       userUnmuted = true;
       video.muted = false;
       video.volume = 1;
+      await new Promise(r => setTimeout(r, 500));
       video.webkitSetPresentationMode('picture-in-picture');
       pipBtn.textContent = '✕ PiP';
     }
