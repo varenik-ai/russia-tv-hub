@@ -88,12 +88,7 @@
 
 <script>
 const tg = window.Telegram?.WebApp;
-if (isIOS()) {
-  const v = document.getElementById('video');
-  v.setAttribute('controls','');
-  v.removeAttribute('playsinline');
-  v.removeAttribute('webkit-playsinline');
-}
+
 if (tg) { tg.ready(); tg.expand(); try { tg.disableVerticalSwipes(); } catch(e) {} try { tg.setHeaderColor('#000000'); } catch(e) {} try { tg.setBackgroundColor('#000000'); } catch(e) {} }
 
 const CHANNELS = [
