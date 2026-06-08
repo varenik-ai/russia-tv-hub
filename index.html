@@ -319,7 +319,7 @@ function loadStream(url) {
         hlsAudio.loadSource(proxied);
         hlsAudio.attachMedia(audioBg);
         hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => {
-          audioBg.volume = 0.001; audioBg.muted = false; audioBg.play().catch(() => {});
+          audioBg.volume = 0; audioBg.muted = false; audioBg.play().catch(() => {});
         });
       }
     }
@@ -341,7 +341,16 @@ async function init() {
 }
 
 reloadBtn.onclick=()=>{userPaused=false;init();};
-unmuteBtn.onclick=()=>{ if(video.muted){ video.muted=false; video.volume=1; userUnmuted=true; unmuteBtn.textContent="🔇 "+t.mute; } else { video.muted=true; userUnmuted=false; unmuteBtn.textContent="🔊 "+t.unmute; } };
+unmuteBtn.onclick=()=>{
+  const ab=document.getElementById('audio-bg');
+  if(video.muted){
+    video.muted=false; video.volume=1; userUnmuted=true; unmuteBtn.textContent="🔇 "+t.mute;
+    if(ab){ ab.muted=true; ab.pause(); }
+  } else {
+    video.muted=true; userUnmuted=false; unmuteBtn.textContent="🔊 "+t.unmute;
+    if(ab&&isIOS()){ ab.muted=false; ab.volume=0; ab.play().catch(()=>{}); }
+  }
+};
 modeBtn.onclick=()=>setAudioMode(!audioOnly);
 
 // Hub
