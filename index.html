@@ -320,7 +320,8 @@ function loadStream(url) {
         hlsAudio.attachMedia(audioBg);
         hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => {
           audioBg.volume = 0.001; audioBg.muted = false; audioBg.play().catch(() => {});
-      });
+        });
+      }
     }
   }
   if(Hls.isSupported()) {
