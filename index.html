@@ -260,7 +260,7 @@ video.addEventListener("mousedown",()=>{pauseByUser=true;});
 video.addEventListener("touchstart",()=>{pauseByUser=true;},{passive:true});
 video.addEventListener("pause",()=>{ if(isIOS()||(isAndroid()&&pauseByUser)) userPaused=true; pauseByUser=false; });
 video.addEventListener("play",()=>{
-  setTimeout(enforceMute,300);
+  if(!userUnmuted) video.muted=true;
   userPaused=false;
   if(isAndroid()){ const a=document.getElementById("audio-bg"); if(a) a.muted=true; }
 });
