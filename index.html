@@ -106,7 +106,7 @@ if (tg) {
 }
 
 const CHANNELS = [
-  { id:"rossiya1", name:"Россия 1", desc:"Прямой эфир", icon:"Р", iconBg:"#003893",
+  { id:"rossiya1", name:"Россия 1", desc:"Прямой эфир", icon:"Р", iconBg:"#003893", logo:"rossiya1.jpg",
     stream:"https://rossiya1-proxy.vercel.app/api/stream",
     proxy:"https://rossiya1-proxy.vercel.app/api/proxy?url=" },
   { id:"perviy", name:"Первый Канал", desc:"Прямой эфир из-за рубежа", icon:"1", iconBg:"#D52B1E",
@@ -345,7 +345,7 @@ function buildHub() {
   channelsGrid.innerHTML="";
   CHANNELS.forEach(ch=>{
     const card=document.createElement("div"); card.className="channel-card";
-    card.innerHTML=`<div class="ch-icon" style="background:${ch.iconBg}">${ch.icon}</div><div><div class="ch-name">${ch.name}</div><div class="ch-desc">${ch.desc}</div></div><div class="live-dot"></div>`;
+    card.innerHTML=`<div class="ch-icon" style="background:${ch.iconBg}">${ch.logo?`<img src="${ch.logo}" alt="${ch.name}">`:`${ch.icon}`}</div><div><div class="ch-name">${ch.name}</div><div class="ch-desc">${ch.desc}</div></div><div class="live-dot"></div>`;
     card.onclick=()=>openChannel(ch); channelsGrid.appendChild(card);
   });
 }
