@@ -311,19 +311,6 @@ function loadStream(url) {
     }
   }
   video.muted=true;
-  if(isIOS()) {
-    const audioBg = document.getElementById('audio-bg');
-    if (audioBg) {
-      if (Hls.isSupported()) {
-        hlsAudio = new Hls({ liveSyncDurationCount: 3, enableWorker: true });
-        hlsAudio.loadSource(proxied);
-        hlsAudio.attachMedia(audioBg);
-        hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => {
-          audioBg.volume = 0; audioBg.muted = false; audioBg.play().catch(() => {});
-        });
-      }
-    }
-  }
   if(Hls.isSupported()) {
     hls=new Hls({liveSyncDurationCount:3,lowLatencyMode:true,enableWorker:true,backBufferLength:30});
     hls.loadSource(proxied); hls.attachMedia(video);
