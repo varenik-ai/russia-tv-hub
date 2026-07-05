@@ -420,11 +420,15 @@ function loadStream(url) {
     if (!currentCh) return;
     try {
       const r = await fetch(currentCh.stream + (currentCh.stream.includes('?')?'&':'?') + 't=' + Date.now(), { cache:'no-store' });
-      const d = await r.json();
-      if (d.url) {
-        if (hls) hls.loadSource(d.url);
-        if (hlsAudio) hlsAudio.loadSource(d.url);
+      const ct = r.headers.get('Content-Type') || '';
+      if (!ct.includes('mpegurl') && !ct.includes('m3u')) {
+        const d = await r.json();
+        if (d.url) {
+          if (hls) hls.loadSource(d.url);
+          if (hlsAudio) hlsAudio.loadSource(d.url);
+        }
       }
+      // Для прямых m3u8-воркеров hls.js обновляет плейлист сам
     } catch(e) {}
   }, 20 * 60 * 1000);
 }
@@ -435,8 +439,14 @@ async function init() {
   try {
     const sep = currentCh.stream.includes('?') ? '&' : '?';
     const r = await fetch(currentCh.stream + sep + 't=' + Date.now(), { cache:'no-store' });
-    const d = await r.json();
-    if (d.url) loadStream(d.url); else setStatus('errorUrl', true);
+    const ct = r.headers.get('Content-Type') || '';
+    if (ct.includes('mpegurl') || ct.includes('m3u')) {
+      // Воркер вернул m3u8 напрямую — URL стрима и есть плейлист
+      loadStream(currentCh.stream);
+    } else {
+      const d = await r.json();
+      if (d.url) loadStream(d.url); else setStatus('errorUrl', true);
+    }
   } catch(e) { setStatus('errorServer', true); }
 }
 
