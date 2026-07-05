@@ -2,7 +2,7 @@
 // Деплой: cd ~/russia-worker && cp ~/russia-tv-hub/russia-worker.js src/index.js && npx wrangler deploy
 // Или через Cloudflare Dashboard → Workers → Edit code
 
-const VERSION = '1.5.1';
+const VERSION = '1.6.0';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -10,29 +10,33 @@ const CORS = {
   'Access-Control-Allow-Headers': '*',
 };
 
-// Подтверждённые рабочие потоки (проверены через CF Worker debug)
+// Подтверждённые рабочие потоки без гео-ограничений (проверены через CF Worker debug)
 const STREAMS = {
-  // ── Новости и общие ──────────────────────────────────────
+  // ── Новости ───────────────────────────────────────────────
   rossiya1:  'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia1-hd/index.m3u8',
   ntv:       'https://stream8.cinerama.uz/1023/tracks-v1a1/mono.m3u8',
   rossiya24: 'https://stream8.cinerama.uz/1021/tracks-v1a1/mono.m3u8',
   pyatyy:    'https://cdn4.skygo.mn/live/disk1/Channel_5/HLSv3-FTA/Channel_5.m3u8',
-  rentv:     'http://zabava-htlive.cdn.ngenix.net/hls/CH_RENTV/variant.m3u8',
   tvc:       'https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8',
   zvezda:    'https://tvchannelstream1.tvzvezda.ru/cdn/tvzvezda/playlist.m3u8',
   mir:       'http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mir24_2500/playlist.m3u8',
+  rbc:       'http://online.video.rbc.ru/online/rbctv_1080p/index.m3u8',
+  rt:        'http://rt-glb.rttv.com/dvr/rtnews/playlist.m3u8',
   // ── Развлечения ──────────────────────────────────────────
-  sts:       'https://zabava-htlive.cdn.ngenix.net/hls/CH_STS/variant.m3u8',
-  pyatnitsa: 'http://zabava-htlive.cdn.ngenix.net/hls/CH_PYATNIZZA/variant.m3u8',
+  pyatnitsa: 'https://vod.tuva.ru/friday/index.m3u8',   // заменён с zabava (гео) на vod.tuva.ru
+  tnt:       'https://bl.rutube.ru/livestream/546602986e6a424d74d594876ddb3f04/index.m3u8?s=K-z3nz49R1oGQ-5yPSd8pg&e=2082157024&scheme=https',
   tnt4:      'https://zabava-htlive.cdn.ngenix.net/hls/CH_TNT4/variant.m3u8',
   kultura:   'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/kultura-hd/index.m3u8',
   soloviev:  'https://stream.smotrim.ru/hls/solovievlive/playlist_6.m3u8',
+  istoriya:  'https://stream8.cinerama.uz/1266/tracks-v1a1/mono.m3u8',
+  domkino:   'https://stream8.cinerama.uz/1054/tracks-v1a1/mono.m3u8',
   // ── Детские ──────────────────────────────────────────────
   karusel:   'https://streaming102.interskytech.com/live/232.m3u8',
   mult:      'https://stream8.cinerama.uz/1246/tracks-v1a1/mono.m3u8',
   nick:      'http://s70378.cdn.ngenix.net/nickelodeon/2/index.m3u8',
   // ── Музыка ───────────────────────────────────────────────
   muztv:     'https://stream8.cinerama.uz/1200/tracks-v1a1/mono.m3u8',
+  ntv_hit:   'http://cdn.ntv.ru/th_hit/tracks-v1a1/mono.m3u8',
   rutv:      'https://stream8.cinerama.uz/1202/tracks-v1a1/mono.m3u8',
 };
 
