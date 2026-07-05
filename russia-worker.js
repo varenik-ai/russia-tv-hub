@@ -2,7 +2,7 @@
 // Деплой: cd ~/russia-worker && cp ~/russia-tv-hub/russia-worker.js src/index.js && npx wrangler deploy
 // Или через Cloudflare Dashboard → Workers → Edit code
 
-const VERSION = '1.2.0';
+const VERSION = '1.4.0';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +20,7 @@ const STREAMS = {
   rentv:     'https://cdn4.skygo.mn/live/disk1/RenTV/HLSv3-FTA/RenTV.m3u8',
   tvc:       'https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8',
   zvezda:    'https://tvchannelstream1.tvzvezda.ru/cdn/tvzvezda/playlist.m3u8',
-  mir:       'http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mirtv_2500/playlist.m3u8',
+  mir:       'http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mir24_2500/playlist.m3u8',
   // ── Развлечения ──────────────────────────────────────────
   sts:       'https://cdn4.skygo.mn/live/disk1/STS/HLSv3-FTA/STS.m3u8',
   pyatnitsa: 'https://vod.tuva.ru/friday/index.m3u8',
@@ -131,12 +131,19 @@ function rewriteM3u8(content, sourceUrl, workerOrigin) {
   for (const rawLine of lines) {
     const line = rawLine.trimEnd();
 
+    // Пропустить треки субтитров — вызывают ошибки hls.js (напр. Россия 24 rus_subs.m3u8)
+    if (line.startsWith('#EXT-X-MEDIA') && line.includes('TYPE=SUBTITLES')) continue;
+
     if (line === '' || line.startsWith('#')) {
       // Перезаписать URI= внутри тегов (EXT-X-KEY, EXT-X-MEDIA, EXT-X-MAP и др.)
-      const fixed = line.replace(/URI="([^"]+)"/g, (_, uri) => {
+      let fixed = line.replace(/URI="([^"]+)"/g, (_, uri) => {
         const abs = resolveUrl(base, uri);
         return `URI="${workerOrigin}/proxy?url=${encodeURIComponent(abs)}"`;
       });
+      // Убрать атрибут SUBTITLES="..." из EXT-X-STREAM-INF
+      if (fixed.startsWith('#EXT-X-STREAM-INF')) {
+        fixed = fixed.replace(/,?SUBTITLES="[^"]*"/, '');
+      }
       out.push(fixed);
     } else {
       // Строка-URL (сегмент TS или суб-плейлист)
@@ -205,9 +212,11 @@ async function proxyTarget(targetUrl, workerOrigin) {
   }
 
   const ct = (res.headers.get('Content-Type') || '').toLowerCase();
-  const isM3u8 = ct.includes('mpegurl') || ct.includes('m3u') ||
+  // TS-сегмент имеет приоритет — иначе "playlist_X.ts" ошибочно детектируется как m3u8
+  const isTs = /\.ts([?#]|$)/.test(targetUrl) || ct.includes('video/') || ct.includes('audio/') || ct.includes('octet-stream');
+  const isM3u8 = !isTs && (ct.includes('mpegurl') || ct.includes('m3u') ||
                  targetUrl.includes('.m3u8') || targetUrl.includes('playlist') ||
-                 targetUrl.includes('chunklist') || targetUrl.includes('variant');
+                 targetUrl.includes('chunklist') || targetUrl.includes('variant'));
 
   if (isM3u8) {
     const body = await res.text();
