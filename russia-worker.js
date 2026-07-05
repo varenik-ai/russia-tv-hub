@@ -2,7 +2,7 @@
 // Деплой: cd ~/russia-worker && cp ~/russia-tv-hub/russia-worker.js src/index.js && npx wrangler deploy
 // Или через Cloudflare Dashboard → Workers → Edit code
 
-const VERSION = '1.0.0';
+const VERSION = '1.2.0';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -17,7 +17,7 @@ const STREAMS = {
   ntv:       'https://stream8.cinerama.uz/1023/tracks-v1a1/mono.m3u8',
   rossiya24: 'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia24-sd/index.m3u8',
   pyatyy:    'https://cdn4.skygo.mn/live/disk1/Channel_5/HLSv3-FTA/Channel_5.m3u8',
-  rentv:     'http://cdn4.skygo.mn/live/disk1/RenTV/HLSv3-FTA/RenTV.m3u8',
+  rentv:     'https://cdn4.skygo.mn/live/disk1/RenTV/HLSv3-FTA/RenTV.m3u8',
   tvc:       'https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8',
   zvezda:    'https://tvchannelstream1.tvzvezda.ru/cdn/tvzvezda/playlist.m3u8',
   mir:       'http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mirtv_2500/playlist.m3u8',
@@ -79,13 +79,13 @@ async function handleRequest(request) {
       });
     }
     try {
-      const res = await fetch(target, { headers: { 'User-Agent': UA } });
+      const res = await fetch(target, { headers: { 'User-Agent': UA }, cf: { cacheEverything: false, cacheTtl: -1 } });
       const body = await res.text();
       return new Response(JSON.stringify({
         status: res.status,
         contentType: res.headers.get('Content-Type'),
         body: body.slice(0, 500),
-      }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
+      }), { headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), {
         status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
@@ -158,6 +158,7 @@ async function fetchM3u8(streamUrl, workerOrigin) {
         'Referer': new URL(streamUrl).origin + '/',
         'Origin':  new URL(streamUrl).origin,
       },
+      cf: { cacheEverything: false, cacheTtl: -1 },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message, url: streamUrl }), {
@@ -193,6 +194,7 @@ async function proxyTarget(targetUrl, workerOrigin) {
         'Referer':    new URL(targetUrl).origin + '/',
         'Origin':     new URL(targetUrl).origin,
       },
+      cf: { cacheEverything: false, cacheTtl: -1 },
     });
   } catch (e) {
     return new Response(`Fetch error: ${e.message}`, { status: 502, headers: CORS });
