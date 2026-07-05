@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN   = '8846615980:AAGUUb1s2fUfzeLH5D14fEj9_asvTqltCN4';
 const CHANNEL = '@RussiaTV_Hub_Live';
 const APP_URL = 'https://t.me/RussiaTVHub_bot/russiatv';
-const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=5';
+const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=6';
 
 const bot = new TelegramBot(TOKEN, { polling: { interval: 2000, autoStart: true, params: { timeout: 10 } } });
 
@@ -14,7 +14,7 @@ bot.onText(/\/start/, (msg) => {
   const greetings = {
     ru: `🇷🇺 Привет, ${name}! Добро пожаловать в *Russia TV Live*
 
-📺 *27+ российских каналов прямо в Telegram* — бесплатно, без регистрации, 24/7.
+📺 *18 российских каналов прямо в Telegram* — бесплатно, без регистрации, 24/7.
 
 🔴 *Самые популярные:*
 ▪️ Россия 1, Первый Канал, НТВ
@@ -28,7 +28,7 @@ bot.onText(/\/start/, (msg) => {
 
     bg: `🇷🇺 Здравейте, ${name}! Добре дошли в *Russia TV Live*
 
-📺 *27+ руски канала директно в Telegram* — безплатно, без регистрация, 24/7.
+📺 *18 руски канала директно в Telegram* — безплатно, без регистрация, 24/7.
 
 🔴 *Най-популярните канали:*
 ▪️ Россия 1, Первый Канал, НТВ
@@ -39,7 +39,7 @@ bot.onText(/\/start/, (msg) => {
 
     en: `🇷🇺 Hello, ${name}! Welcome to *Russia TV Live*
 
-📺 *27+ Russian TV channels right in Telegram* — free, no registration, 24/7.
+📺 *18 Russian TV channels right in Telegram* — free, no registration, 24/7.
 
 🔴 *Most popular channels:*
 ▪️ Russia 1, Channel One, NTV
@@ -50,7 +50,7 @@ bot.onText(/\/start/, (msg) => {
 
     uk: `🇷🇺 Привіт, ${name}! Ласкаво просимо до *Russia TV Live*
 
-📺 *27+ російських каналів прямо в Telegram* — безкоштовно, без реєстрації, 24/7.
+📺 *18 російських каналів прямо в Telegram* — безкоштовно, без реєстрації, 24/7.
 
 🔴 *Найпопулярніші канали:*
 ▪️ Россия 1, Первый Канал, НТВ
@@ -61,7 +61,7 @@ bot.onText(/\/start/, (msg) => {
 
     de: `🇷🇺 Hallo, ${name}! Willkommen bei *Russia TV Live*
 
-📺 *27+ russische Sender direkt in Telegram* — kostenlos, ohne Anmeldung, 24/7.
+📺 *18 russische Sender direkt in Telegram* — kostenlos, ohne Anmeldung, 24/7.
 
 🔴 *Beliebteste Sender:*
 ▪️ Rossija 1, Perwyi Kanal, NTW
@@ -71,7 +71,7 @@ bot.onText(/\/start/, (msg) => {
 
     fr: `🇷🇺 Bonjour, ${name}! Bienvenue sur *Russia TV Live*
 
-📺 *27+ chaînes russes directement dans Telegram* — gratuit, sans inscription, 24/7.
+📺 *18 chaînes russes directement dans Telegram* — gratuit, sans inscription, 24/7.
 
 🔴 *Chaînes les plus populaires:*
 ▪️ Russie 1, Première Chaîne, NTV
@@ -81,7 +81,7 @@ bot.onText(/\/start/, (msg) => {
 
     es: `🇷🇺 Hola, ${name}! Bienvenido a *Russia TV Live*
 
-📺 *27+ canales rusos directamente en Telegram* — gratis, sin registro, 24/7.
+📺 *18 canales rusos directamente en Telegram* — gratis, sin registro, 24/7.
 
 🔴 *Canales más populares:*
 ▪️ Rusia 1, Canal Uno, NTV
@@ -91,7 +91,7 @@ bot.onText(/\/start/, (msg) => {
 
     tr: `🇷🇺 Merhaba, ${name}! *Russia TV Live*'a hoş geldiniz
 
-📺 *Telegram'da 27+ Rus kanalı* — ücretsiz, kayıt gerekmez, 7/24.
+📺 *Telegram'da 18 Rus kanalı* — ücretsiz, kayıt gerekmez, 7/24.
 
 🔴 *En popüler kanallar:*
 ▪️ Rossiya 1, Perviy Kanal, NTV
@@ -137,36 +137,29 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/\/post/, async (msg) => {
   try {
     const post = await bot.sendMessage(CHANNEL,
-`🇷🇺 *RUSSIA TV LIVE — 27+ КАНАЛОВ В ПРЯМОМ ЭФИРЕ* 🔴
+`🇷🇺 *RUSSIA TV LIVE — 18 КАНАЛОВ В ПРЯМОМ ЭФИРЕ* 🔴
 
-Смотрите *все ведущие российские телеканалы* прямо в Telegram — *бесплатно, без регистрации, 24/7.*
+Смотрите *ведущие российские телеканалы* прямо в Telegram — *бесплатно, без регистрации, 24/7.*
 
 ━━━━━━━━━━━━━━━━━━━━
 📡 *НОВОСТИ И ОБЩИЕ*
-▪️ Россия 1 · Первый Канал · НТВ
-▪️ Россия 24 · Пятый канал · ОТР
-▪️ РЕН ТВ · ТВЦ · Звезда · МИР
-
-⚽ *СПОРТ*
-▪️ Матч ТВ · Матч Премьер
-▪️ Матч Футбол 1 · 2 · 3
+▪️ Россия 1 · НТВ · Россия 24
+▪️ Пятый канал · РЕН ТВ · ТВЦ
+▪️ МИР · Звезда
 
 🎬 *РАЗВЛЕЧЕНИЯ И КИНО*
-▪️ ТНТ · СТС · Пятница · Домашний
-▪️ ТВ-3 · Ю · ТНТ4 · 2×2 · ЧЕ
+▪️ СТС · Пятница · ТНТ4
+▪️ Россия К · Соловьёв Live
 
 👶 *ДЕТСКИЕ*
-▪️ Карусель · Мульт · Мультфильм
-▪️ Disney Channel · Nickelodeon
+▪️ Карусель · Мульт · Nickelodeon
 
 🎵 *МУЗЫКА*
-▪️ МУЗ-ТВ · RU.TV · Bridge TV
+▪️ МУЗ-ТВ · RU.TV
 ━━━━━━━━━━━━━━━━━━━━
 
 ✅ HD качество 24/7
 ✅ iOS · Android · Desktop
-✅ Без подписки и рекламы
-✅ Интерфейс на 8 языках
 
 👇 *Нажмите кнопку и выберите канал:*`,
       {
