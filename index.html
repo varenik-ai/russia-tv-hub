@@ -3,47 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Россия ТВ v4</title>
+  <title>Россия ТВ Live</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     html,body { background:#0a0a14; height:100%; font-family:-apple-system,BlinkMacSystemFont,sans-serif; color:white; overflow:hidden; touch-action:pan-x pan-y pinch-zoom; }
-    #hub-screen { display:flex; flex-direction:column; align-items:center; height:100%; overflow-y:auto; padding:24px 16px 40px; padding-top:calc(24px + max(var(--tg-safe-top, 0px), env(safe-area-inset-top, 0px))); }
-    .hub-logo { font-size:26px; font-weight:900; color:#D52B1E; letter-spacing:2px; margin-bottom:8px; text-transform:uppercase; }
-    .hub-logo span { color:white; }
+
+    /* ── Hub ── */
+    #hub-screen { display:flex; flex-direction:column; align-items:center; height:100%; overflow-y:auto; padding:24px 16px 40px; padding-top:calc(24px + max(var(--tg-safe-top,0px), env(safe-area-inset-top,0px))); }
+    .hub-logo { font-size:26px; font-weight:900; letter-spacing:2px; margin-bottom:4px; text-transform:uppercase; }
+    .hub-logo .red   { color:#D52B1E; }
+    .hub-logo .white { color:white; }
+    .hub-logo .blue  { color:#003F8F; }
     .hub-sub { font-size:13px; color:#555; margin-bottom:24px; }
     .channels-grid { width:100%; max-width:560px; display:flex; flex-direction:column; gap:10px; }
-    .channel-card { background:#1a1a28; border:1px solid #2a2a3a; border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:all .2s; }
+
+    .category-header { font-size:11px; font-weight:700; color:#444; text-transform:uppercase; letter-spacing:2px; padding:6px 4px 2px; margin-top:6px; }
+
+    .channel-card { background:#1a1a28; border:1px solid #2a2a3a; border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden; }
+    .channel-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:4px 0 0 4px; background:var(--ch-color,#555); }
     .channel-card:active { opacity:.75; transform:scale(.98); }
-    .ch-icon { width:52px; height:52px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900; flex-shrink:0; overflow:hidden; }
-    .ch-icon img { width:52px; height:52px; object-fit:cover; display:block; }
+    .ch-icon { width:52px; height:52px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:900; flex-shrink:0; }
+    .ch-info { flex:1; }
     .ch-name { font-size:16px; font-weight:700; margin-bottom:3px; }
     .ch-desc { font-size:12px; color:#555; }
-    .live-dot { width:8px; height:8px; background:#D52B1E; border-radius:50%; animation:pulse 1.2s infinite; flex-shrink:0; }
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.25} }
+    .live-dot { width:8px; height:8px; background:var(--ch-color,#555); border-radius:50%; animation:pulse 1.2s infinite; flex-shrink:0; }
+
+    /* ── Player ── */
     #player-screen { display:none; flex-direction:column; align-items:center; height:100%; }
-    .player-header { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; padding-top:calc(10px + max(var(--tg-safe-top, 0px), env(safe-area-inset-top, 0px))); background:#0d0d1a; border-bottom:1px solid #1e1e2e; flex-shrink:0; }
+    .player-header { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; padding-top:calc(10px + max(var(--tg-safe-top,0px), env(safe-area-inset-top,0px))); background:#0d0d1a; border-bottom:1px solid #1e1e2e; flex-shrink:0; }
     .back-btn { background:#1a1a2e; border:1px solid #333; border-radius:8px; padding:7px 12px; color:#aaa; font-size:14px; cursor:pointer; }
     .back-btn:active { opacity:.7; }
     .ch-title-bar { font-size:15px; font-weight:700; }
-    .live-badge-top { background:#D52B1E; color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:none; }
+    .live-badge-top { color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:none; }
+
+    /* ── Video ── */
     #video-container { width:100%; flex:1; background:#000; position:relative; overflow:visible; touch-action:pinch-zoom; }
     #video-container.css-fs { position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important; z-index:9999 !important; }
-    #video-container.css-fs .live-badge, #video-container:fullscreen .live-badge, #video-container:-webkit-full-screen .live-badge { display:none !important; }
-    #video-container.css-fs video { width:100vw !important; height:100vh !important; }
+    #video-container.css-fs .live-badge,
+    #video-container:fullscreen .live-badge,
+    #video-container:-webkit-full-screen .live-badge { display:none !important; }
     #video-container.css-fs .overlay { display:none !important; }
-    #video-container:fullscreen .overlay, #video-container:-webkit-full-screen .overlay { display:none !important; }
+    #video-container:fullscreen .overlay,
+    #video-container:-webkit-full-screen .overlay { display:none !important; }
     video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:1; }
     audio { display:none; }
-    .live-badge { position:absolute; top:14px; left:14px; background:rgba(213,43,30,.95); color:white; font-size:13px; padding:5px 12px; border-radius:30px; display:none; align-items:center; gap:6px; font-weight:700; z-index:25; }
+
+    .live-badge { position:absolute; top:14px; left:14px; color:white; font-size:13px; padding:5px 12px; border-radius:30px; display:none; align-items:center; gap:6px; font-weight:700; z-index:25; background:rgba(213,43,30,.9); }
     #audio-badge { position:absolute; inset:0; display:none; align-items:center; justify-content:center; z-index:3; pointer-events:none; background:rgba(0,0,0,.85); }
     #audio-badge .pill { padding:14px 20px; border-radius:999px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); font-size:15px; }
     body.audio-only #audio-badge { display:flex; }
     body.audio-only video { opacity:.02; }
+
     .overlay { position:absolute; inset:0; z-index:20; pointer-events:none; transition:opacity .5s ease; }
     .overlay.hidden { opacity:0; pointer-events:none; }
     .controls { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(0,0,0,.92)); padding:28px 14px; pointer-events:all; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
@@ -51,14 +64,16 @@
     .btn:active { transform:scale(.96); }
     .btn.danger { background:#D52B1E; }
     .btn.reload { background:#333; }
+
     #status { font-size:13px; color:#888; text-align:center; padding:8px 0 0; flex-shrink:0; }
     .dot { display:inline-block; width:8px; height:8px; background:#D52B1E; border-radius:50%; margin-right:6px; animation:pulse 1.2s infinite; vertical-align:middle; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.25} }
   </style>
 </head>
 <body>
 
 <div id="hub-screen">
-  <div class="hub-logo">РОССИЯ <span>ТВ</span></div>
+  <div class="hub-logo"><span class="white">РОС</span><span class="red">СИ</span><span class="blue">Я</span> <span class="white">ТВ</span></div>
   <div class="hub-sub">Прямой эфир — Бесплатно — 24/7</div>
   <div class="channels-grid" id="channels-grid"></div>
 </div>
@@ -66,11 +81,11 @@
 <div id="player-screen">
   <div class="player-header">
     <button class="back-btn" id="back-btn">← Каналы</button>
-    <span class="ch-title-bar" id="ch-title">Россия 1</span>
+    <span class="ch-title-bar" id="ch-title"></span>
     <span class="live-badge-top" id="live-badge-top">LIVE</span>
   </div>
   <div id="video-container">
-    <div class="live-badge" id="live-badge"><span class="dot"></span> LIVE</div>
+    <div class="live-badge" id="live-badge"><span class="dot"></span> ПРЯМОЙ ЭФИР</div>
     <div id="audio-badge"><div class="pill">🎧 Аудио режим</div></div>
     <video id="video" autoplay playsinline webkit-playsinline airplay="allow" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;"></video>
     <div class="overlay" id="overlay">
@@ -90,6 +105,7 @@
 <script>
 const tg = window.Telegram?.WebApp;
 
+// ── Safe area ──────────────────────────────────────────────────────────────
 function updateSafeArea() {
   const tgTop = tg?.contentSafeAreaInsets?.top || tg?.safeAreaInsets?.top || 0;
   const top = tgTop > 0 ? tgTop : (document.fullscreenElement || tg?.isFullscreen ? 32 : 0);
@@ -106,183 +122,259 @@ if (tg) {
   setTimeout(updateSafeArea, 500);
 }
 
-const CHANNELS = [
-  { id:"rossiya1", name:"Россия 1", desc:"Прямой эфир", icon:"Р", iconBg:"#003893", logo:"rossiya1.jpg",
-    stream:"https://rossiya1-worker.dyaltd.workers.dev/stream",
-    proxy:"https://rossiya1-worker.dyaltd.workers.dev/proxy?url=" },
-  { id:"perviy", name:"Первый Канал", desc:"Прямой эфир из-за рубежа", icon:"1", iconBg:"#D52B1E",
-    stream:"https://russia-tv-proxy.vercel.app/api/stream",
-    proxy:"https://russia-tv-proxy.vercel.app/api/proxy?url=" },
+// ── Определение платформы ──────────────────────────────────────────────────
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    || window.Telegram?.WebApp?.platform === 'ios';
+}
+function isAndroid() { return /Android/i.test(navigator.userAgent); }
+
+// ── Каналы ────────────────────────────────────────────────────────────────
+const PROXY = 'https://russia-worker.dyaltd.workers.dev';
+
+const CHANNEL_GROUPS = [
+  {
+    label: '📡 Новости и общие',
+    channels: [
+      { id:'rossiya1',   name:'Россия 1',      desc:'Главный федеральный канал',   icon:'Р1',   color:'#D52B1E', iconBg:'#1a0808', stream: 'https://rossiya1-worker.dyaltd.workers.dev/stream' },
+      { id:'pervyi',     name:'Первый Канал',   desc:'Новости и развлечения',       icon:'1',    color:'#c0392b', iconBg:'#1a0808', stream: PROXY+'/stream?channel=pervyi' },
+      { id:'ntv',        name:'НТВ',            desc:'Новости и кино 24/7',         icon:'НТВ',  color:'#2980b9', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv' },
+      { id:'rossiya24',  name:'Россия 24',      desc:'Новости круглосуточно',       icon:'Р24',  color:'#1565c0', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=rossiya24' },
+      { id:'pyatyy',     name:'Пятый канал',    desc:'Новости и публицистика',      icon:'5',    color:'#1976d2', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=pyatyy' },
+      { id:'otr',        name:'ОТР',            desc:'Общественное телевидение',    icon:'ОТР',  color:'#00695c', iconBg:'#0a1512', stream: PROXY+'/stream?channel=otr' },
+      { id:'rentv',      name:'РЕН ТВ',         desc:'Новости и документальные',    icon:'РЕН',  color:'#e53935', iconBg:'#1a0a0a', stream: PROXY+'/stream?channel=rentv' },
+      { id:'tvc',        name:'ТВЦ',            desc:'Московская телевизия',        icon:'ТВЦ',  color:'#37474f', iconBg:'#0a0f12', stream: PROXY+'/stream?channel=tvc' },
+      { id:'mir',        name:'МИР',            desc:'СНГ — межгосударственное ТВ', icon:'МИР',  color:'#0288d1', iconBg:'#0a1018', stream: PROXY+'/stream?channel=mir' },
+      { id:'zvezda',     name:'Звезда',         desc:'Патриотическое телевидение',  icon:'★',    color:'#c62828', iconBg:'#180808', stream: PROXY+'/stream?channel=zvezda' },
+    ]
+  },
+  {
+    label: '⚽ Спорт',
+    channels: [
+      { id:'matchtv',    name:'Матч ТВ',        desc:'Спорт 24/7',                  icon:'МТВ',  color:'#2e7d32', iconBg:'#0a140a', stream: PROXY+'/stream?channel=matchtv' },
+      { id:'matchprem',  name:'Матч Премьер',   desc:'Футбол премьер-лига',         icon:'МП',   color:'#388e3c', iconBg:'#0a140a', stream: PROXY+'/stream?channel=matchprem' },
+      { id:'matchfut1',  name:'Матч Футбол 1',  desc:'Футбол прямые трансляции',    icon:'МФ1',  color:'#43a047', iconBg:'#0a1a0a', stream: PROXY+'/stream?channel=matchfut1' },
+      { id:'matchfut2',  name:'Матч Футбол 2',  desc:'Футбол прямые трансляции',    icon:'МФ2',  color:'#558b2f', iconBg:'#0a1a0a', stream: PROXY+'/stream?channel=matchfut2' },
+      { id:'matchfut3',  name:'Матч Футбол 3',  desc:'Футбол прямые трансляции',    icon:'МФ3',  color:'#689f38', iconBg:'#0a1a0a', stream: PROXY+'/stream?channel=matchfut3' },
+    ]
+  },
+  {
+    label: '🎬 Развлечения и кино',
+    channels: [
+      { id:'tnt',        name:'ТНТ',            desc:'Комедии и развлечения',       icon:'ТНТ',  color:'#f57f17', iconBg:'#1a1200', stream: PROXY+'/stream?channel=tnt' },
+      { id:'sts',        name:'СТС',            desc:'Сериалы и кино',              icon:'СТС',  color:'#e67e22', iconBg:'#1a1000', stream: PROXY+'/stream?channel=sts' },
+      { id:'pyatnitsa',  name:'Пятница',        desc:'Лайфстайл и реалити',         icon:'ПТН',  color:'#d4ac0d', iconBg:'#1a1500', stream: PROXY+'/stream?channel=pyatnitsa' },
+      { id:'domashniy',  name:'Домашний',       desc:'Для всей семьи',              icon:'ДОМ',  color:'#ab47bc', iconBg:'#150a18', stream: PROXY+'/stream?channel=domashniy' },
+      { id:'tv3',        name:'ТВ-3',           desc:'Мистика и фантастика',        icon:'ТВ3',  color:'#7b1fa2', iconBg:'#150a1a', stream: PROXY+'/stream?channel=tv3' },
+      { id:'yu',         name:'Ю',              desc:'Для женщин и семьи',          icon:'Ю',    color:'#e91e63', iconBg:'#1a0a10', stream: PROXY+'/stream?channel=yu' },
+      { id:'tnt4',       name:'ТНТ4',           desc:'Сериалы и шоу',              icon:'ТНТ4', color:'#fb8c00', iconBg:'#1a1000', stream: PROXY+'/stream?channel=tnt4' },
+      { id:'2x2',        name:'2×2',            desc:'Анимация и юмор',             icon:'2×2',  color:'#43a047', iconBg:'#0a1a0a', stream: PROXY+'/stream?channel=2x2' },
+      { id:'che',        name:'ЧЕ',             desc:'Развлечения и кино',          icon:'ЧЕ',   color:'#8d6e63', iconBg:'#150f0a', stream: PROXY+'/stream?channel=che' },
+    ]
+  },
+  {
+    label: '👶 Детские',
+    channels: [
+      { id:'karusel',    name:'Карусель',       desc:'Для малышей и детей',         icon:'КАР',  color:'#ff6f00', iconBg:'#1a1200', stream: PROXY+'/stream?channel=karusel' },
+      { id:'mult',       name:'Мульт',          desc:'Мультфильмы 24/7',            icon:'МЛТ',  color:'#ff8f00', iconBg:'#1a1400', stream: PROXY+'/stream?channel=mult' },
+      { id:'multfilm',   name:'Мультфильм',     desc:'Советская и мировая анимация',icon:'МФ',   color:'#ffa000', iconBg:'#1a1500', stream: PROXY+'/stream?channel=multfilm' },
+      { id:'disneykids', name:'Disney Channel', desc:'Disney для детей',            icon:'DIS',  color:'#1976d2', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=disneykids' },
+      { id:'nick',       name:'Nickelodeon',    desc:'Мультики и шоу',              icon:'NIK',  color:'#7cb342', iconBg:'#0a1a0a', stream: PROXY+'/stream?channel=nick' },
+    ]
+  },
+  {
+    label: '🎵 Музыка',
+    channels: [
+      { id:'muztv',      name:'МУЗ-ТВ',         desc:'Хиты и клипы',               icon:'МУЗ',  color:'#e91e63', iconBg:'#1a0a10', stream: PROXY+'/stream?channel=muztv' },
+      { id:'rutv',       name:'RU.TV',           desc:'Русская музыка 24/7',        icon:'RU',   color:'#c2185b', iconBg:'#180a12', stream: PROXY+'/stream?channel=rutv' },
+      { id:'bridge',     name:'Bridge TV',      desc:'Современные хиты',            icon:'BRG',  color:'#ab47bc', iconBg:'#150a18', stream: PROXY+'/stream?channel=bridge' },
+    ]
+  },
 ];
 
+// ── Переводы ────────────────────────────────────────────────────────────────
 const T = {
-  ru:{ loading:"Получаем поток...", connecting:"Подключение...", live:"ПРЯМОЙ ЭФИР", pressPlay:"Нажмите ▶", errorStream:"Ошибка — переподключаемся...", errorUrl:"Не удалось получить URL", errorServer:"Ошибка сервера", reconnect:"🔄 Переподключиться", unmute:"🔊 Включить звук", mute:"🔇 Выключить звук", fullscreen:"🔳 Полный экран", exitFs:"✕ Выйти", audioMode:"🎧 Только звук", videoMode:"🎥 Видео" },
-  bg:{ loading:"Зареждаме...", connecting:"Свързване...", live:"НА ЖИВО", pressPlay:"Натиснете ▶", errorStream:"Грешка...", errorUrl:"Неуспешно", errorServer:"Грешка", reconnect:"🔄 Свържи", unmute:"🔊 Звук", fullscreen:"🔳 Екран", exitFs:"✕", audioMode:"🎧 Аудио", videoMode:"🎥 Видео" },
-  en:{ loading:"Loading...", connecting:"Connecting...", live:"LIVE", pressPlay:"Press ▶", errorStream:"Error — reconnecting...", errorUrl:"Failed to get URL", errorServer:"Server error", reconnect:"🔄 Reconnect", unmute:"🔊 Unmute", fullscreen:"🔳 Fullscreen", exitFs:"✕ Exit", audioMode:"🎧 Audio only", videoMode:"🎥 Video" },
-  de:{ loading:"Laden...", connecting:"Verbinden...", live:"LIVE", pressPlay:"▶ drücken", errorStream:"Fehler...", errorUrl:"Fehler", errorServer:"Serverfehler", reconnect:"🔄 Neu", unmute:"🔊 Ton", fullscreen:"🔳 Vollbild", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Video" },
-  fr:{ loading:"Chargement...", connecting:"Connexion...", live:"EN DIRECT", pressPlay:"▶", errorStream:"Erreur...", errorUrl:"Erreur URL", errorServer:"Erreur", reconnect:"🔄 Reconnecter", unmute:"🔊 Son", fullscreen:"🔳 Plein écran", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Vidéo" },
-  es:{ loading:"Cargando...", connecting:"Conectando...", live:"EN VIVO", pressPlay:"▶", errorStream:"Error...", errorUrl:"Error", errorServer:"Error", reconnect:"🔄 Reconectar", unmute:"🔊 Sonido", fullscreen:"🔳 Pantalla", exitFs:"✕", audioMode:"🎧 Audio", videoMode:"🎥 Video" },
-  uk:{ loading:"Отримуємо...", connecting:"Підключення...", live:"ПРЯМИЙ ЕФІР", pressPlay:"Натисніть ▶", errorStream:"Помилка...", errorUrl:"Помилка URL", errorServer:"Помилка", reconnect:"🔄 Повторити", unmute:"🔊 Звук", fullscreen:"🔳 Екран", exitFs:"✕", audioMode:"🎧 Аудіо", videoMode:"🎥 Відео" },
-  tr:{ loading:"Yükleniyor...", connecting:"Bağlanıyor...", live:"CANLI", pressPlay:"▶", errorStream:"Hata...", errorUrl:"Hata", errorServer:"Hata", reconnect:"🔄 Bağlan", unmute:"🔊 Ses", fullscreen:"🔳 Tam ekran", exitFs:"✕", audioMode:"🎧 Ses", videoMode:"🎥 Video" },
+  ru:{ loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео' },
+  en:{ loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video' },
+  bg:{ loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео' },
+  uk:{ loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео' },
+  de:{ loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video' },
+  fr:{ loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo' },
+  es:{ loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video' },
+  tr:{ loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video' },
 };
-
 function getLang() {
-  try { const s=tg?.initDataUnsafe?.user?.language_code?.split("-")[0].toLowerCase(); if(s&&T[s]) return s; } catch(e) {}
-  const b=(navigator.language||"en").split("-")[0].toLowerCase(); return T[b]?b:"en";
+  try { const s=tg?.initDataUnsafe?.user?.language_code?.split('-')[0].toLowerCase(); if(s&&T[s]) return s; } catch(e) {}
+  const b=(navigator.language||'en').split('-')[0].toLowerCase(); return T[b]?b:'ru';
 }
 const t = T[getLang()];
 
-function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)||(window.Telegram?.WebApp?.platform==="ios"); }
-function isAndroid() { return /Android/i.test(navigator.userAgent); }
+// ── DOM ────────────────────────────────────────────────────────────────────
+const hubScreen     = document.getElementById('hub-screen');
+const playerScreen  = document.getElementById('player-screen');
+const channelsGrid  = document.getElementById('channels-grid');
+const backBtn       = document.getElementById('back-btn');
+const chTitle       = document.getElementById('ch-title');
+const liveBadgeTop  = document.getElementById('live-badge-top');
+const video         = document.getElementById('video');
+const container     = document.getElementById('video-container');
+const overlay       = document.getElementById('overlay');
+const statusEl      = document.getElementById('status');
+const liveBadge     = document.getElementById('live-badge');
+const reloadBtn     = document.getElementById('reload-btn');
+const unmuteBtn     = document.getElementById('unmute-btn');
+const modeBtn       = document.getElementById('mode-btn');
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+const pipBtn        = document.getElementById('pip-btn');
 
-const hubScreen=document.getElementById("hub-screen"),playerScreen=document.getElementById("player-screen");
-const channelsGrid=document.getElementById("channels-grid"),backBtn=document.getElementById("back-btn");
-const chTitle=document.getElementById("ch-title"),liveBadgeTop=document.getElementById("live-badge-top");
+let currentCh=null, hls=null, hlsAudio=null, hideTimeout=null, tokenRefreshTimer=null;
+let userPaused=false, audioOnly=false, userUnmuted=false, isExpanded=false, wakeLockSentinel=null;
 
-let currentCh=null,hls=null,hlsAudio=null,hideTimeout=null;
-let userPaused=false,audioOnly=false,userUnmuted=false,isExpanded=false,wakeLockSentinel=null;
+reloadBtn.textContent     = t.reconnect;
+unmuteBtn.textContent     = t.unmute;
+modeBtn.textContent       = t.audioMode;
+fullscreenBtn.textContent = t.fullscreen;
 
-const video=document.getElementById("video"),container=document.getElementById("video-container");
-const overlay=document.getElementById("overlay"),statusEl=document.getElementById("status");
-const liveBadge=document.getElementById("live-badge"),reloadBtn=document.getElementById("reload-btn");
-const unmuteBtn=document.getElementById("unmute-btn"),modeBtn=document.getElementById("mode-btn");
-const fullscreenBtn=document.getElementById("fullscreen-btn"),pipBtn=document.getElementById("pip-btn");
-
-reloadBtn.textContent=t.reconnect; unmuteBtn.textContent=t.unmute;
-modeBtn.textContent=t.audioMode; fullscreenBtn.textContent=t.fullscreen;
-
-function setStatus(key,isError) {
-  const msg=t[key]||key;
-  statusEl.innerHTML=isError?"⚠️ "+msg:"<span class=\"dot\"></span>"+msg;
-  reloadBtn.style.display=isError?"block":"none";
+// ── Утилиты ────────────────────────────────────────────────────────────────
+function setStatus(key, isError) {
+  const msg = t[key] || key;
+  statusEl.innerHTML = isError ? '⚠️ '+msg : '<span class="dot"></span>'+msg;
+  reloadBtn.style.display = isError ? 'block' : 'none';
 }
-function enforceMute() { if(!userUnmuted) video.muted=true; }
+function enforceMute() { if (!userUnmuted) video.muted = true; }
 function setAudioMode(on) {
-  audioOnly=!!on; document.body.classList.toggle("audio-only",audioOnly);
-  modeBtn.textContent=audioOnly?t.videoMode:t.audioMode;
-  if(audioOnly){overlay.classList.remove("hidden");if(hideTimeout)clearTimeout(hideTimeout);}
+  audioOnly = !!on;
+  document.body.classList.toggle('audio-only', audioOnly);
+  modeBtn.textContent = audioOnly ? t.videoMode : t.audioMode;
+  if (audioOnly) { overlay.classList.remove('hidden'); if (hideTimeout) clearTimeout(hideTimeout); }
 }
 function showUI() {
-  overlay.classList.remove("hidden");
-  if(hideTimeout) clearTimeout(hideTimeout);
-  if(isExpanded&&!audioOnly) hideTimeout=setTimeout(()=>overlay.classList.add("hidden"),4000);
+  overlay.classList.remove('hidden');
+  if (hideTimeout) clearTimeout(hideTimeout);
+  if (isExpanded && !audioOnly) hideTimeout = setTimeout(() => overlay.classList.add('hidden'), 4000);
 }
 
-// Fullscreen
+// ── Fullscreen ─────────────────────────────────────────────────────────────
 function enterFs() {
-  if(video.webkitEnterFullscreen && isIOS()) { video.webkitEnterFullscreen(); isExpanded=true; fullscreenBtn.textContent=t.exitFs; return; }
-  try { if(tg?.requestFullscreen) tg.requestFullscreen(); } catch(e) {}
-  if(container.requestFullscreen) {
+  if (video.webkitEnterFullscreen && isIOS()) {
+    video.webkitEnterFullscreen();
+    isExpanded = true; fullscreenBtn.textContent = t.exitFs; return;
+  }
+  try { if (tg?.requestFullscreen) tg.requestFullscreen(); } catch(e) {}
+  if (container.requestFullscreen) {
     container.requestFullscreen()
-      .then(()=>{ container.classList.remove("css-fs"); document.body.style.overflow=""; })
-      .catch(()=>{ container.classList.add("css-fs"); document.body.style.overflow="hidden"; });
-  } else if(container.webkitRequestFullscreen) {
+      .then(() => { container.classList.remove('css-fs'); document.body.style.overflow=''; })
+      .catch(() => { container.classList.add('css-fs'); document.body.style.overflow='hidden'; });
+  } else if (container.webkitRequestFullscreen) {
     container.webkitRequestFullscreen();
   } else {
-    container.classList.add("css-fs"); document.body.style.overflow="hidden";
+    container.classList.add('css-fs'); document.body.style.overflow='hidden';
   }
-  isExpanded=true; fullscreenBtn.textContent=t.exitFs;
+  isExpanded = true; fullscreenBtn.textContent = t.exitFs;
 }
 function exitFs() {
   try { if(document.exitFullscreen) document.exitFullscreen(); else if(document.webkitExitFullscreen) document.webkitExitFullscreen(); } catch(e) {}
-  container.classList.remove("css-fs"); document.body.style.overflow="";
-  isExpanded=false; fullscreenBtn.textContent=t.fullscreen;
-  overlay.classList.remove("hidden"); if(hideTimeout){clearTimeout(hideTimeout);hideTimeout=null;}
+  container.classList.remove('css-fs'); document.body.style.overflow='';
+  isExpanded = false; fullscreenBtn.textContent = t.fullscreen;
+  overlay.classList.remove('hidden');
+  if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout=null; }
 }
-fullscreenBtn.onclick=()=>isExpanded?exitFs():enterFs();
+fullscreenBtn.onclick = () => isExpanded ? exitFs() : enterFs();
+
 function onFsChange() {
-  const fsEl=document.fullscreenElement||document.webkitFullscreenElement;
-  if(fsEl) { isExpanded=true; fullscreenBtn.textContent=t.exitFs; overlay.classList.remove("hidden"); if(hideTimeout)clearTimeout(hideTimeout); hideTimeout=setTimeout(()=>overlay.classList.add("hidden"),3000); video.style.objectFit=window.innerWidth>window.innerHeight?"cover":"contain"; }
-  else { isExpanded=false; fullscreenBtn.textContent=t.fullscreen; overlay.classList.remove("hidden"); if(hideTimeout){clearTimeout(hideTimeout);hideTimeout=null;} video.style.objectFit="contain"; if(!userUnmuted) video.muted=true; }
+  const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+  if (fsEl) {
+    isExpanded = true; fullscreenBtn.textContent = t.exitFs;
+    overlay.classList.remove('hidden');
+    if (hideTimeout) clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => overlay.classList.add('hidden'), 3000);
+    video.style.objectFit = window.innerWidth > window.innerHeight ? 'cover' : 'contain';
+  } else {
+    isExpanded = false; fullscreenBtn.textContent = t.fullscreen;
+    overlay.classList.remove('hidden');
+    if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout=null; }
+    video.style.objectFit = 'contain';
+    if (!userUnmuted) video.muted = true;
+  }
 }
-document.addEventListener("fullscreenchange",onFsChange);
-document.addEventListener("webkitfullscreenchange",onFsChange);
-video.addEventListener("webkitendfullscreen", async () => {
-  isExpanded = false;
-  fullscreenBtn.textContent = t.fullscreen;
-  overlay.classList.remove("hidden");
-  setTimeout(() => {
-    if (currentCh) { stopStream(); init(); }
-  }, 300);
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+
+video.addEventListener('webkitendfullscreen', async () => {
+  isExpanded = false; fullscreenBtn.textContent = t.fullscreen;
+  overlay.classList.remove('hidden');
+  setTimeout(() => { if (currentCh) { stopStream(); init(); } }, 300);
 });
 
-// Gestures
-let lastTap=0;
-container.addEventListener("pointerup",e=>{ if(e.target.closest("button")) return; const now=Date.now(); if(now-lastTap<280){isExpanded?exitFs():enterFs();lastTap=0;return;} lastTap=now; setTimeout(()=>{if(Date.now()-lastTap>=270)showUI();},290); });
-container.addEventListener("pointermove",()=>{if(isExpanded)showUI();});
-container.addEventListener("touchstart",()=>{if(isExpanded)showUI();},{passive:true});
+// ── Жесты ──────────────────────────────────────────────────────────────────
+let lastTap = 0;
+container.addEventListener('pointerup', e => {
+  if (e.target.closest('button')) return;
+  const now = Date.now();
+  if (now-lastTap < 280) { isExpanded ? exitFs() : enterFs(); lastTap=0; return; }
+  lastTap = now;
+  setTimeout(() => { if (Date.now()-lastTap >= 270) showUI(); }, 290);
+});
+container.addEventListener('pointermove', () => { if (isExpanded) showUI(); });
+container.addEventListener('touchstart', () => { if (isExpanded) showUI(); }, { passive:true });
 
-// PiP
-
-if (!isIOS() && !isAndroid()) { pipBtn.style.cssText = ''; pipBtn.style.display = 'block'; }
+// ── PiP (только PC) ────────────────────────────────────────────────────────
+if (!isIOS() && !isAndroid()) pipBtn.style.display = 'block';
 pipBtn.textContent = '🎥 PiP';
 pipBtn.onclick = async () => {
   try {
-    if (document.pictureInPictureElement) {
-      await document.exitPictureInPicture();
-      pipBtn.textContent = '🎥 PiP';
-    } else if (!isIOS() && video.requestPictureInPicture) {
-      await video.requestPictureInPicture();
-      pipBtn.textContent = '✕ PiP';
-    } else if (video.webkitSetPresentationMode) {
-      userUnmuted = true;
-      video.muted = false;
-      video.volume = 1;
-      await new Promise(r => setTimeout(r, 500));
-      video.webkitSetPresentationMode('picture-in-picture');
-      pipBtn.textContent = '✕ PiP';
-    }
-  } catch(e) { console.log('PiP:', e); }
+    if (document.pictureInPictureElement) { await document.exitPictureInPicture(); pipBtn.textContent='🎥 PiP'; }
+    else if (!isIOS() && video.requestPictureInPicture) { await video.requestPictureInPicture(); pipBtn.textContent='✕ PiP'; }
+  } catch(e) {}
 };
-video.addEventListener('enterpictureinpicture', () => { pipBtn.textContent = '✕ PiP'; });
 video.addEventListener('leavepictureinpicture', async () => {
-  pipBtn.textContent = '🎥 PiP';
-  userUnmuted = false;
-  video.muted = true;
-  if (video.paused) { try { await video.play(); } catch(e){} }
+  pipBtn.textContent='🎥 PiP'; userUnmuted=false; video.muted=true;
+  if (video.paused) { try { await video.play(); } catch(e) {} }
 });
 
-// Wake Lock
-async function requestWakeLock() { try{if(!isIOS()&&"wakeLock"in navigator&&!wakeLockSentinel)wakeLockSentinel=await navigator.wakeLock.request("screen");}catch(e){} }
-
-// Media Session
-function setupMediaSession() {
-  if(!("mediaSession"in navigator)) return;
-  const name=currentCh?currentCh.name:"Россия ТВ";
-  navigator.mediaSession.metadata=new MediaMetadata({title:name,artist:"Live 🔴",album:"Россия ТВ"});
-  navigator.mediaSession.playbackState="playing";
-  navigator.mediaSession.setActionHandler("play",async()=>{try{await video.play();}catch(e){}});
-  navigator.mediaSession.setActionHandler("pause",()=>{video.pause();});
+// ── Wake Lock ───────────────────────────────────────────────────────────────
+async function requestWakeLock() {
+  try { if (!isIOS() && 'wakeLock' in navigator && !wakeLockSentinel) wakeLockSentinel=await navigator.wakeLock.request('screen'); } catch(e) {}
 }
 
-// Background playback
-let pauseByUser=false;
-video.addEventListener("mousedown",()=>{pauseByUser=true;});
-video.addEventListener("touchstart",()=>{pauseByUser=true;},{passive:true});
-video.addEventListener("pause",()=>{ if(isIOS()||(isAndroid()&&pauseByUser)) userPaused=true; pauseByUser=false; });
-video.addEventListener("play",()=>{
-  if(!userUnmuted) video.muted=true;
+// ── Media Session ───────────────────────────────────────────────────────────
+function setupMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  const name = currentCh ? currentCh.name : 'Россия ТВ';
+  navigator.mediaSession.metadata = new MediaMetadata({ title:name, artist:'Прямой эфир 🔴', album:'Россия ТВ Live' });
+  navigator.mediaSession.playbackState = 'playing';
+  navigator.mediaSession.setActionHandler('play', async () => { try { await video.play(); } catch(e) {} });
+  navigator.mediaSession.setActionHandler('pause', () => { video.pause(); });
+}
+
+// ── Фоновое воспроизведение ─────────────────────────────────────────────────
+let pauseByUser = false;
+video.addEventListener('mousedown', () => { pauseByUser=true; });
+video.addEventListener('touchstart', () => { pauseByUser=true; }, { passive:true });
+video.addEventListener('pause', () => {
+  if (isIOS() || (isAndroid() && pauseByUser)) userPaused=true;
+  pauseByUser=false;
+});
+video.addEventListener('play', () => {
+  if (!userUnmuted) video.muted=true;
   userPaused=false;
-  if(isAndroid()){ const a=document.getElementById("audio-bg"); if(a) a.muted=true; }
+  if (isAndroid()) { const a=document.getElementById('audio-bg'); if(a) a.muted=true; }
 });
 document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'hidden') {
+  if (document.visibilityState==='hidden') {
     if (isIOS() || userPaused) return;
     setTimeout(async () => {
       if (video.paused) { try { await video.play(); } catch(e) {} }
-      const a = document.getElementById('audio-bg');
-      if (isAndroid() && a) { a.muted = false; if (a.paused) { try { await a.play(); } catch(e) {} } video.muted = true; }
+      const a=document.getElementById('audio-bg');
+      if (isAndroid() && a) { a.muted=false; if(a.paused){try{await a.play();}catch(e){}} video.muted=true; }
     }, 300);
   } else {
     enforceMute();
-    if (isAndroid()) { const a = document.getElementById('audio-bg'); if (a) a.muted = true; }
+    if (isAndroid()) { const a=document.getElementById('audio-bg'); if(a) a.muted=true; }
     if (!userPaused && video.paused) {
-      try {
-        await video.play();
-      } catch(e) {
-        if (currentCh) { stopStream(); init(); }
-      }
-    } else if (!userPaused && video.readyState < 2) {
+      try { await video.play(); } catch(e) { if(currentCh){stopStream();init();} }
+    } else if (!userPaused && video.readyState<2) {
       if (currentCh) { stopStream(); init(); }
     }
   }
@@ -291,72 +383,144 @@ window.addEventListener('pageshow', async () => {
   if (!userPaused && video.paused) { try { await video.play(); } catch(e) {} }
 });
 
-// Stream
+// ── Поток ──────────────────────────────────────────────────────────────────
 function stopStream() {
-  if(hls){hls.destroy();hls=null;} if(hlsAudio){hlsAudio.destroy();hlsAudio=null;}
-  video.src=""; liveBadge.style.display="none"; liveBadgeTop.style.display="none";
-  if(wakeLockSentinel){wakeLockSentinel.release().catch(()=>{});wakeLockSentinel=null;}
+  if (hls) { hls.destroy(); hls=null; }
+  if (hlsAudio) { hlsAudio.destroy(); hlsAudio=null; }
+  if (tokenRefreshTimer) { clearInterval(tokenRefreshTimer); tokenRefreshTimer=null; }
+  video.src=''; liveBadge.style.display='none'; liveBadgeTop.style.display='none';
+  if (wakeLockSentinel) { wakeLockSentinel.release().catch(()=>{}); wakeLockSentinel=null; }
 }
+
 function loadStream(url) {
-  if(!currentCh) return;
+  if (!currentCh) return;
   userUnmuted=false;
-  const proxied=currentCh.proxy+encodeURIComponent(url);
-  stopStream(); setStatus("connecting"); unmuteBtn.style.display="none";
+  const streamUrl = url;
+  stopStream(); setStatus('connecting'); unmuteBtn.style.display='none';
+
   if (isAndroid()) {
     const audioBg = document.getElementById('audio-bg');
     if (audioBg && Hls.isSupported()) {
-      hlsAudio = new Hls({ liveSyncDurationCount: 3, enableWorker: true });
-      hlsAudio.loadSource(proxied);
-      hlsAudio.attachMedia(audioBg);
-      hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => { audioBg.muted = true; audioBg.play().catch(() => {}); });
+      hlsAudio = new Hls({ liveSyncDurationCount:3, enableWorker:true });
+      hlsAudio.loadSource(streamUrl); hlsAudio.attachMedia(audioBg);
+      hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => { audioBg.muted=true; audioBg.play().catch(()=>{}); });
     }
   }
+
   video.muted=true;
-  if(Hls.isSupported()) {
-    hls=new Hls({liveSyncDurationCount:3,lowLatencyMode:true,enableWorker:true,backBufferLength:30});
-    hls.loadSource(proxied); hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED,async()=>{ setStatus("live"); liveBadge.style.display="flex"; liveBadgeTop.style.display="inline"; try{if(!userUnmuted)video.muted=true; await video.play(); unmuteBtn.style.display=audioOnly?"none":"block";  setupMediaSession(); if(!isIOS())requestWakeLock();}catch(e){setStatus("pressPlay");} });
-    hls.on(Hls.Events.ERROR,(e,data)=>{ if(!data.fatal)return; if(data.type===Hls.ErrorTypes.NETWORK_ERROR){try{hls.startLoad();}catch(err){}return;} if(data.type===Hls.ErrorTypes.MEDIA_ERROR){try{hls.recoverMediaError();}catch(err){}return;} setStatus("errorStream",true); setTimeout(()=>init(),5000); });
-  } else if(video.canPlayType("application/vnd.apple.mpegurl")) {
-    video.src=proxied; setStatus("live"); liveBadge.style.display="flex"; liveBadgeTop.style.display="inline";
-    video.play().then(()=>{unmuteBtn.style.display=audioOnly?"none":"block";setupMediaSession();if(!isIOS())requestWakeLock();}).catch(()=>setStatus("pressPlay"));
+  if (Hls.isSupported()) {
+    hls = new Hls({ liveSyncDurationCount:3, lowLatencyMode:true, enableWorker:true, backBufferLength:30 });
+    hls.loadSource(streamUrl); hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+      setStatus('live'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
+      try {
+        if (!userUnmuted) video.muted=true;
+        await video.play();
+        unmuteBtn.style.display = audioOnly ? 'none' : 'block';
+        setupMediaSession();
+        if (!isIOS()) requestWakeLock();
+      } catch(e) { setStatus('pressPlay'); }
+    });
+    hls.on(Hls.Events.ERROR, (e, data) => {
+      if (!data.fatal) return;
+      if (data.type===Hls.ErrorTypes.NETWORK_ERROR) { try{hls.startLoad();}catch(err){} return; }
+      if (data.type===Hls.ErrorTypes.MEDIA_ERROR)   { try{hls.recoverMediaError();}catch(err){} return; }
+      setStatus('errorStream', true); setTimeout(() => init(), 5000);
+    });
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src=streamUrl; setStatus('live'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
+    video.play()
+      .then(() => { unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock(); })
+      .catch(() => setStatus('pressPlay'));
   }
-}
-async function init() {
-  if(!currentCh) return;
-  setStatus("loading"); reloadBtn.style.display="none"; unmuteBtn.style.display="none";
-  try { const r=await fetch(currentCh.stream+"?t="+Date.now(),{cache:"no-store"}); const d=await r.json(); if(d.url)loadStream(d.url); else setStatus("errorUrl",true); } catch(e){setStatus("errorServer",true);}
+
+  // Авторефреш токена каждые 20 минут
+  tokenRefreshTimer = setInterval(async () => {
+    if (!currentCh) return;
+    try {
+      const r = await fetch(currentCh.stream + (currentCh.stream.includes('?')?'&':'?') + 't=' + Date.now(), { cache:'no-store' });
+      const d = await r.json();
+      if (d.url) {
+        if (hls) hls.loadSource(d.url);
+        if (hlsAudio) hlsAudio.loadSource(d.url);
+      }
+    } catch(e) {}
+  }, 20 * 60 * 1000);
 }
 
-reloadBtn.onclick=()=>{userPaused=false;init();};
-unmuteBtn.onclick=()=>{
-  const ab=document.getElementById('audio-bg');
-  if(video.muted){
-    video.muted=false; video.volume=1; userUnmuted=true; unmuteBtn.textContent="🔇 "+t.mute;
-    if(ab){ ab.muted=true; ab.pause(); }
+async function init() {
+  if (!currentCh) return;
+  setStatus('loading'); reloadBtn.style.display='none'; unmuteBtn.style.display='none';
+  try {
+    const sep = currentCh.stream.includes('?') ? '&' : '?';
+    const r = await fetch(currentCh.stream + sep + 't=' + Date.now(), { cache:'no-store' });
+    const d = await r.json();
+    if (d.url) loadStream(d.url); else setStatus('errorUrl', true);
+  } catch(e) { setStatus('errorServer', true); }
+}
+
+// ── Кнопки ─────────────────────────────────────────────────────────────────
+reloadBtn.onclick = () => { userPaused=false; init(); };
+unmuteBtn.onclick = () => {
+  const ab = document.getElementById('audio-bg');
+  if (video.muted) {
+    video.muted=false; video.volume=1; userUnmuted=true;
+    unmuteBtn.textContent = '🔇 '+t.mute;
+    if (ab) { ab.muted=true; ab.pause(); }
   } else {
-    video.muted=true; userUnmuted=false; unmuteBtn.textContent="🔊 "+t.unmute;
-    if(ab&&isIOS()){ ab.muted=false; ab.volume=0; ab.play().catch(()=>{}); }
+    video.muted=true; userUnmuted=false;
+    unmuteBtn.textContent = '🔊 '+t.unmute;
+    if (ab && isIOS()) { ab.muted=false; ab.volume=0; ab.play().catch(()=>{}); }
   }
 };
-modeBtn.onclick=()=>setAudioMode(!audioOnly);
+modeBtn.onclick = () => setAudioMode(!audioOnly);
 
-// Hub
+// ── Хаб ───────────────────────────────────────────────────────────────────
 function buildHub() {
-  channelsGrid.innerHTML="";
-  CHANNELS.forEach(ch=>{
-    const card=document.createElement("div"); card.className="channel-card";
-    card.innerHTML=`<div class="ch-icon" style="background:${ch.iconBg}">${ch.logo?`<img src="${ch.logo}" alt="${ch.name}">`:`${ch.icon}`}</div><div><div class="ch-name">${ch.name}</div><div class="ch-desc">${ch.desc}</div></div><div class="live-dot"></div>`;
-    card.onclick=()=>openChannel(ch); channelsGrid.appendChild(card);
+  channelsGrid.innerHTML = '';
+  CHANNEL_GROUPS.forEach(group => {
+    const header = document.createElement('div');
+    header.className = 'category-header';
+    header.textContent = group.label;
+    channelsGrid.appendChild(header);
+
+    group.channels.forEach(ch => {
+      const card = document.createElement('div');
+      card.className = 'channel-card';
+      card.style.setProperty('--ch-color', ch.color);
+      card.innerHTML = `
+        <div class="ch-icon" style="background:${ch.iconBg};color:${ch.color}">${ch.icon}</div>
+        <div class="ch-info">
+          <div class="ch-name">${ch.name}</div>
+          <div class="ch-desc">${ch.desc}</div>
+        </div>
+        <div class="live-dot"></div>`;
+      card.onclick = () => openChannel(ch);
+      channelsGrid.appendChild(card);
+    });
   });
 }
+
 function openChannel(ch) {
-  currentCh=ch; hubScreen.style.display="none"; playerScreen.style.display="flex";
-  chTitle.textContent=ch.name; audioOnly=false; document.body.classList.remove("audio-only");
-  modeBtn.textContent=t.audioMode; stopStream(); init();
+  currentCh = ch;
+  hubScreen.style.display = 'none';
+  playerScreen.style.display = 'flex';
+  chTitle.textContent = ch.name;
+  liveBadgeTop.style.background = ch.color;
+  liveBadge.style.background = ch.color;
+  audioOnly = false; document.body.classList.remove('audio-only');
+  modeBtn.textContent = t.audioMode;
+  stopStream(); init();
 }
-function goToHub() { stopStream(); playerScreen.style.display="none"; hubScreen.style.display="flex"; currentCh=null; }
-backBtn.onclick=()=>{ try{ Telegram.WebApp.close(); }catch(e){} };
+
+function goToHub() {
+  stopStream();
+  playerScreen.style.display = 'none';
+  hubScreen.style.display = 'flex';
+  currentCh = null;
+}
+
+backBtn.onclick = () => goToHub();
 
 buildHub();
 </script>
