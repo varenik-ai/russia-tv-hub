@@ -137,7 +137,7 @@ const CHANNEL_GROUPS = [
   {
     label: '📡 Новости и общие',
     channels: [
-      { id:'rossiya1',  name:'Россия 1',    desc:'Главный федеральный канал',   icon:'Р1',  color:'#D52B1E', iconBg:'#1a0808', stream: 'https://rossiya1-worker.dyaltd.workers.dev/stream' },
+      { id:'rossiya1',  name:'Россия 1',    desc:'Главный федеральный канал',   icon:'Р1',  color:'#D52B1E', iconBg:'#1a0808', stream: PROXY+'/stream?channel=rossiya1' },
       { id:'ntv',       name:'НТВ',         desc:'Новости и кино 24/7',         icon:'НТВ', color:'#2980b9', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv' },
       { id:'rossiya24', name:'Россия 24',   desc:'Новости круглосуточно',       icon:'Р24', color:'#1565c0', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=rossiya24' },
       { id:'pyatyy',    name:'Пятый канал', desc:'Новости и публицистика',      icon:'5',   color:'#1976d2', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=pyatyy' },
