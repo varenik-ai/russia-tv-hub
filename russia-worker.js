@@ -2,7 +2,7 @@
 // Деплой: cd ~/russia-worker && cp ~/russia-tv-hub/russia-worker.js src/index.js && npx wrangler deploy
 // Или через Cloudflare Dashboard → Workers → Edit code
 
-const VERSION = '1.4.0';
+const VERSION = '1.5.1';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -15,16 +15,16 @@ const STREAMS = {
   // ── Новости и общие ──────────────────────────────────────
   rossiya1:  'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia1-hd/index.m3u8',
   ntv:       'https://stream8.cinerama.uz/1023/tracks-v1a1/mono.m3u8',
-  rossiya24: 'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia24-sd/index.m3u8',
+  rossiya24: 'https://stream8.cinerama.uz/1021/tracks-v1a1/mono.m3u8',
   pyatyy:    'https://cdn4.skygo.mn/live/disk1/Channel_5/HLSv3-FTA/Channel_5.m3u8',
-  rentv:     'https://cdn4.skygo.mn/live/disk1/RenTV/HLSv3-FTA/RenTV.m3u8',
+  rentv:     'http://zabava-htlive.cdn.ngenix.net/hls/CH_RENTV/variant.m3u8',
   tvc:       'https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8',
   zvezda:    'https://tvchannelstream1.tvzvezda.ru/cdn/tvzvezda/playlist.m3u8',
   mir:       'http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mir24_2500/playlist.m3u8',
   // ── Развлечения ──────────────────────────────────────────
-  sts:       'https://cdn4.skygo.mn/live/disk1/STS/HLSv3-FTA/STS.m3u8',
-  pyatnitsa: 'https://vod.tuva.ru/friday/index.m3u8',
-  tnt4:      'https://cdn4.skygo.mn/live/disk1/TNT4/HLSv3-FTA/TNT4.m3u8',
+  sts:       'https://zabava-htlive.cdn.ngenix.net/hls/CH_STS/variant.m3u8',
+  pyatnitsa: 'http://zabava-htlive.cdn.ngenix.net/hls/CH_PYATNIZZA/variant.m3u8',
+  tnt4:      'https://zabava-htlive.cdn.ngenix.net/hls/CH_TNT4/variant.m3u8',
   kultura:   'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/kultura-hd/index.m3u8',
   soloviev:  'https://stream.smotrim.ru/hls/solovievlive/playlist_6.m3u8',
   // ── Детские ──────────────────────────────────────────────
