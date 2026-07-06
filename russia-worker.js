@@ -2,7 +2,7 @@
 // Деплой: cd ~/russia-worker && cp ~/russia-tv-hub/russia-worker.js src/index.js && npx wrangler deploy
 // Или через Cloudflare Dashboard → Workers → Edit code
 
-const VERSION = '1.9.0';
+const VERSION = '2.0.0';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +13,7 @@ const CORS = {
 // Подтверждённые рабочие потоки без гео-ограничений (проверены через CF Worker debug)
 const STREAMS = {
   // ── Новости ───────────────────────────────────────────────
+  perviy:       'https://bl.rutube.ru/livestream/c58f502c7bb34a8fcdd976b221fca292/index.m3u8?s=dCp9jj0VQ_bvTcOo0ehpaA&e=2083325175&scheme=https',
   rossiya1:     'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia1-hd/index.m3u8',
   ntv:          'https://stream8.cinerama.uz/1023/tracks-v1a1/mono.m3u8',
   ntv_hit:      'http://cdn.ntv.ru/th_hit/tracks-v1a1/mono.m3u8',
