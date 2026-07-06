@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN   = 'REDACTED_LEAKED_BOT_TOKEN';
 const CHANNEL = '@RussiaTV_Hub_Live';
 const APP_URL = 'https://t.me/RussiaTVHub_bot/russiatv';
-const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=9';
+const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=10';
 
 const bot = new TelegramBot(TOKEN, { polling: { interval: 2000, autoStart: true, params: { timeout: 10 } } });
 
