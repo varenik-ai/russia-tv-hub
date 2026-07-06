@@ -139,25 +139,34 @@ const CHANNEL_GROUPS = [
     channels: [
       { id:'rossiya1',  name:'Россия 1',    desc:'Главный федеральный канал',   icon:'Р1',  color:'#D52B1E', iconBg:'#1a0808', stream: PROXY+'/stream?channel=rossiya1' },
       { id:'ntv',       name:'НТВ',         desc:'Новости и кино 24/7',         icon:'НТВ', color:'#2980b9', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv' },
+      { id:'ntv_hit',   name:'НТВ Хит',     desc:'Сериалы и развлечения НТВ',   icon:'НТВ+',color:'#1e88e5', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv_hit' },
       { id:'rossiya24', name:'Россия 24',   desc:'Новости круглосуточно',       icon:'Р24', color:'#1565c0', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=rossiya24' },
       { id:'pyatyy',    name:'Пятый канал', desc:'Новости и публицистика',      icon:'5',   color:'#1976d2', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=pyatyy' },
       { id:'tvc',       name:'ТВЦ',         desc:'Московское телевидение',      icon:'ТВЦ', color:'#37474f', iconBg:'#0a0f12', stream: PROXY+'/stream?channel=tvc' },
       { id:'mir',       name:'МИР',         desc:'СНГ — межгосударственное ТВ', icon:'МИР', color:'#0288d1', iconBg:'#0a1018', stream: PROXY+'/stream?channel=mir' },
       { id:'zvezda',    name:'Звезда',      desc:'Патриотическое телевидение',  icon:'★',   color:'#c62828', iconBg:'#180808', stream: PROXY+'/stream?channel=zvezda' },
-      { id:'rbc',       name:'РБК',         desc:'Деловые новости 24/7',        icon:'РБК', color:'#f44336', iconBg:'#1a0a08', stream: PROXY+'/stream?channel=rbc' },
       { id:'rt',        name:'RT',          desc:'Новости на русском',          icon:'RT',  color:'#b71c1c', iconBg:'#180808', stream: PROXY+'/stream?channel=rt' },
+      { id:'tass',      name:'ТАСС ТВ',     desc:'Новостное агентство ТАСС',    icon:'ТАС', color:'#0d47a1', iconBg:'#080d1a', stream: PROXY+'/stream?channel=tass' },
     ]
   },
   {
     label: '🎬 Развлечения и кино',
     channels: [
       { id:'tnt',       name:'ТНТ',          desc:'Юмор, сериалы и шоу',      icon:'ТНТ',  color:'#ff6d00', iconBg:'#1a1000', stream: PROXY+'/stream?channel=tnt' },
-      { id:'pyatnitsa', name:'Пятница',       desc:'Лайфстайл и реалити',      icon:'ПТН',  color:'#d4ac0d', iconBg:'#1a1500', stream: PROXY+'/stream?channel=pyatnitsa' },
-      { id:'tnt4',      name:'ТНТ4',          desc:'Сериалы и шоу',            icon:'ТНТ4', color:'#fb8c00', iconBg:'#1a1000', stream: PROXY+'/stream?channel=tnt4' },
       { id:'kultura',   name:'Россия К',      desc:'Культура и искусство',     icon:'РК',   color:'#6a1b9a', iconBg:'#140a18', stream: PROXY+'/stream?channel=kultura' },
       { id:'soloviev',  name:'Соловьёв Live', desc:'Политика и аналитика',     icon:'СЛ',   color:'#455a64', iconBg:'#0d1214', stream: PROXY+'/stream?channel=soloviev' },
       { id:'istoriya',  name:'История',       desc:'Документальное кино',      icon:'ИСТ',  color:'#5d4037', iconBg:'#120e0a', stream: PROXY+'/stream?channel=istoriya' },
       { id:'domkino',   name:'Дом Кино',      desc:'Советское и русское кино', icon:'ДК',   color:'#7b1fa2', iconBg:'#130a18', stream: PROXY+'/stream?channel=domkino' },
+    ]
+  },
+  {
+    label: '🎥 Кино',
+    channels: [
+      { id:'kinohit',      name:'Кинохит',      desc:'Лучшие фильмы 24/7',      icon:'КХТ', color:'#e53935', iconBg:'#1a0808', stream: PROXY+'/stream?channel=kinohit' },
+      { id:'retro',        name:'Ретро',         desc:'Советское кино',           icon:'РТР', color:'#8d6e63', iconBg:'#140e0a', stream: PROXY+'/stream?channel=retro' },
+      { id:'kinokomediya', name:'Кинокомедия',   desc:'Комедии 24/7',             icon:'КМД', color:'#f9a825', iconBg:'#1a1400', stream: PROXY+'/stream?channel=kinokomediya' },
+      { id:'kinopremiera', name:'Кинопремьера',  desc:'Новинки кино',             icon:'КПР', color:'#7b1fa2', iconBg:'#130818', stream: PROXY+'/stream?channel=kinopremiera' },
+      { id:'viju',         name:'Viju TV1000',   desc:'Кино и сериалы',           icon:'VJU', color:'#00897b', iconBg:'#081412', stream: PROXY+'/stream?channel=viju' },
     ]
   },
   {
@@ -172,7 +181,6 @@ const CHANNEL_GROUPS = [
     label: '🎵 Музыка',
     channels: [
       { id:'muztv',   name:'МУЗ-ТВ', desc:'Хиты и клипы',         icon:'МУЗ', color:'#e91e63', iconBg:'#1a0a10', stream: PROXY+'/stream?channel=muztv' },
-      { id:'ntv_hit', name:'НТВ Хит', desc:'Лучшие клипы НТВ',    icon:'НТВ+', color:'#1e88e5', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv_hit' },
       { id:'rutv',    name:'RU.TV',   desc:'Русская музыка 24/7',  icon:'RU',  color:'#c2185b', iconBg:'#180a12', stream: PROXY+'/stream?channel=rutv' },
     ]
   },
