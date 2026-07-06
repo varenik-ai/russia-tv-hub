@@ -12,92 +12,111 @@ bot.onText(/\/start/, (msg) => {
   const lang = (msg.from.language_code || 'ru').split('-')[0];
 
   const greetings = {
-    ru: `🇷🇺 Привет, ${name}! Добро пожаловать в *Russia TV Live*
+    ru: `🇷🇺 Привет, ${name}!
 
-📺 *18 российских каналов прямо в Telegram* — бесплатно, без регистрации, 24/7.
+📺 *РОССИЯ·ТВ — 35 каналов прямого эфира в Telegram*
 
-🔴 *Самые популярные:*
-▪️ Россия 1, Первый Канал, НТВ
-▪️ Россия 24, Пятый канал, ОТР, РЕН ТВ
-▪️ Матч ТВ, Матч Премьер, Матч Футбол 1/2/3
-▪️ ТНТ, СТС, Пятница, Домашний, ТВ-3
-▪️ Карусель, Мульт, Disney Channel, Nickelodeon
-▪️ МУЗ-ТВ, RU.TV, Bridge TV
+Смотри российское телевидение онлайн — бесплатно, без VPN, без регистрации, 24/7.
 
-✅ HD качество · iOS, Android, Desktop · 8 языков`,
+📡 *Новости:* Первый канал, Россия 1, НТВ, Россия 24, Пятый, МИР, Звезда, ТВЦ, 360°
+🎬 *Развлечения:* ТНТ, Россия К, Соловьёв Live, История
+🎥 *Кино:* Дом Кино, Кинохит, Ретро, Кинокомедия, Viju, Наше кино, Родное кино и др.
+👶 *Детские:* Карусель, Мульт, Nickelodeon, Уникум
+🎵 *Музыка:* МУЗ-ТВ, Музыка Первого, RU.TV
+🌿 *Хобби:* Охота и рыбалка, Загородная жизнь
 
-    bg: `🇷🇺 Здравейте, ${name}! Добре дошли в *Russia TV Live*
+✅ HD · iOS · Android · Desktop · 8 языков`,
 
-📺 *18 руски канала директно в Telegram* — безплатно, без регистрация, 24/7.
+    bg: `🇷🇺 Здравейте, ${name}!
 
-🔴 *Най-популярните канали:*
-▪️ Россия 1, Первый Канал, НТВ
-▪️ Россия 24, РЕН ТВ, Матч ТВ
-▪️ ТНТ, СТС, Карусель, Мульт
+📺 *РОССИЯ·ТВ — 35 руски канала на живо в Telegram*
 
-✅ HD качество · iOS, Android, Desktop · 8 езика`,
+Гледайте руска телевизия онлайн — безплатно, без VPN, без регистрация, 24/7.
 
-    en: `🇷🇺 Hello, ${name}! Welcome to *Russia TV Live*
+📡 *Новини:* Первый канал, Россия 1, НТВ, Россия 24, МИР, Звезда
+🎬 *Развлечения:* ТНТ, Россия К, Соловьёв Live
+🎥 *Кино:* Дом Кино, Кинохит, Ретро, Наше кино и още
+👶 *Детски:* Карусель, Мульт, Nickelodeon
 
-📺 *18 Russian TV channels right in Telegram* — free, no registration, 24/7.
+✅ HD · iOS · Android · Desktop · 8 езика`,
 
-🔴 *Most popular channels:*
-▪️ Russia 1, Channel One, NTV
-▪️ Russia 24, Ren TV, Match TV
-▪️ TNT, STS, Karusel, Mult
+    en: `🇷🇺 Hello, ${name}!
 
-✅ HD quality · iOS, Android, Desktop · 8 languages`,
+📺 *РОССИЯ·ТВ — 35 Russian TV channels live on Telegram*
 
-    uk: `🇷🇺 Привіт, ${name}! Ласкаво просимо до *Russia TV Live*
+Watch Russian television online — free, no VPN, no registration, 24/7.
 
-📺 *18 російських каналів прямо в Telegram* — безкоштовно, без реєстрації, 24/7.
+📡 *News:* Channel One, Russia 1, NTV, Russia 24, MIR, Zvezda
+🎬 *Entertainment:* TNT, Russia K, Solovyov Live
+🎥 *Movies:* Dom Kino, KinoHit, Retro, Our Cinema and more
+👶 *Kids:* Karusel, Mult, Nickelodeon
 
-🔴 *Найпопулярніші канали:*
-▪️ Россия 1, Первый Канал, НТВ
-▪️ Россия 24, РЕН ТВ, Матч ТВ
-▪️ ТНТ, СТС, Карусель, Мульт
+✅ HD · iOS · Android · Desktop · 8 languages`,
 
-✅ HD якість · iOS, Android, Desktop · 8 мов`,
+    uk: `🇷🇺 Привіт, ${name}!
 
-    de: `🇷🇺 Hallo, ${name}! Willkommen bei *Russia TV Live*
+📺 *РОССИЯ·ТВ — 35 каналів прямого ефіру в Telegram*
 
-📺 *18 russische Sender direkt in Telegram* — kostenlos, ohne Anmeldung, 24/7.
+Дивись російське телебачення онлайн — безкоштовно, без VPN, без реєстрації, 24/7.
 
-🔴 *Beliebteste Sender:*
-▪️ Rossija 1, Perwyi Kanal, NTW
-▪️ Rossija 24, Match TV, TNT, STS
+📡 *Новини:* Перший канал, Росія 1, НТВ, Росія 24, МИР, Зірка
+🎬 *Розваги:* ТНТ, Росія К, Соловйов Live
+🎥 *Кіно:* Дом Кіно, Кінохіт, Ретро, Наше кіно та інші
+👶 *Дитячі:* Карусель, Мульт, Nickelodeon
 
-✅ HD-Qualität · iOS, Android, Desktop · 8 Sprachen`,
+✅ HD · iOS · Android · Desktop · 8 мов`,
 
-    fr: `🇷🇺 Bonjour, ${name}! Bienvenue sur *Russia TV Live*
+    de: `🇷🇺 Hallo, ${name}!
 
-📺 *18 chaînes russes directement dans Telegram* — gratuit, sans inscription, 24/7.
+📺 *РОССИЯ·ТВ — 35 russische Sender live auf Telegram*
 
-🔴 *Chaînes les plus populaires:*
-▪️ Russie 1, Première Chaîne, NTV
-▪️ Russie 24, Match TV, TNT, STS
+Russisches Fernsehen online schauen — kostenlos, kein VPN, keine Anmeldung, 24/7.
 
-✅ Qualité HD · iOS, Android, Desktop · 8 langues`,
+📡 *Nachrichten:* Erster Kanal, Russland 1, NTV, Russland 24, MIR
+🎬 *Unterhaltung:* TNT, Russland K, Solovyov Live
+🎥 *Kino:* Dom Kino, KinoHit, Retro und mehr
+👶 *Kinder:* Karusel, Mult, Nickelodeon
 
-    es: `🇷🇺 Hola, ${name}! Bienvenido a *Russia TV Live*
+✅ HD · iOS · Android · Desktop · 8 Sprachen`,
 
-📺 *18 canales rusos directamente en Telegram* — gratis, sin registro, 24/7.
+    fr: `🇷🇺 Bonjour, ${name}!
 
-🔴 *Canales más populares:*
-▪️ Rusia 1, Canal Uno, NTV
-▪️ Rusia 24, Match TV, TNT, STS
+📺 *РОССИЯ·ТВ — 35 chaînes russes en direct sur Telegram*
 
-✅ Calidad HD · iOS, Android, Desktop · 8 idiomas`,
+Regardez la télévision russe en ligne — gratuit, sans VPN, sans inscription, 24/7.
 
-    tr: `🇷🇺 Merhaba, ${name}! *Russia TV Live*'a hoş geldiniz
+📡 *Actualités:* Première Chaîne, Russie 1, NTV, Russie 24, MIR
+🎬 *Divertissement:* TNT, Russie K, Solovyov Live
+🎥 *Cinéma:* Dom Kino, KinoHit, Rétro et plus
+👶 *Enfants:* Karusel, Mult, Nickelodeon
 
-📺 *Telegram'da 18 Rus kanalı* — ücretsiz, kayıt gerekmez, 7/24.
+✅ HD · iOS · Android · Desktop · 8 langues`,
 
-🔴 *En popüler kanallar:*
-▪️ Rossiya 1, Perviy Kanal, NTV
-▪️ Rossiya 24, Match TV, TNT, STS
+    es: `🇷🇺 ¡Hola, ${name}!
 
-✅ HD kalite · iOS, Android, Desktop · 8 dil`,
+📺 *РОССИЯ·ТВ — 35 canales rusos en vivo en Telegram*
+
+Mira la televisión rusa en línea — gratis, sin VPN, sin registro, 24/7.
+
+📡 *Noticias:* Canal Uno, Rusia 1, NTV, Rusia 24, MIR
+🎬 *Entretenimiento:* TNT, Rusia K, Solovyov Live
+🎥 *Cine:* Dom Kino, KinoHit, Retro y más
+👶 *Infantil:* Karusel, Mult, Nickelodeon
+
+✅ HD · iOS · Android · Desktop · 8 idiomas`,
+
+    tr: `🇷🇺 Merhaba, ${name}!
+
+📺 *РОССИЯ·ТВ — Telegram'da 35 Rus kanalı canlı yayın*
+
+Rus televizyonunu çevrimiçi izleyin — ücretsiz, VPN'siz, kayıt gerekmez, 7/24.
+
+📡 *Haberler:* Birinci Kanal, Rusya 1, NTV, Rusya 24, MIR
+🎬 *Eğlence:* TNT, Rusya K, Solovyov Live
+🎥 *Sinema:* Dom Kino, KinoHit, Retro ve daha fazlası
+👶 *Çocuk:* Karusel, Mult, Nickelodeon
+
+✅ HD · iOS · Android · Desktop · 8 dil`,
   };
 
   const btnWatch = {
@@ -137,29 +156,34 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/\/post/, async (msg) => {
   try {
     const post = await bot.sendMessage(CHANNEL,
-`🇷🇺 *RUSSIA TV LIVE — 18 КАНАЛОВ В ПРЯМОМ ЭФИРЕ* 🔴
+`🇷🇺 *РОССИЯ·ТВ — 35 КАНАЛОВ В ПРЯМОМ ЭФИРЕ* 🔴
 
-Смотрите *ведущие российские телеканалы* прямо в Telegram — *бесплатно, без регистрации, 24/7.*
+Смотрите *ведущие российские телеканалы* прямо в Telegram — *бесплатно, без VPN, без регистрации, 24/7.*
 
 ━━━━━━━━━━━━━━━━━━━━
-📡 *НОВОСТИ И ОБЩИЕ*
-▪️ Россия 1 · НТВ · Россия 24
-▪️ Пятый канал · РЕН ТВ · ТВЦ
-▪️ МИР · Звезда
+📡 *НОВОСТИ*
+▪️ Первый канал · Россия 1 · НТВ · НТВ Хит
+▪️ Россия 24 · Пятый канал · ТВЦ · МИР · Звезда · 360°
 
-🎬 *РАЗВЛЕЧЕНИЯ И КИНО*
-▪️ СТС · Пятница · ТНТ4
-▪️ Россия К · Соловьёв Live
+🎬 *РАЗВЛЕЧЕНИЯ*
+▪️ ТНТ · Россия К · Соловьёв Live · История
+
+🎥 *КИНО*
+▪️ Дом Кино · T24 · Кинохит · Ретро · Кинокомедия
+▪️ Кинопремьера · Viju · Наше кино · Родное кино
+▪️ Кинопоказ · Киносвидание · Индийское кино
 
 👶 *ДЕТСКИЕ*
-▪️ Карусель · Мульт · Nickelodeon
+▪️ Карусель · Мульт · Nickelodeon · Уникум
 
 🎵 *МУЗЫКА*
-▪️ МУЗ-ТВ · RU.TV
+▪️ МУЗ-ТВ · Музыка Первого · RU.TV
+
+🌿 *ХОББИ*
+▪️ Охота и рыбалка · Загородная жизнь
 ━━━━━━━━━━━━━━━━━━━━
 
-✅ HD качество 24/7
-✅ iOS · Android · Desktop
+✅ HD · iOS · Android · Desktop · 8 языков
 
 👇 *Нажмите кнопку и выберите канал:*`,
       {
