@@ -2,7 +2,7 @@
 // Деплой: cd ~/russia-worker && cp ~/russia-tv-hub/russia-worker.js src/index.js && npx wrangler deploy
 // Или через Cloudflare Dashboard → Workers → Edit code
 
-const VERSION = '1.7.0';
+const VERSION = '1.8.0';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -21,8 +21,7 @@ const STREAMS = {
   tvc:          'https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8',
   zvezda:       'https://tvchannelstream1.tvzvezda.ru/cdn/tvzvezda/playlist.m3u8',
   mir:          'http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mir24_2500/playlist.m3u8',
-  rt:           'http://rt-glb.rttv.com/live/rtnews/playlist.m3u8',   // /live/ — не /dvr/
-  tass:         'https://tass-hls.servicecdn.ru/httpstreamer/tass-loop-main.stream/playlist.m3u8',
+  ch360:        'https://cdn-evacoder-tv.facecast.io/evacoder_hls_hi/CkxfR1xNUAJwTgtXTBZTAJli/index.m3u8',
   // ── Развлечения ──────────────────────────────────────────
   tnt:          'https://bl.rutube.ru/livestream/546602986e6a424d74d594876ddb3f04/index.m3u8?s=K-z3nz49R1oGQ-5yPSd8pg&e=2082157024&scheme=https',
   kultura:      'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/kultura-hd/index.m3u8',
