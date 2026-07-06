@@ -2,7 +2,7 @@
 // Деплой: cd ~/russia-worker && cp ~/russia-tv-hub/russia-worker.js src/index.js && npx wrangler deploy
 // Или через Cloudflare Dashboard → Workers → Edit code
 
-const VERSION = '1.8.0';
+const VERSION = '1.9.0';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +22,7 @@ const STREAMS = {
   zvezda:       'https://tvchannelstream1.tvzvezda.ru/cdn/tvzvezda/playlist.m3u8',
   mir:          'http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mir24_2500/playlist.m3u8',
   ch360:        'https://cdn-evacoder-tv.facecast.io/evacoder_hls_hi/CkxfR1xNUAJwTgtXTBZTAJli/index.m3u8',
+  t24:          'https://stream8.cinerama.uz/1037/tracks-v1a1/mono.m3u8',
   // ── Развлечения ──────────────────────────────────────────
   tnt:          'https://bl.rutube.ru/livestream/546602986e6a424d74d594876ddb3f04/index.m3u8?s=K-z3nz49R1oGQ-5yPSd8pg&e=2082157024&scheme=https',
   kultura:      'https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/kultura-hd/index.m3u8',
@@ -34,13 +35,23 @@ const STREAMS = {
   kinokomediya: 'https://stream8.cinerama.uz/1232/tracks-v1a1/mono.m3u8',
   kinopremiera: 'https://stream8.cinerama.uz/1207/tracks-v1a1/mono.m3u8',
   viju:         'https://stream8.cinerama.uz/1058/tracks-v1a1/mono.m3u8',
+  nasheKino:    'https://stream8.cinerama.uz/1051/tracks-v1a1/mono.m3u8',
+  rodnoeKino:   'https://stream8.cinerama.uz/1052/tracks-v1a1/mono.m3u8',
+  kinopokaz:    'https://stream8.cinerama.uz/1057/tracks-v1a1/mono.m3u8',
+  kinosvidanie: 'https://stream8.cinerama.uz/1203/tracks-v1a1/mono.m3u8',
+  indiyskoekino:'https://stream8.cinerama.uz/1060/tracks-v1a1/mono.m3u8',
   // ── Детские ──────────────────────────────────────────────
   karusel:      'https://streaming102.interskytech.com/live/232.m3u8',
   mult:         'https://stream8.cinerama.uz/1246/tracks-v1a1/mono.m3u8',
   nick:         'http://s70378.cdn.ngenix.net/nickelodeon/2/index.m3u8',
   // ── Музыка ───────────────────────────────────────────────
   muztv:        'https://stream8.cinerama.uz/1200/tracks-v1a1/mono.m3u8',
+  muzykaPervogo:'https://stream8.cinerama.uz/1201/tracks-v1a1/mono.m3u8',
   rutv:         'https://stream8.cinerama.uz/1202/tracks-v1a1/mono.m3u8',
+  // ── Хобби и стиль ────────────────────────────────────────
+  ohotarybalka: 'https://stream8.cinerama.uz/1038/tracks-v1a1/mono.m3u8',
+  zagorodnaya:  'https://stream8.cinerama.uz/1044/tracks-v1a1/mono.m3u8',
+  unikum:       'https://stream8.cinerama.uz/1033/tracks-v1a1/mono.m3u8',
 };
 
 addEventListener('fetch', event => {

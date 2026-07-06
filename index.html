@@ -146,6 +146,7 @@ const CHANNEL_GROUPS = [
       { id:'mir',       name:'МИР',         desc:'СНГ — межгосударственное ТВ', icon:'МИР', color:'#0288d1', iconBg:'#0a1018', stream: PROXY+'/stream?channel=mir' },
       { id:'zvezda',    name:'Звезда',      desc:'Патриотическое телевидение',  icon:'★',   color:'#c62828', iconBg:'#180808', stream: PROXY+'/stream?channel=zvezda' },
       { id:'ch360',     name:'360°',         desc:'Новости Подмосковья',         icon:'360', color:'#1565c0', iconBg:'#080d1a', stream: PROXY+'/stream?channel=ch360' },
+      { id:'t24',       name:'T24',          desc:'Телеканал Т24',               icon:'T24', color:'#00838f', iconBg:'#081214', stream: PROXY+'/stream?channel=t24' },
     ]
   },
   {
@@ -161,11 +162,16 @@ const CHANNEL_GROUPS = [
   {
     label: '🎥 Кино',
     channels: [
-      { id:'kinohit',      name:'Кинохит',      desc:'Лучшие фильмы 24/7',      icon:'КХТ', color:'#e53935', iconBg:'#1a0808', stream: PROXY+'/stream?channel=kinohit' },
-      { id:'retro',        name:'Ретро',         desc:'Советское кино',           icon:'РТР', color:'#8d6e63', iconBg:'#140e0a', stream: PROXY+'/stream?channel=retro' },
-      { id:'kinokomediya', name:'Кинокомедия',   desc:'Комедии 24/7',             icon:'КМД', color:'#f9a825', iconBg:'#1a1400', stream: PROXY+'/stream?channel=kinokomediya' },
-      { id:'kinopremiera', name:'Кинопремьера',  desc:'Новинки кино',             icon:'КПР', color:'#7b1fa2', iconBg:'#130818', stream: PROXY+'/stream?channel=kinopremiera' },
-      { id:'viju',         name:'Viju TV1000',   desc:'Кино и сериалы',           icon:'VJU', color:'#00897b', iconBg:'#081412', stream: PROXY+'/stream?channel=viju' },
+      { id:'kinohit',      name:'Кинохит',         desc:'Лучшие фильмы 24/7',      icon:'КХТ', color:'#e53935', iconBg:'#1a0808', stream: PROXY+'/stream?channel=kinohit' },
+      { id:'retro',        name:'Ретро',            desc:'Советское кино',           icon:'РТР', color:'#8d6e63', iconBg:'#140e0a', stream: PROXY+'/stream?channel=retro' },
+      { id:'kinokomediya', name:'Кинокомедия',      desc:'Комедии 24/7',             icon:'КМД', color:'#f9a825', iconBg:'#1a1400', stream: PROXY+'/stream?channel=kinokomediya' },
+      { id:'kinopremiera', name:'Кинопремьера',     desc:'Новинки кино',             icon:'КПР', color:'#7b1fa2', iconBg:'#130818', stream: PROXY+'/stream?channel=kinopremiera' },
+      { id:'viju',         name:'Viju TV1000',      desc:'Кино и сериалы',           icon:'VJU', color:'#00897b', iconBg:'#081412', stream: PROXY+'/stream?channel=viju' },
+      { id:'nasheKino',    name:'Наше кино',        desc:'Новое российское кино',    icon:'НК',  color:'#c62828', iconBg:'#180808', stream: PROXY+'/stream?channel=nasheKino' },
+      { id:'rodnoeKino',   name:'Родное кино',      desc:'Отечественное кино',       icon:'РК',  color:'#ad1457', iconBg:'#180810', stream: PROXY+'/stream?channel=rodnoeKino' },
+      { id:'kinopokaz',    name:'Кинопоказ',        desc:'Кино 24/7',                icon:'КПК', color:'#6a1b9a', iconBg:'#130818', stream: PROXY+'/stream?channel=kinopokaz' },
+      { id:'kinosvidanie', name:'Кинoсвидание',     desc:'Романтическое кино',       icon:'КСВ', color:'#d81b60', iconBg:'#180a10', stream: PROXY+'/stream?channel=kinosvidanie' },
+      { id:'indiyskoekino',name:'Индийское кино',   desc:'Лучшие фильмы Болливуда',  icon:'ИНД', color:'#f57f17', iconBg:'#1a1200', stream: PROXY+'/stream?channel=indiyskoekino' },
     ]
   },
   {
@@ -179,8 +185,17 @@ const CHANNEL_GROUPS = [
   {
     label: '🎵 Музыка',
     channels: [
-      { id:'muztv',   name:'МУЗ-ТВ', desc:'Хиты и клипы',         icon:'МУЗ', color:'#e91e63', iconBg:'#1a0a10', stream: PROXY+'/stream?channel=muztv' },
-      { id:'rutv',    name:'RU.TV',   desc:'Русская музыка 24/7',  icon:'RU',  color:'#c2185b', iconBg:'#180a12', stream: PROXY+'/stream?channel=rutv' },
+      { id:'muztv',        name:'МУЗ-ТВ',         desc:'Хиты и клипы',            icon:'МУЗ', color:'#e91e63', iconBg:'#1a0a10', stream: PROXY+'/stream?channel=muztv' },
+      { id:'muzykaPervogo',name:'Музыка Первого', desc:'Канал Первого',            icon:'М1',  color:'#1565c0', iconBg:'#080d1a', stream: PROXY+'/stream?channel=muzykaPervogo' },
+      { id:'rutv',         name:'RU.TV',          desc:'Русская музыка 24/7',      icon:'RU',  color:'#c2185b', iconBg:'#180a12', stream: PROXY+'/stream?channel=rutv' },
+    ]
+  },
+  {
+    label: '🌿 Хобби и стиль',
+    channels: [
+      { id:'ohotarybalka', name:'Охота и рыбалка', desc:'Охота, рыбалка, природа', icon:'ОР',  color:'#2e7d32', iconBg:'#081208', stream: PROXY+'/stream?channel=ohotarybalka' },
+      { id:'zagorodnaya',  name:'Загородная жизнь',desc:'Дом, дача, природа',       icon:'ЗЖ',  color:'#558b2f', iconBg:'#0a1208', stream: PROXY+'/stream?channel=zagorodnaya' },
+      { id:'unikum',       name:'Уникум',          desc:'Познавательное ТВ',        icon:'УНК', color:'#00695c', iconBg:'#081210', stream: PROXY+'/stream?channel=unikum' },
     ]
   },
 ];
