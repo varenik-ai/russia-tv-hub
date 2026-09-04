@@ -33,14 +33,17 @@
 
     /* ── Player ── */
     #player-screen { display:none; flex-direction:column; align-items:center; height:100%; }
-    .player-header { width:100%; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    .player-header { width:100%; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap;
       padding-top:calc(10px + max(var(--tg-safe-top,0px), env(safe-area-inset-top,0px)));
       padding-right:calc(14px + var(--tg-safe-right,0px));
       padding-bottom:10px;
       padding-left:calc(14px + var(--tg-safe-left,0px));
       background:#0d0d1a; border-bottom:1px solid #1e1e2e; flex-shrink:0; }
-    .back-btn { background:#1a1a2e; border:1px solid #333; border-radius:8px; padding:7px 12px; color:#aaa; font-size:14px; cursor:pointer; flex-shrink:0; }
-    .back-btn:active { opacity:.7; }
+    /* Кнопка "← Каналы" переехала в нижнюю панель управления (.controls) —
+       в верхней шапке она перекрывалась плавающей кнопкой "Закрыть" от Telegram
+       в полноэкранном режиме на iOS (та кнопка рисуется поверх контента и может
+       быть шире/у́же в зависимости от языка и устройства, надёжно её не обойти). */
+    .btn.channels-btn { background:linear-gradient(135deg,#1565c0,#0d47a1); font-weight:700; order:-1; }
     .ch-title-bar { font-size:15px; font-weight:700; }
     .live-badge-top { color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:none; }
 
@@ -85,7 +88,6 @@
 
 <div id="player-screen">
   <div class="player-header">
-    <button class="back-btn" id="back-btn">← Каналы</button>
     <span class="ch-title-bar" id="ch-title"></span>
     <span class="live-badge-top" id="live-badge-top">LIVE</span>
   </div>
@@ -95,6 +97,7 @@
     <video id="video" autoplay playsinline webkit-playsinline airplay="allow" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;"></video>
     <div class="overlay" id="overlay">
       <div class="controls">
+        <button id="back-btn" class="btn channels-btn"></button>
         <button id="reload-btn" class="btn reload" style="display:none"></button>
         <button id="unmute-btn" class="btn danger" style="display:none"></button>
         <button id="mode-btn" class="btn"></button>
@@ -233,14 +236,14 @@ const CHANNEL_GROUPS = [
 
 // ── Переводы ────────────────────────────────────────────────────────────────
 const T = {
-  ru:{ loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео' },
-  en:{ loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video' },
-  bg:{ loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео' },
-  uk:{ loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео' },
-  de:{ loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video' },
-  fr:{ loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo' },
-  es:{ loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video' },
-  tr:{ loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video' },
+  ru:{ loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео', channels:'📺 Все каналы' },
+  en:{ loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video', channels:'📺 All channels' },
+  bg:{ loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео', channels:'📺 Всички канали' },
+  uk:{ loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео', channels:'📺 Усі канали' },
+  de:{ loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Alle Sender' },
+  fr:{ loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo', channels:'📺 Toutes les chaînes' },
+  es:{ loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Todos los canales' },
+  tr:{ loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video', channels:'📺 Tüm kanallar' },
 };
 function getLang() {
   try { const s=tg?.initDataUnsafe?.user?.language_code?.split('-')[0].toLowerCase(); if(s&&T[s]) return s; } catch(e) {}
@@ -273,6 +276,7 @@ reloadBtn.textContent     = t.reconnect;
 unmuteBtn.textContent     = t.unmute;
 modeBtn.textContent       = t.audioMode;
 fullscreenBtn.textContent = t.fullscreen;
+backBtn.textContent       = t.channels;
 
 // ── Утилиты ────────────────────────────────────────────────────────────────
 function setStatus(key, isError) {
