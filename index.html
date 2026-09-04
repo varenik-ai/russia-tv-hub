@@ -33,12 +33,13 @@
 
     /* ── Player ── */
     #player-screen { display:none; flex-direction:column; align-items:center; height:100%; }
-    .player-header { width:100%; display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap;
+    .player-header { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; overflow:hidden;
       padding-top:calc(10px + max(var(--tg-safe-top,0px), env(safe-area-inset-top,0px)));
       padding-right:calc(14px + var(--tg-safe-right,0px));
       padding-bottom:10px;
       padding-left:calc(14px + var(--tg-safe-left,0px));
       background:#0d0d1a; border-bottom:1px solid #1e1e2e; flex-shrink:0; }
+    .ch-title-bar { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     /* Кнопка "← Каналы" переехала в нижнюю панель управления (.controls) —
        в верхней шапке она перекрывалась плавающей кнопкой "Закрыть" от Telegram
        в полноэкранном режиме на iOS (та кнопка рисуется поверх контента и может
@@ -125,9 +126,12 @@ function updateSafeArea() {
   const topReal   = csa.top    || sa.top    || 0;
   const leftReal  = csa.left   || sa.left   || 0;
   const rightReal = csa.right  || sa.right  || 0;
-  const top   = topReal   > 0 ? topReal   : (inFs ? 56 : 0);
-  const left  = leftReal  > 0 ? leftReal  : (inFs ? 54 : 0);
-  const right = rightReal > 0 ? rightReal : (inFs ? 54 : 0);
+  // По скриншоту с iPhone: капсула "✕ Закрыть" слева доходит примерно до 25%
+  // ширины экрана, а шеврон+меню "···" справа занимают примерно 20% ширины —
+  // старых 54px хватало не всегда, увеличили запас с обеих сторон.
+  const top   = topReal   > 0 ? topReal   : (inFs ? 56  : 0);
+  const left  = leftReal  > 0 ? leftReal  : (inFs ? 104 : 0);
+  const right = rightReal > 0 ? rightReal : (inFs ? 88  : 0);
   document.documentElement.style.setProperty('--tg-safe-top', top + 'px');
   document.documentElement.style.setProperty('--tg-safe-left', left + 'px');
   document.documentElement.style.setProperty('--tg-safe-right', right + 'px');
