@@ -27,8 +27,7 @@
     .channel-card:active { opacity:.75; transform:scale(.98); }
     .ch-icon { width:44px; height:44px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex-shrink:0; }
     .ch-info { flex:1; min-width:0; }
-    .ch-name { font-size:14px; font-weight:700; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .ch-desc { font-size:11px; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ch-name { font-size:14px; font-weight:700; white-space:normal; line-height:1.25; }
     .live-dot { width:8px; height:8px; background:var(--ch-color,#555); border-radius:50%; animation:pulse 1.2s infinite; flex-shrink:0; }
 
     /* ── Player ── */
@@ -548,7 +547,6 @@ function buildHub() {
         <div class="ch-icon" style="background:${ch.iconBg};color:${ch.color}">${ch.icon}</div>
         <div class="ch-info">
           <div class="ch-name">${ch.name}</div>
-          <div class="ch-desc">${ch.desc}</div>
         </div>
         <div class="live-dot"></div>`;
       card.onclick = () => openChannel(ch);
