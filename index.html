@@ -284,6 +284,8 @@ let userPaused=false, audioOnly=false, userUnmuted=false, isExpanded=false, wake
 // на самом деле восстанавливался сам через какое-то время.
 let _lastProgressTime = Date.now();
 let _lastVideoTime = 0;
+let _lastFrameCount = 0;
+let _lastFrameProgressTime = Date.now();
 let _sessionStart = Date.now();
 let _watchdogReconnecting = false;
 const PREEMPTIVE_REFRESH_MS = 6 * 60 * 1000; // профилактический реконнект с запасом до наблюдаемых сбоев источника
@@ -413,6 +415,20 @@ function _watchdogReconnect(statusKey) {
 }
 setInterval(() => {
   if (!hls || !currentCh || video.seeking || _watchdogReconnecting) return;
+  if (video.readyState >= 3 && typeof video.getVideoPlaybackQuality === 'function') {
+    const _vpq = video.getVideoPlaybackQuality();
+    if (_vpq.totalVideoFrames > _lastFrameCount) {
+      _lastFrameCount = _vpq.totalVideoFrames;
+      _lastFrameProgressTime = Date.now();
+    } else if (!video.paused && Date.now() - _lastFrameProgressTime > 9000) {
+      // currentTime может тикать (аудио/системные часы), пока сам видеокадр не
+      // обновляется — картинка визуально замирает/чернеет при формально "живом"
+      // потоке. Проверка по currentTime одна это не ловит.
+      _lastFrameProgressTime = Date.now();
+      _watchdogReconnect('errorStream');
+      return;
+    }
+  }
   if (video.paused && video.readyState < 3) {
     // В мини-аппе нет пользовательской паузы во время просмотра (кроме userPaused,
     // который здесь исключаем) — остановка без буфера означает зависание/сбой.
@@ -486,6 +502,7 @@ function loadStream(url) {
   const streamUrl = url;
   stopStream(); setStatus('connecting'); unmuteBtn.style.display='none';
   _lastProgressTime = Date.now(); _lastVideoTime = 0; _sessionStart = Date.now();
+  _lastFrameCount = 0; _lastFrameProgressTime = Date.now();
 
   if (isAndroid()) {
     const audioBg = document.getElementById('audio-bg');
