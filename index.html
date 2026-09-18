@@ -155,7 +155,7 @@ function isIOS() {
 function isAndroid() { return /Android/i.test(navigator.userAgent); }
 
 // ── Каналы ────────────────────────────────────────────────────────────────
-const PROXY = 'https://russia-worker.dyaltd.workers.dev';
+const PROXY = 'https://stream.russian-tv.com';
 
 const CHANNEL_GROUPS = [
   {
@@ -164,8 +164,8 @@ const CHANNEL_GROUPS = [
       { id:'perviy',    name:'Первый канал', desc:'Главный телеканал России',     icon:'1',   color:'#D52B1E', iconBg:'#1a0808', stream: PROXY+'/stream?channel=perviy' },
       { id:'rossiya1',  name:'Россия 1',    desc:'Главный федеральный канал',   icon:'Р1',  color:'#D52B1E', iconBg:'#1a0808', stream: PROXY+'/stream?channel=rossiya1' },
       { id:'ntv',       name:'НТВ',         desc:'Новости и кино 24/7',         icon:'НТВ', color:'#2980b9', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv' },
-      { id:'ntv_hit',   name:'НТВ Хит',     desc:'Сериалы и развлечения НТВ',   icon:'НТВ+',color:'#1e88e5', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv_hit' },
       { id:'rossiya24', name:'Россия 24',   desc:'Новости круглосуточно',       icon:'Р24', color:'#1565c0', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=rossiya24' },
+      { id:'russiyaK',  name:'Россия Культура', desc:'Культура, наука и искусство', icon:'РК', color:'#7b5e3a', iconBg:'#120e08', stream: PROXY+'/stream?channel=russiyaK' },
       { id:'pyatyy',    name:'Пятый канал', desc:'Новости и публицистика',      icon:'5',   color:'#1976d2', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=pyatyy' },
       { id:'tvc',       name:'ТВЦ',         desc:'Московское телевидение',      icon:'ТВЦ', color:'#37474f', iconBg:'#0a0f12', stream: PROXY+'/stream?channel=tvc' },
       { id:'mir',       name:'МИР',         desc:'СНГ — межгосударственное ТВ', icon:'МИР', color:'#0288d1', iconBg:'#0a1018', stream: PROXY+'/stream?channel=mir' },
