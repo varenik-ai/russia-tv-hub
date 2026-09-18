@@ -275,6 +275,19 @@ const pipBtn        = document.getElementById('pip-btn');
 let currentCh=null, hls=null, hlsAudio=null, hideTimeout=null, tokenRefreshTimer=null;
 let userPaused=false, audioOnly=false, userUnmuted=false, isExpanded=false, wakeLockSentinel=null;
 
+// ── Сторож зависания потока ──────────────────────────────────────────────────
+// Источник (cinerama.uz и другие) иногда тихо перестаёт отдавать новые
+// сегменты БЕЗ fatal-ошибки HLS.js — статус остаётся "ПРЯМОЙ ЭФИР", а
+// картинка замирает/чернеет навсегда, без автопереподключения. На сайте
+// (russian-tv.com) от этого давно есть защита, в мини-аппе её не было —
+// отсюда постоянные жалобы на "не работает" конкретный канал, хотя источник
+// на самом деле восстанавливался сам через какое-то время.
+let _lastProgressTime = Date.now();
+let _lastVideoTime = 0;
+let _sessionStart = Date.now();
+let _watchdogReconnecting = false;
+const PREEMPTIVE_REFRESH_MS = 6 * 60 * 1000; // профилактический реконнект с запасом до наблюдаемых сбоев источника
+
 reloadBtn.textContent     = t.reconnect;
 unmuteBtn.textContent     = t.unmute;
 modeBtn.textContent       = t.audioMode;
@@ -383,6 +396,36 @@ async function requestWakeLock() {
   try { if (!isIOS() && 'wakeLock' in navigator && !wakeLockSentinel) wakeLockSentinel=await navigator.wakeLock.request('screen'); } catch(e) {}
 }
 
+// ── Сторож зависания: см. комментарий у объявления переменных выше ──────────
+video.addEventListener('timeupdate', () => {
+  if (video.currentTime !== _lastVideoTime) {
+    _lastVideoTime = video.currentTime;
+    _lastProgressTime = Date.now();
+  }
+});
+function _watchdogReconnect(statusKey) {
+  if (_watchdogReconnecting || !currentCh) return;
+  _watchdogReconnecting = true;
+  _lastProgressTime = Date.now();
+  setStatus(statusKey, true);
+  stopStream();
+  init().finally(() => { _watchdogReconnecting = false; });
+}
+setInterval(() => {
+  if (!hls || !currentCh || video.seeking || _watchdogReconnecting) return;
+  if (video.paused && video.readyState < 3) {
+    // В мини-аппе нет пользовательской паузы во время просмотра (кроме userPaused,
+    // который здесь исключаем) — остановка без буфера означает зависание/сбой.
+    if (userPaused) return;
+    if (Date.now() - _lastProgressTime > 12000) { _watchdogReconnect('errorStream'); }
+    return;
+  }
+  if (Date.now() - _lastProgressTime > 18000) { _watchdogReconnect('errorStream'); return; }
+  if (video.readyState >= 3 && Date.now() - _sessionStart > PREEMPTIVE_REFRESH_MS) {
+    _watchdogReconnect('connecting');
+  }
+}, 5000);
+
 // ── Media Session ───────────────────────────────────────────────────────────
 function setupMediaSession() {
   if (!('mediaSession' in navigator)) return;
@@ -442,6 +485,7 @@ function loadStream(url) {
   userUnmuted=false;
   const streamUrl = url;
   stopStream(); setStatus('connecting'); unmuteBtn.style.display='none';
+  _lastProgressTime = Date.now(); _lastVideoTime = 0; _sessionStart = Date.now();
 
   if (isAndroid()) {
     const audioBg = document.getElementById('audio-bg');
