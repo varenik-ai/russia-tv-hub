@@ -504,10 +504,32 @@ function loadStream(url) {
   // воркер отключаем принудительно — так надёжнее почти во всех WebView.
   const HLS_WORKER_SAFE = false;
 
+  // Буфер и дистанция от "живого края" (v82.10.1): у части источников
+  // fs.uplink.kz (Кинoсвидание, Viju и др.) сегменты либо тяжёлые (Кино-
+  // свидание — ~5 Мбит/с при таргет-длительности 6с — на мобильной сети
+  // тонкий буфер съедается за пару секунд и картинка замирает), либо
+  // источник иногда отдаёт в плейлисте самый свежий сегмент чуть раньше,
+  // чем реально успевает его записать (Viju — периодические 404 на
+  // последнем сегменте плейлиста), что при lowLatencyMode + маленьком
+  // liveSyncDurationCount ловится как ошибка загрузки фрагмента и
+  // выглядит как фриз. Раньше держались близко к живому краю ради
+  // минимальной задержки — но для обычного (не Low-Latency) HLS-источника
+  // с собственной внутренней задержкой ~20-30с это не даёт выигрыша,
+  // только хрупкость. Теперь держим больший запас и буфер.
+  const HLS_BUFFER_OPTS = {
+    liveSyncDurationCount: 6,   // не подходим к самому краю — источник иногда ещё не дописал последний сегмент
+    lowLatencyMode: false,      // источники не LL-HLS — этот режим только уменьшал буфер без выигрыша в задержке
+    maxBufferLength: 30,        // сек буфера вперёд — гасит джиттер сети/тяжёлые сегменты
+    maxMaxBufferLength: 60,
+    fragLoadingMaxRetry: 6,
+    fragLoadingRetryDelay: 500,
+    manifestLoadingMaxRetry: 4,
+  };
+
   if (isAndroid()) {
     const audioBg = document.getElementById('audio-bg');
     if (audioBg && Hls.isSupported()) {
-      hlsAudio = new Hls({ liveSyncDurationCount:3, enableWorker:HLS_WORKER_SAFE });
+      hlsAudio = new Hls({ ...HLS_BUFFER_OPTS, enableWorker:HLS_WORKER_SAFE });
       hlsAudio.loadSource(streamUrl); hlsAudio.attachMedia(audioBg);
       hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => { audioBg.muted=true; audioBg.play().catch(()=>{}); });
     }
@@ -515,7 +537,7 @@ function loadStream(url) {
 
   video.muted=true;
   if (Hls.isSupported()) {
-    hls = new Hls({ liveSyncDurationCount:3, lowLatencyMode:true, enableWorker:HLS_WORKER_SAFE, backBufferLength:30 });
+    hls = new Hls({ ...HLS_BUFFER_OPTS, enableWorker:HLS_WORKER_SAFE, backBufferLength:30 });
     hls.loadSource(streamUrl); hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, async () => {
       setStatus('live'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
