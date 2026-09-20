@@ -176,7 +176,7 @@ const CHANNEL_GROUPS = [
   {
     label: '🎬 Развлечения',
     channels: [
-      { id:'tnt',       name:'ТНТ',          desc:'Юмор, сериалы и шоу',      icon:'ТНТ',  color:'#ff6d00', iconBg:'#1a1000', stream: PROXY+'/stream?channel=tnt' },
+      { id:'tnt',       name:'ТНТ4',         desc:'Юмор, сериалы и молодёжные шоу', icon:'ТНТ4', color:'#ff6d00', iconBg:'#1a1000', stream: PROXY+'/stream?channel=tnt' },
       { id:'soloviev',  name:'Соловьёв Live', desc:'Политика и аналитика',     icon:'СЛ',   color:'#455a64', iconBg:'#0d1214', stream: PROXY+'/stream?channel=soloviev' },
       { id:'istoriya',  name:'История',       desc:'Документальное кино',      icon:'ИСТ',  color:'#5d4037', iconBg:'#120e0a', stream: PROXY+'/stream?channel=istoriya' },
     ]
@@ -497,10 +497,17 @@ function loadStream(url) {
   _lastProgressTime = Date.now(); _lastVideoTime = 0; _sessionStart = Date.now();
   _lastFrameCount = 0; _lastFrameProgressTime = Date.now();
 
+  // Web Worker внутри WebView Telegram (особенно старые версии Android/Desktop
+  // клиента) нередко не даёт hls.js создать воркер через blob: URL — тогда
+  // инициализация HLS тихо зависает без единой fatal-ошибки, и канал просто
+  // не запускается. В браузере (сайт) это не проявляется, поэтому в мини-аппе
+  // воркер отключаем принудительно — так надёжнее почти во всех WebView.
+  const HLS_WORKER_SAFE = false;
+
   if (isAndroid()) {
     const audioBg = document.getElementById('audio-bg');
     if (audioBg && Hls.isSupported()) {
-      hlsAudio = new Hls({ liveSyncDurationCount:3, enableWorker:true });
+      hlsAudio = new Hls({ liveSyncDurationCount:3, enableWorker:HLS_WORKER_SAFE });
       hlsAudio.loadSource(streamUrl); hlsAudio.attachMedia(audioBg);
       hlsAudio.on(Hls.Events.MANIFEST_PARSED, () => { audioBg.muted=true; audioBg.play().catch(()=>{}); });
     }
@@ -508,7 +515,7 @@ function loadStream(url) {
 
   video.muted=true;
   if (Hls.isSupported()) {
-    hls = new Hls({ liveSyncDurationCount:3, lowLatencyMode:true, enableWorker:true, backBufferLength:30 });
+    hls = new Hls({ liveSyncDurationCount:3, lowLatencyMode:true, enableWorker:HLS_WORKER_SAFE, backBufferLength:30 });
     hls.loadSource(streamUrl); hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, async () => {
       setStatus('live'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
