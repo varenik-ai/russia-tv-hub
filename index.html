@@ -26,6 +26,9 @@
     .channel-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:4px 0 0 4px; background:var(--ch-color,#555); }
     .channel-card:active { opacity:.75; transform:scale(.98); }
     .ch-icon { width:44px; height:44px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex-shrink:0; }
+    .ch-icon.ch-logo { background:#0e0e18 !important; padding:6px; box-sizing:border-box; }
+    .ch-icon.ch-logo img { width:100%; height:100%; object-fit:contain; display:block; }
+    .site-link-btn { background:linear-gradient(135deg,#ff9800,#f4511e) !important; font-weight:800 !important; box-shadow:0 2px 10px rgba(244,81,53,.5); }
     .ch-info { flex:1; min-width:0; }
     .ch-name { font-size:14px; font-weight:700; white-space:normal; line-height:1.25; }
     .live-dot { width:8px; height:8px; background:var(--ch-color,#555); border-radius:50%; animation:pulse 1.2s infinite; flex-shrink:0; }
@@ -103,6 +106,7 @@
         <button id="mode-btn" class="btn"></button>
         <button id="fullscreen-btn" class="btn"></button>
         <button id="pip-btn" class="btn" style="display:none"></button>
+        <button id="site-link-btn" class="btn site-link-btn">🌐 Смотреть на сайте</button>
       </div>
     </div>
     <audio id="audio-bg" muted></audio>
@@ -178,89 +182,96 @@ function _advanceProxy() {
 }
 function _streamUrl(ch) { return _currentProxy() + '/stream?channel=' + ch.id; }
 
+// v82.15: логотипы — 1-в-1 как на сайте (russian-tv.com): там, где у сайта
+// есть настоящая картинка логотипа (assets/logos/*.svg или smotret.tv), она
+// указана в поле `logo`; остальные каналы — на сайте у них тоже только
+// цветная текстовая плашка, поэтому здесь она и остаётся (это не расхождение
+// с сайтом, а тот же самый fallback). `slug` — путь канала на russian-tv.com
+// для кнопки "Смотреть на сайте".
+const SITE = 'https://russian-tv.com';
 const CHANNEL_GROUPS = [
   {
     label: '📡 Новости и общие',
     channels: [
-      { id:'perviy',    name:'Первый канал', desc:'Главный телеканал России',     icon:'1',   color:'#D52B1E', iconBg:'#1a0808', stream: PROXY+'/stream?channel=perviy' },
-      { id:'rossiya1',  name:'Россия 1',    desc:'Главный федеральный канал',   icon:'Р1',  color:'#D52B1E', iconBg:'#1a0808', stream: PROXY+'/stream?channel=rossiya1' },
-      { id:'ntv',       name:'НТВ',         desc:'Новости и кино 24/7',         icon:'НТВ', color:'#2980b9', iconBg:'#0a1020', stream: PROXY+'/stream?channel=ntv' },
-      { id:'rossiya24', name:'Россия 24',   desc:'Новости круглосуточно',       icon:'Р24', color:'#1565c0', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=rossiya24' },
-      { id:'russiyaK',  name:'Россия Культура', desc:'Культура, наука и искусство', icon:'РК', color:'#7b5e3a', iconBg:'#120e08', stream: PROXY+'/stream?channel=russiyaK' },
-      { id:'pyatyy',    name:'Пятый канал', desc:'Новости и публицистика',      icon:'5',   color:'#1976d2', iconBg:'#0a0f1a', stream: PROXY+'/stream?channel=pyatyy' },
-      { id:'tvc',       name:'ТВЦ',         desc:'Московское телевидение',      icon:'ТВЦ', color:'#37474f', iconBg:'#0a0f12', stream: PROXY+'/stream?channel=tvc' },
-      { id:'mir',       name:'МИР',         desc:'СНГ — межгосударственное ТВ', icon:'МИР', color:'#0288d1', iconBg:'#0a1018', stream: PROXY+'/stream?channel=mir' },
-      { id:'zvezda',    name:'Звезда',      desc:'Патриотическое телевидение',  icon:'★',   color:'#c62828', iconBg:'#180808', stream: PROXY+'/stream?channel=zvezda' },
-      { id:'ch360',     name:'360°',         desc:'Новости Подмосковья',         icon:'360', color:'#1565c0', iconBg:'#080d1a', stream: PROXY+'/stream?channel=ch360' },
+      { id:'perviy',    name:'Первый канал', desc:'Главный телеканал России',     icon:'1',   color:'#D52B1E', iconBg:'#1a0808', logo:SITE+'/assets/logos/perviy.svg',              slug:'perviy-kanal-live',  stream: PROXY+'/stream?channel=perviy' },
+      { id:'rossiya1',  name:'Россия 1',    desc:'Главный федеральный канал',   icon:'Р1',  color:'#D52B1E', iconBg:'#1a0808', logo:SITE+'/assets/logos/rossiya1.svg',            slug:'rossiya-1-live',     stream: PROXY+'/stream?channel=rossiya1' },
+      { id:'ntv',       name:'НТВ',         desc:'Новости и кино 24/7',         icon:'НТВ', color:'#2980b9', iconBg:'#0a1020', logo:SITE+'/assets/logos/ntv.svg',                 slug:'ntv-live',           stream: PROXY+'/stream?channel=ntv' },
+      { id:'rossiya24', name:'Россия 24',   desc:'Новости круглосуточно',       icon:'Р24', color:'#1565c0', iconBg:'#0a0f1a', logo:SITE+'/assets/logos/rossiya24.svg',           slug:'rossiya-24-live',    stream: PROXY+'/stream?channel=rossiya24' },
+      { id:'russiyaK',  name:'Россия Культура', desc:'Культура, наука и искусство', icon:'РК', color:'#7b5e3a', iconBg:'#120e08', slug:'rossiya-kultura-live', stream: PROXY+'/stream?channel=russiyaK' },
+      { id:'pyatyy',    name:'Пятый канал', desc:'Новости и публицистика',      icon:'5',   color:'#1976d2', iconBg:'#0a0f1a', logo:SITE+'/assets/logos/pyatyy.svg',              slug:'pyatyy-kanal-live',  stream: PROXY+'/stream?channel=pyatyy' },
+      { id:'tvc',       name:'ТВЦ',         desc:'Московское телевидение',      icon:'ТВЦ', color:'#37474f', iconBg:'#0a0f12', logo:'https://smotret.tv/images/logo-tv-centr.svg', slug:'tv-centr-live',     stream: PROXY+'/stream?channel=tvc' },
+      { id:'mir',       name:'МИР',         desc:'СНГ — межгосударственное ТВ', icon:'МИР', color:'#0288d1', iconBg:'#0a1018', logo:'https://smotret.tv/images/logo-mir.svg',      slug:'mir-live',          stream: PROXY+'/stream?channel=mir' },
+      { id:'zvezda',    name:'Звезда',      desc:'Патриотическое телевидение',  icon:'★',   color:'#c62828', iconBg:'#180808', logo:'https://smotret.tv/images/logo-zvezda.svg',   slug:'zvezda-live',       stream: PROXY+'/stream?channel=zvezda' },
+      { id:'ch360',     name:'360°',         desc:'Новости Подмосковья',         icon:'360', color:'#1565c0', iconBg:'#080d1a', slug:'kanal-360-live', stream: PROXY+'/stream?channel=ch360' },
     ]
   },
   {
     label: '🎬 Развлечения',
     channels: [
-      { id:'tnt',       name:'ТНТ4',         desc:'Юмор, сериалы и молодёжные шоу', icon:'ТНТ4', color:'#ff6d00', iconBg:'#1a1000', stream: PROXY+'/stream?channel=tnt' },
-      { id:'soloviev',  name:'Соловьёв Live', desc:'Политика и аналитика',     icon:'СЛ',   color:'#455a64', iconBg:'#0d1214', stream: PROXY+'/stream?channel=soloviev' },
-      { id:'istoriya',  name:'История',       desc:'Документальное кино',      icon:'ИСТ',  color:'#5d4037', iconBg:'#120e0a', stream: PROXY+'/stream?channel=istoriya' },
+      { id:'tnt',       name:'ТНТ4',         desc:'Юмор, сериалы и молодёжные шоу', icon:'ТНТ4', color:'#ff6d00', iconBg:'#1a1000', logo:'https://smotret.tv/images/logo-tnt.svg', slug:'tnt-live', stream: PROXY+'/stream?channel=tnt' },
+      { id:'soloviev',  name:'Соловьёв Live', desc:'Политика и аналитика',     icon:'СЛ',   color:'#455a64', iconBg:'#0d1214', logo:'https://smotret.tv/images/logo-solovev-live.svg', slug:'soloviev-live', stream: PROXY+'/stream?channel=soloviev' },
+      { id:'istoriya',  name:'История',       desc:'Документальное кино',      icon:'ИСТ',  color:'#5d4037', iconBg:'#120e0a', slug:'istoriya-live', stream: PROXY+'/stream?channel=istoriya' },
     ]
   },
   {
     label: '🎥 Кино',
     channels: [
-      { id:'domkino',      name:'Дом Кино',         desc:'Советское и русское кино', icon:'ДК',  color:'#7b1fa2', iconBg:'#130a18', stream: PROXY+'/stream?channel=domkino' },
-      { id:'kinohit',      name:'Кинохит',         desc:'Лучшие фильмы 24/7',      icon:'КХТ', color:'#e53935', iconBg:'#1a0808', stream: PROXY+'/stream?channel=kinohit' },
-      { id:'kinokomediya', name:'Кинокомедия',      desc:'Комедии 24/7',             icon:'КМД', color:'#f9a825', iconBg:'#1a1400', stream: PROXY+'/stream?channel=kinokomediya' },
-      { id:'viju',         name:'Viju TV1000',      desc:'Кино и сериалы',           icon:'VJU', color:'#00897b', iconBg:'#081412', stream: PROXY+'/stream?channel=viju' },
-      { id:'nasheKino',    name:'Наше кино',        desc:'Новое российское кино',    icon:'НК',  color:'#c62828', iconBg:'#180808', stream: PROXY+'/stream?channel=nasheKino' },
-      { id:'rodnoeKino',   name:'Родное кино',      desc:'Отечественное кино',       icon:'РК',  color:'#ad1457', iconBg:'#180810', stream: PROXY+'/stream?channel=rodnoeKino' },
-      { id:'kinosvidanie', name:'Кинoсвидание',     desc:'Романтическое кино',       icon:'КСВ', color:'#d81b60', iconBg:'#180a10', stream: PROXY+'/stream?channel=kinosvidanie' },
-      { id:'indiyskoekino',name:'Индийское кино',   desc:'Лучшие фильмы Болливуда',  icon:'ИНД', color:'#f57f17', iconBg:'#1a1200', stream: PROXY+'/stream?channel=indiyskoekino' },
-      { id:'kinodetektiv', name:'Кино Детектив',    desc:'Детективы и триллеры 24/7', icon:'ДТК', color:'#546e7a', iconBg:'#0c1216', stream: PROXY+'/stream?channel=kinodetektiv' },
-      { id:'kinoekshn',    name:'Кино Экшн',        desc:'Боевики и экшн 24/7',      icon:'ЭКШ', color:'#d84315', iconBg:'#1a0d08', stream: PROXY+'/stream?channel=kinoekshn' },
+      { id:'domkino',      name:'Дом Кино',         desc:'Советское и русское кино', icon:'ДК',  color:'#7b1fa2', iconBg:'#130a18', slug:'dom-kino-live', stream: PROXY+'/stream?channel=domkino' },
+      { id:'kinohit',      name:'Кинохит',         desc:'Лучшие фильмы 24/7',      icon:'КХТ', color:'#e53935', iconBg:'#1a0808', slug:'kinohit-live', stream: PROXY+'/stream?channel=kinohit' },
+      { id:'kinokomediya', name:'Кинокомедия',      desc:'Комедии 24/7',             icon:'КМД', color:'#f9a825', iconBg:'#1a1400', slug:'kinokomediya-live', stream: PROXY+'/stream?channel=kinokomediya' },
+      { id:'viju',         name:'Viju TV1000',      desc:'Кино и сериалы',           icon:'VJU', color:'#00897b', iconBg:'#081412', slug:'viju-tv-live', stream: PROXY+'/stream?channel=viju' },
+      { id:'nasheKino',    name:'Наше кино',        desc:'Новое российское кино',    icon:'НК',  color:'#c62828', iconBg:'#180808', slug:'nashe-kino-live', stream: PROXY+'/stream?channel=nasheKino' },
+      { id:'rodnoeKino',   name:'Родное кино',      desc:'Отечественное кино',       icon:'РК',  color:'#ad1457', iconBg:'#180810', slug:'rodnoe-kino-live', stream: PROXY+'/stream?channel=rodnoeKino' },
+      { id:'kinosvidanie', name:'Кинoсвидание',     desc:'Романтическое кино',       icon:'КСВ', color:'#d81b60', iconBg:'#180a10', slug:'kinosvidanie-live', stream: PROXY+'/stream?channel=kinosvidanie' },
+      { id:'indiyskoekino',name:'Индийское кино',   desc:'Лучшие фильмы Болливуда',  icon:'ИНД', color:'#f57f17', iconBg:'#1a1200', slug:'indiyskoekino-live', stream: PROXY+'/stream?channel=indiyskoekino' },
+      { id:'kinodetektiv', name:'Кино Детектив',    desc:'Детективы и триллеры 24/7', icon:'ДТК', color:'#546e7a', iconBg:'#0c1216', slug:'kino-detektiv-live', stream: PROXY+'/stream?channel=kinodetektiv' },
+      { id:'kinoekshn',    name:'Кино Экшн',        desc:'Боевики и экшн 24/7',      icon:'ЭКШ', color:'#d84315', iconBg:'#1a0d08', slug:'kino-ekshn-live', stream: PROXY+'/stream?channel=kinoekshn' },
     ]
   },
   {
     label: '👶 Детские',
     channels: [
-      { id:'karusel',  name:'Карусель',    desc:'Для малышей и детей', icon:'КАР', color:'#ff6f00', iconBg:'#1a1200', stream: PROXY+'/stream?channel=karusel' },
-      { id:'mult',     name:'Мульт',       desc:'Мультфильмы 24/7',    icon:'МЛТ', color:'#ff8f00', iconBg:'#1a1400', stream: PROXY+'/stream?channel=mult' },
+      { id:'karusel',  name:'Карусель',    desc:'Для малышей и детей', icon:'КАР', color:'#ff6f00', iconBg:'#1a1200', logo:'https://smotret.tv/images/logo-karusel.svg', slug:'karusel-live', stream: PROXY+'/stream?channel=karusel' },
+      { id:'mult',     name:'Мульт',       desc:'Мультфильмы 24/7',    icon:'МЛТ', color:'#ff8f00', iconBg:'#1a1400', slug:'mult-live', stream: PROXY+'/stream?channel=mult' },
     ]
   },
   {
     label: '🎵 Музыка',
     channels: [
-      { id:'muztv',        name:'МУЗ-ТВ',         desc:'Хиты и клипы',            icon:'МУЗ', color:'#e91e63', iconBg:'#1a0a10', stream: PROXY+'/stream?channel=muztv' },
-      { id:'muzykaPervogo',name:'Музыка Первого', desc:'Канал Первого',            icon:'М1',  color:'#1565c0', iconBg:'#080d1a', stream: PROXY+'/stream?channel=muzykaPervogo' },
+      { id:'muztv',        name:'МУЗ-ТВ',         desc:'Хиты и клипы',            icon:'МУЗ', color:'#e91e63', iconBg:'#1a0a10', logo:'https://smotret.tv/images/logo-muz-tv.svg', slug:'muz-tv-live', stream: PROXY+'/stream?channel=muztv' },
+      { id:'muzykaPervogo',name:'Музыка Первого', desc:'Канал Первого',            icon:'М1',  color:'#1565c0', iconBg:'#080d1a', slug:'muzyka-pervogo-live', stream: PROXY+'/stream?channel=muzykaPervogo' },
     ]
   },
   {
     label: '🌿 Хобби и стиль',
     channels: [
-      { id:'ohotarybalka', name:'Охота и рыбалка', desc:'Охота, рыбалка, природа', icon:'ОР',  color:'#2e7d32', iconBg:'#081208', stream: PROXY+'/stream?channel=ohotarybalka' },
+      { id:'ohotarybalka', name:'Охота и рыбалка', desc:'Охота, рыбалка, природа', icon:'ОР',  color:'#2e7d32', iconBg:'#081208', slug:'ohota-i-rybalka-live', stream: PROXY+'/stream?channel=ohotarybalka' },
     ]
   },
   {
     label: '⚽ Спорт',
     channels: [
-      { id:'floHockey',  name:'FloSports Hockey',   desc:'Хоккей 24/7 — лучшие матчи и турниры', icon:'FH',  color:'#0277bd', iconBg:'#080d1a', stream: PROXY+'/stream?channel=floHockey' },
-      { id:'floRacing',  name:'FloSports Racing',   desc:'Автоспорт и гонки 24/7',               icon:'FR',  color:'#e65100', iconBg:'#1a0e08', stream: PROXY+'/stream?channel=floRacing' },
-      { id:'vijuSport',  name:'Viju+ Sport',        desc:'Спорт в HD — лучшие трансляции',       icon:'VS',  color:'#1a237e', iconBg:'#080a1a', stream: PROXY+'/stream?channel=vijuSport' },
-      { id:'m1mma',      name:'M1 Global MMA',      desc:'Смешанные единоборства — ММА и бокс',  icon:'M1',  color:'#b71c1c', iconBg:'#1a0808', stream: PROXY+'/stream?channel=m1mma' },
-      { id:'redbull',    name:'Red Bull TV',         desc:'Экстремальный спорт и приключения',    icon:'RB',  color:'#c62828', iconBg:'#1a0808', stream: PROXY+'/stream?channel=redbull' },
-      { id:'unbeaten',   name:'Unbeaten Boxing',     desc:'Бокс без цензуры — бои 24/7',          icon:'UB',  color:'#4a148c', iconBg:'#110818', stream: PROXY+'/stream?channel=unbeaten' },
-      { id:'freesports', name:'World of Freesports', desc:'Мировой спорт — бесплатно 24/7',       icon:'WFS', color:'#37474f', iconBg:'#08100a', stream: PROXY+'/stream?channel=freesports' },
+      { id:'floHockey',  name:'FloSports Hockey',   desc:'Хоккей 24/7 — лучшие матчи и турниры', icon:'FH',  color:'#0277bd', iconBg:'#080d1a', slug:'flosports-hockey-live', stream: PROXY+'/stream?channel=floHockey' },
+      { id:'floRacing',  name:'FloSports Racing',   desc:'Автоспорт и гонки 24/7',               icon:'FR',  color:'#e65100', iconBg:'#1a0e08', slug:'flosports-racing-live', stream: PROXY+'/stream?channel=floRacing' },
+      { id:'vijuSport',  name:'Viju+ Sport',        desc:'Спорт в HD — лучшие трансляции',       icon:'VS',  color:'#1a237e', iconBg:'#080a1a', slug:'viju-sport-live', stream: PROXY+'/stream?channel=vijuSport' },
+      { id:'m1mma',      name:'M1 Global MMA',      desc:'Смешанные единоборства — ММА и бокс',  icon:'M1',  color:'#b71c1c', iconBg:'#1a0808', slug:'m1-mma-live', stream: PROXY+'/stream?channel=m1mma' },
+      { id:'redbull',    name:'Red Bull TV',         desc:'Экстремальный спорт и приключения',    icon:'RB',  color:'#c62828', iconBg:'#1a0808', slug:'red-bull-tv-live', stream: PROXY+'/stream?channel=redbull' },
+      { id:'unbeaten',   name:'Unbeaten Boxing',     desc:'Бокс без цензуры — бои 24/7',          icon:'UB',  color:'#4a148c', iconBg:'#110818', slug:'unbeaten-boxing-live', stream: PROXY+'/stream?channel=unbeaten' },
+      { id:'freesports', name:'World of Freesports', desc:'Мировой спорт — бесплатно 24/7',       icon:'WFS', color:'#37474f', iconBg:'#08100a', slug:'world-freesports-live', stream: PROXY+'/stream?channel=freesports' },
     ]
   },
 ];
 
 // ── Переводы ────────────────────────────────────────────────────────────────
 const T = {
-  ru:{ loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео', channels:'📺 Все каналы' },
-  en:{ loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video', channels:'📺 All channels' },
-  bg:{ loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео', channels:'📺 Всички канали' },
-  uk:{ loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео', channels:'📺 Усі канали' },
-  de:{ loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Alle Sender' },
-  fr:{ loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo', channels:'📺 Toutes les chaînes' },
-  es:{ loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Todos los canales' },
-  tr:{ loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video', channels:'📺 Tüm kanallar' },
+  ru:{ loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео', channels:'📺 Все каналы', watchOnSite:'🌐 Смотреть на сайте' },
+  en:{ loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video', channels:'📺 All channels', watchOnSite:'🌐 Watch on website' },
+  bg:{ loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео', channels:'📺 Всички канали', watchOnSite:'🌐 Гледай в сайта' },
+  uk:{ loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео', channels:'📺 Усі канали', watchOnSite:'🌐 Дивитись на сайті' },
+  de:{ loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Alle Sender', watchOnSite:'🌐 Auf der Website ansehen' },
+  fr:{ loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo', channels:'📺 Toutes les chaînes', watchOnSite:'🌐 Voir sur le site' },
+  es:{ loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Todos los canales', watchOnSite:'🌐 Ver en el sitio' },
+  tr:{ loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video', channels:'📺 Tüm kanallar', watchOnSite:'🌐 Sitede izle' },
 };
 function getLang() {
   try { const s=tg?.initDataUnsafe?.user?.language_code?.split('-')[0].toLowerCase(); if(s&&T[s]) return s; } catch(e) {}
@@ -285,6 +296,7 @@ const unmuteBtn     = document.getElementById('unmute-btn');
 const modeBtn       = document.getElementById('mode-btn');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const pipBtn        = document.getElementById('pip-btn');
+const siteLinkBtn   = document.getElementById('site-link-btn');
 
 let currentCh=null, hls=null, hlsAudio=null, hideTimeout=null, tokenRefreshTimer=null;
 let _nativeErrorHandler=null, _nativeMetaHandler=null; // v82.13: именованные обработчики нативной HLS-ветки (Safari/iOS), чтобы гарантированно снимать их и не копить утечку слушателей на общем video-элементе
@@ -310,6 +322,15 @@ unmuteBtn.textContent     = t.unmute;
 modeBtn.textContent       = t.audioMode;
 fullscreenBtn.textContent = t.fullscreen;
 backBtn.textContent       = t.channels;
+siteLinkBtn.textContent   = t.watchOnSite;
+siteLinkBtn.onclick = () => {
+  if (!currentCh || !currentCh.slug) return;
+  const url = SITE + '/' + currentCh.slug + '/';
+  try {
+    if (tg?.openLink) { tg.openLink(url, { try_instant_view: false }); return; }
+  } catch(e) {}
+  window.open(url, '_blank');
+};
 
 // ── Утилиты ────────────────────────────────────────────────────────────────
 function setStatus(key, isError) {
@@ -744,8 +765,11 @@ function buildHub() {
       const card = document.createElement('div');
       card.className = 'channel-card';
       card.style.setProperty('--ch-color', ch.color);
+      const iconHtml = ch.logo
+        ? `<div class="ch-icon ch-logo"><img src="${ch.logo}" alt="${ch.icon}" loading="lazy" onerror="this.parentElement.outerHTML='&lt;div class=&quot;ch-icon&quot; style=&quot;background:${ch.iconBg};color:${ch.color}&quot;&gt;${ch.icon}&lt;/div&gt;'"></div>`
+        : `<div class="ch-icon" style="background:${ch.iconBg};color:${ch.color}">${ch.icon}</div>`;
       card.innerHTML = `
-        <div class="ch-icon" style="background:${ch.iconBg};color:${ch.color}">${ch.icon}</div>
+        ${iconHtml}
         <div class="ch-info">
           <div class="ch-name">${ch.name}</div>
         </div>
