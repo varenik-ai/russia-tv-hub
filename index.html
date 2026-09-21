@@ -266,6 +266,7 @@ const fullscreenBtn = document.getElementById('fullscreen-btn');
 const pipBtn        = document.getElementById('pip-btn');
 
 let currentCh=null, hls=null, hlsAudio=null, hideTimeout=null, tokenRefreshTimer=null;
+let _nativeErrorHandler=null, _nativeMetaHandler=null; // v82.13: именованные обработчики нативной HLS-ветки (Safari/iOS), чтобы гарантированно снимать их и не копить утечку слушателей на общем video-элементе
 let userPaused=false, audioOnly=false, userUnmuted=false, isExpanded=false, wakeLockSentinel=null;
 
 // ── Сторож зависания потока ──────────────────────────────────────────────────
@@ -489,6 +490,11 @@ function stopStream() {
   if (hls) { hls.destroy(); hls=null; }
   if (hlsAudio) { hlsAudio.destroy(); hlsAudio=null; }
   if (tokenRefreshTimer) { clearInterval(tokenRefreshTimer); tokenRefreshTimer=null; }
+  // v82.13: снимаем обработчики нативной HLS-ветки ДО video.src='' — иначе
+  // сам сброс src сгенерирует 'error', который поймает обработчик от
+  // предыдущего канала.
+  if (_nativeErrorHandler) { video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null; }
+  if (_nativeMetaHandler) { video.removeEventListener('loadedmetadata', _nativeMetaHandler); _nativeMetaHandler = null; }
   video.src=''; liveBadge.style.display='none'; liveBadgeTop.style.display='none';
   if (wakeLockSentinel) { wakeLockSentinel.release().catch(()=>{}); wakeLockSentinel=null; }
 }
@@ -582,18 +588,43 @@ function loadStream(url) {
     // через hls.js веткой выше, у которой ретраи есть. Добавлены: обработчик
     // 'error' на видео + watchdog по таймауту, если воспроизведение не
     // началось за разумное время.
+    // v82.13: v82.12 добавил сюда addEventListener('error', ..., {once:true}),
+    // но если канал стартовал успешно (сработал 'loadedmetadata'), сам
+    // обработчик error НИКОГДА не срабатывал и НИКОГДА не снимался — оставался
+    // висеть на общем `video`-элементе навсегда. При каждом переключении
+    // канала stopStream() делает video.src='', что само по себе генерирует
+    // событие 'error' — и ВСЕ накопленные с прошлых каналов обработчики
+    // срабатывали одновременно при следующем же переключении, наперебой
+    // вызывая init() и ломая последующую загрузку. Чем больше каналов
+    // переключили — тем хуже. Теперь обработчики именованные и снимаются
+    // явно в обеих ветках (успех/ошибка), плюс на каждый заход в
+    // native-ветку сперва снимаются обработчики от предыдущего захода.
+    if (_nativeErrorHandler) { video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null; }
+    if (_nativeMetaHandler) { video.removeEventListener('loadedmetadata', _nativeMetaHandler); _nativeMetaHandler = null; }
     let nativeStarted = false;
     const nativeTimeout = setTimeout(() => {
       if (!nativeStarted && currentCh) { setStatus('errorStream', true); setTimeout(() => init(), 3000); }
     }, 10000);
-    video.addEventListener('error', () => {
+    _nativeErrorHandler = () => {
       clearTimeout(nativeTimeout);
+      video.removeEventListener('loadedmetadata', _nativeMetaHandler); _nativeMetaHandler = null;
+      _nativeErrorHandler = null;
       if (currentCh) { setStatus('errorStream', true); setTimeout(() => init(), 5000); }
-    }, { once: true });
-    video.addEventListener('loadedmetadata', () => { nativeStarted = true; clearTimeout(nativeTimeout); }, { once: true });
+    };
+    _nativeMetaHandler = () => {
+      nativeStarted = true; clearTimeout(nativeTimeout);
+      video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null;
+      _nativeMetaHandler = null;
+    };
+    video.addEventListener('error', _nativeErrorHandler, { once: true });
+    video.addEventListener('loadedmetadata', _nativeMetaHandler, { once: true });
     video.src=streamUrl; setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
     video.play()
-      .then(() => { nativeStarted = true; clearTimeout(nativeTimeout); setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock(); })
+      .then(() => {
+        nativeStarted = true; clearTimeout(nativeTimeout);
+        video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null;
+        setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock();
+      })
       .catch(() => { setStatus('pressPlay'); });
   }
 
