@@ -325,11 +325,22 @@ backBtn.textContent       = t.channels;
 siteLinkBtn.textContent   = t.watchOnSite;
 siteLinkBtn.onclick = () => {
   if (!currentCh || !currentCh.slug) return;
+  // v82.16: раньше открывали через tg.openLink() — на старых клиентах
+  // Telegram (WebApp 6.0, см. предупреждения в консоли выше) параметр
+  // {try_instant_view:false} не поддерживается и молча игнорируется,
+  // из-за чего ссылка иногда открывалась в режиме Instant View — это
+  // упрощённый "читательский" шаблон Telegram без реальной адаптивной
+  // вёрстки сайта, поэтому выглядел как десктопная версия на телефоне.
+  // window.open() отдаёт ссылку системному/внешнему браузеру напрямую,
+  // минуя Instant View — там сайт открывается как обычная мобильная
+  // страница (у неё есть свой viewport и адаптивная вёрстка).
   const url = SITE + '/' + currentCh.slug + '/';
-  try {
-    if (tg?.openLink) { tg.openLink(url, { try_instant_view: false }); return; }
-  } catch(e) {}
-  window.open(url, '_blank');
+  const w = window.open(url, '_blank');
+  if (!w) {
+    // Popup заблокирован (редко, но бывает в некоторых WebView) — тогда
+    // используем tg.openLink как запасной путь.
+    try { tg?.openLink?.(url, { try_instant_view: false }); } catch(e) {}
+  }
 };
 
 // ── Утилиты ────────────────────────────────────────────────────────────────
