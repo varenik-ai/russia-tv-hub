@@ -157,6 +157,27 @@ function isAndroid() { return /Android/i.test(navigator.userAgent); }
 // ── Каналы ────────────────────────────────────────────────────────────────
 const PROXY = 'https://stream.russian-tv.com';
 
+// v82.14: ротация резервных прокси — на сайте (russian-tv.com) это уже есть
+// и решает как раз ту разницу в надёжности "на сайте работает, в мини-аппе
+// нет": при сбое основного Worker'а (rate limit, временный сетевой сбой,
+// краевой узел Cloudflare и т.п.) плеер сайта автоматически переключается
+// на резервный, а мини-апп раньше был жёстко привязан к одному URL без
+// какого-либо резерва. Список тот же, что на сайте (/proxy.json).
+var PROXIES = ['https://stream.russian-tv.com', 'https://oak-valley.dyaltd.workers.dev', 'https://birch-creek.dyaltd.workers.dev'];
+var _proxyIdx = 0;
+var _proxyFailedAt = {};
+function _currentProxy() { return PROXIES[_proxyIdx % PROXIES.length]; }
+function _markProxyFailed() { _proxyFailedAt[_proxyIdx % PROXIES.length] = Date.now(); }
+function _advanceProxy() {
+  for (var i = 1; i <= PROXIES.length; i++) {
+    var idx = (_proxyIdx + i) % PROXIES.length;
+    var failedAt = _proxyFailedAt[idx];
+    if (!failedAt || Date.now() - failedAt > 90000) { _proxyIdx += i; return; }
+  }
+  _proxyIdx++;
+}
+function _streamUrl(ch) { return _currentProxy() + '/stream?channel=' + ch.id; }
+
 const CHANNEL_GROUPS = [
   {
     label: '📡 Новости и общие',
@@ -399,10 +420,16 @@ video.addEventListener('timeupdate', () => {
     _lastProgressTime = Date.now();
   }
 });
+let _watchdogReconnectCount = 0;
 function _watchdogReconnect(statusKey) {
   if (_watchdogReconnecting || !currentCh) return;
   _watchdogReconnecting = true;
   _lastProgressTime = Date.now();
+  // v82.14: если один и тот же канал в этой сессии просмотра уже несколько
+  // раз подряд просил watchdog-переподключение — вероятно, дело не в
+  // разовом сетевом сбое, а в самом прокси. Переключаемся на резервный.
+  _watchdogReconnectCount++;
+  if (_watchdogReconnectCount >= 3) { _watchdogReconnectCount = 0; _markProxyFailed(); _advanceProxy(); }
   setStatus(statusKey, true);
   stopStream();
   init().finally(() => { _watchdogReconnecting = false; });
@@ -570,11 +597,26 @@ function loadStream(url) {
         if (!isIOS()) requestWakeLock();
       } catch(e) { setStatus('pressPlay'); }
     });
+    let _fatalNetErrCount = 0;
     hls.on(Hls.Events.ERROR, (e, data) => {
       if (!data.fatal) return;
-      if (data.type===Hls.ErrorTypes.NETWORK_ERROR) { try{hls.startLoad();}catch(err){} return; }
+      if (data.type===Hls.ErrorTypes.NETWORK_ERROR) {
+        // v82.14: раньше просто дёргали startLoad() на том же прокси —
+        // если сам прокси/источник реально сломан (не разовый сбой),
+        // получали бесконечный цикл ошибок на нём же. После 2 подряд
+        // фатальных сетевых ошибок переключаемся на резервный прокси.
+        _fatalNetErrCount++;
+        if (_fatalNetErrCount >= 2) {
+          _fatalNetErrCount = 0;
+          _markProxyFailed(); _advanceProxy();
+          setStatus('connecting'); setTimeout(() => init(), 1000);
+          return;
+        }
+        try{hls.startLoad();}catch(err){} return;
+      }
       if (data.type===Hls.ErrorTypes.MEDIA_ERROR)   { try{hls.recoverMediaError();}catch(err){} return; }
-      setStatus('errorStream', true); setTimeout(() => init(), 5000);
+      _markProxyFailed(); _advanceProxy();
+      setStatus('errorStream', true); setTimeout(() => init(), 3000);
     });
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
     // Нативный путь (Safari/iOS — hls.js сам уступает браузеру со встроенной
@@ -603,13 +645,15 @@ function loadStream(url) {
     if (_nativeMetaHandler) { video.removeEventListener('loadedmetadata', _nativeMetaHandler); _nativeMetaHandler = null; }
     let nativeStarted = false;
     const nativeTimeout = setTimeout(() => {
-      if (!nativeStarted && currentCh) { setStatus('errorStream', true); setTimeout(() => init(), 3000); }
+      // v82.14: тоже переключаем прокси перед повтором — раньше повторяли
+      // тот же самый URL, что бессмысленно, если сломан именно прокси.
+      if (!nativeStarted && currentCh) { _markProxyFailed(); _advanceProxy(); setStatus('errorStream', true); setTimeout(() => init(), 2000); }
     }, 10000);
     _nativeErrorHandler = () => {
       clearTimeout(nativeTimeout);
       video.removeEventListener('loadedmetadata', _nativeMetaHandler); _nativeMetaHandler = null;
       _nativeErrorHandler = null;
-      if (currentCh) { setStatus('errorStream', true); setTimeout(() => init(), 5000); }
+      if (currentCh) { _markProxyFailed(); _advanceProxy(); setStatus('errorStream', true); setTimeout(() => init(), 3000); }
     };
     _nativeMetaHandler = () => {
       nativeStarted = true; clearTimeout(nativeTimeout);
@@ -632,7 +676,8 @@ function loadStream(url) {
   tokenRefreshTimer = setInterval(async () => {
     if (!currentCh) return;
     try {
-      const r = await fetch(currentCh.stream + (currentCh.stream.includes('?')?'&':'?') + 't=' + Date.now(), { cache:'no-store' });
+      const streamUrl = _streamUrl(currentCh);
+      const r = await fetch(streamUrl + '&t=' + Date.now(), { cache:'no-store' });
       const ct = r.headers.get('Content-Type') || '';
       if (!ct.includes('mpegurl') && !ct.includes('m3u')) {
         const d = await r.json();
@@ -650,17 +695,24 @@ async function init() {
   if (!currentCh) return;
   setStatus('loading'); reloadBtn.style.display='none'; unmuteBtn.style.display='none';
   try {
-    const sep = currentCh.stream.includes('?') ? '&' : '?';
-    const r = await fetch(currentCh.stream + sep + 't=' + Date.now(), { cache:'no-store' });
+    const streamUrl = _streamUrl(currentCh);
+    const r = await fetch(streamUrl + '&t=' + Date.now(), { cache:'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const ct = r.headers.get('Content-Type') || '';
     if (ct.includes('mpegurl') || ct.includes('m3u')) {
       // Воркер вернул m3u8 напрямую — URL стрима и есть плейлист
-      loadStream(currentCh.stream);
+      loadStream(streamUrl);
     } else {
       const d = await r.json();
       if (d.url) loadStream(d.url); else setStatus('errorUrl', true);
     }
-  } catch(e) { setStatus('errorServer', true); }
+  } catch(e) {
+    // v82.14: сбой текущего прокси (сеть/HTTP-ошибка) — переключаемся на
+    // резервный и пробуем ещё раз, прежде чем показывать ошибку зрителю.
+    _markProxyFailed(); _advanceProxy();
+    setStatus('errorServer', true);
+    setTimeout(() => { if (currentCh) init(); }, 3000);
+  }
 }
 
 // ── Кнопки ─────────────────────────────────────────────────────────────────
@@ -713,6 +765,7 @@ function openChannel(ch) {
   liveBadge.style.background = ch.color;
   audioOnly = false; document.body.classList.remove('audio-only');
   modeBtn.textContent = t.audioMode;
+  _watchdogReconnectCount = 0; // v82.14: новый канал — начинаем счёт сбоев прокси заново
   stopStream(); init();
 }
 
