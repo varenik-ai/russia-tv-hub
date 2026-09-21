@@ -457,6 +457,28 @@ video.addEventListener('timeupdate', () => {
     _lastProgressTime = Date.now();
   }
 });
+// v82.18: диагностировано вживую (ТНТ4, История — оба на fs.uplink.kz):
+// hls.js успешно грузит и аппендит сегменты в буфер без единой ошибки, но
+// video.readyState зависает ниже 3 и currentTime не продвигается —
+// микро-разрыв (gap) между буферизованными данными и текущей позицией,
+// который hls.js не всегда перескакивает сам. Раньше это сразу считалось
+// зависанием и запускался полный реконнект — а так как разрыв структурный
+// (в самом потоке источника), после реконнекта та же проблема повторялась
+// снова, и зритель попадал в бесконечный цикл переподключений без реального
+// восстановления показа. Теперь сначала пробуем дешёвый перескок через
+// разрыв, и только если это не помогло — идёт обычный (тяжёлый) реконнект.
+function _tryNudgeGap() {
+  try {
+    if (video.buffered && video.buffered.length) {
+      const end = video.buffered.end(video.buffered.length - 1);
+      if (end - video.currentTime > 0.5) {
+        video.currentTime = Math.max(end - 0.25, video.currentTime + 0.1);
+        return true;
+      }
+    }
+  } catch (e) {}
+  return false;
+}
 let _watchdogReconnectCount = 0;
 function _watchdogReconnect(statusKey) {
   if (_watchdogReconnecting || !currentCh) return;
@@ -495,10 +517,16 @@ setInterval(() => {
     // В мини-аппе нет пользовательской паузы во время просмотра (кроме userPaused,
     // который здесь исключаем) — остановка без буфера означает зависание/сбой.
     if (userPaused) return;
-    if (Date.now() - _lastProgressTime > 12000) { _watchdogReconnect('errorStream'); }
+    if (Date.now() - _lastProgressTime > 12000) {
+      if (_tryNudgeGap()) { _lastProgressTime = Date.now(); return; }
+      _watchdogReconnect('errorStream');
+    }
     return;
   }
-  if (Date.now() - _lastProgressTime > 18000) { _watchdogReconnect('errorStream'); return; }
+  if (Date.now() - _lastProgressTime > 18000) {
+    if (_tryNudgeGap()) { _lastProgressTime = Date.now(); return; }
+    _watchdogReconnect('errorStream'); return;
+  }
   if (video.readyState >= 3 && Date.now() - _sessionStart > PREEMPTIVE_REFRESH_MS) {
     _watchdogReconnect('connecting');
   }
