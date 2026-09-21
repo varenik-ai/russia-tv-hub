@@ -407,7 +407,11 @@ function _watchdogReconnect(statusKey) {
   init().finally(() => { _watchdogReconnecting = false; });
 }
 setInterval(() => {
-  if (!hls || !currentCh || video.seeking || _watchdogReconnecting) return;
+  // v82.12: раньше требовался `hls` (созданный только в ветке hls.js) —
+  // на нативном пути Safari/iOS (canPlayType) hls всегда null, и весь
+  // сторож зависания для него не работал вообще. Логика внутри ни от
+  // чего hls-специфичного не зависит — убрали лишнее условие.
+  if (!currentCh || video.seeking || _watchdogReconnecting) return;
   if (video.readyState >= 3 && typeof video.getVideoPlaybackQuality === 'function') {
     const _vpq = video.getVideoPlaybackQuality();
     if (_vpq.totalVideoFrames > _lastFrameCount) {
@@ -567,10 +571,30 @@ function loadStream(url) {
       setStatus('errorStream', true); setTimeout(() => init(), 5000);
     });
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src=streamUrl; setStatus('live'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
+    // Нативный путь (Safari/iOS — hls.js сам уступает браузеру со встроенной
+    // поддержкой HLS). ВАЖНО (v82.12): раньше здесь не было НИКАКОЙ обработки
+    // ошибок — если поток не грузился (а у части источников бывают разовые
+    // сбои на первой попытке: свежий сегмент ещё не записан, редирект,
+    // нестрогое соответствие плейлиста спеке — AVPlayer к этому строже, чем
+    // hls.js), статус навсегда зависал на "Подключение..." без единой
+    // попытки переподключиться. Именно это, похоже, и объясняло "большинство
+    // каналов не играет" именно на iPhone — на десктопе тот же код идёт
+    // через hls.js веткой выше, у которой ретраи есть. Добавлены: обработчик
+    // 'error' на видео + watchdog по таймауту, если воспроизведение не
+    // началось за разумное время.
+    let nativeStarted = false;
+    const nativeTimeout = setTimeout(() => {
+      if (!nativeStarted && currentCh) { setStatus('errorStream', true); setTimeout(() => init(), 3000); }
+    }, 10000);
+    video.addEventListener('error', () => {
+      clearTimeout(nativeTimeout);
+      if (currentCh) { setStatus('errorStream', true); setTimeout(() => init(), 5000); }
+    }, { once: true });
+    video.addEventListener('loadedmetadata', () => { nativeStarted = true; clearTimeout(nativeTimeout); }, { once: true });
+    video.src=streamUrl; setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
     video.play()
-      .then(() => { unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock(); })
-      .catch(() => setStatus('pressPlay'));
+      .then(() => { nativeStarted = true; clearTimeout(nativeTimeout); setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock(); })
+      .catch(() => { setStatus('pressPlay'); });
   }
 
   // Авторефреш токена каждые 20 минут
