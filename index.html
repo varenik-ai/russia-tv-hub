@@ -511,11 +511,16 @@ function _watchdogReconnect(statusKey) {
   if (_watchdogReconnecting || !currentCh) return;
   _watchdogReconnecting = true;
   _lastProgressTime = Date.now();
-  // v82.14: если один и тот же канал в этой сессии просмотра уже несколько
-  // раз подряд просил watchdog-переподключение — вероятно, дело не в
-  // разовом сетевом сбое, а в самом прокси. Переключаемся на резервный.
+  // v82.29: БЫЛО >= 3 — плеер ждал 3 зависания подряд НА ОДНОМ И ТОМ ЖЕ
+  // прокси, прежде чем переключиться на резервный. Раз Worker уже сам
+  // перебирает все зеркала cinerama.uz на каждый запрос (fetchCinerama),
+  // ждать 3 попытки на одном и том же прокси избыточно — если он завис,
+  // быстрее переключиться на другой (другой edge/сеть), чем упорствовать.
+  // Пользователь сообщил, что канал заводился только после ~6 попыток —
+  // это как раз совпадает с 3 попытки × 2 прокси до переключения. СТАЛО:
+  // переключаемся на резервный сразу после первого же зависания.
   _watchdogReconnectCount++;
-  if (_watchdogReconnectCount >= 3) { _watchdogReconnectCount = 0; _markProxyFailed(); _advanceProxy(); }
+  if (_watchdogReconnectCount >= 1) { _watchdogReconnectCount = 0; _markProxyFailed(); _advanceProxy(); }
   setStatus(statusKey, true);
   stopStream();
   init().finally(() => { _watchdogReconnecting = false; });
