@@ -218,7 +218,14 @@ const CHANNEL_GROUPS = [
   {
     label: '🎬 Развлечения',
     channels: [
-      { id:'tnt',       name:'ТНТ4',         desc:'Юмор, сериалы и молодёжные шоу', icon:'ТНТ4', color:'#ff6d00', iconBg:'#1a1000', logo:'https://smotret.tv/images/logo-tnt.svg', slug:'tnt-live', stream: PROXY+'/stream?channel=tnt' },
+      // v82.28: ТНТ4 — единственный сетевой источник (fs.uplink.kz) снова
+      // словил MSE-стопор декодера (плейлист и сегменты в порядке, CORS
+      // открыт, но video.readyState зависает на HAVE_METADATA — та же
+      // болезнь, что была у tvc/mir/zvezda/domkino/nasheKino и др.), а
+      // альтернативных источников с открытым CORS для ТНТ4 нет. Тот же
+      // официальный iframe-embed OK.ru, что уже используется для канала
+      // "ТНТ" (id: tntRegular) — проверено вживую, живой эфир.
+      { id:'tnt',       name:'ТНТ4',         desc:'Юмор, сериалы и молодёжные шоу (плеер ОК)', icon:'ТНТ4', color:'#ff6d00', iconBg:'#1a1000', logo:'https://smotret.tv/images/logo-tnt.svg', embedUrl:'https://ok.ru/videoembed/10684591709783?nochat=1&autoplay=1' },
       // v82.24: ТНТ (обычный, не ТНТ4) — прямого CORS-совместимого потока
       // нет ни у нас, ни у конкурентов (везде либо DRM, либо официальный
       // iframe-embed Одноклассников). Показываем тот же embed, что и
