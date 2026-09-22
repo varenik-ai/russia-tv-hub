@@ -29,6 +29,12 @@
     .ch-icon.ch-logo { background:#0e0e18 !important; padding:6px; box-sizing:border-box; }
     .ch-icon.ch-logo img { width:100%; height:100%; object-fit:contain; display:block; }
     .site-link-btn { background:linear-gradient(135deg,#ff9800,#f4511e) !important; font-weight:800 !important; box-shadow:0 2px 10px rgba(244,81,53,.5); }
+    /* v82.24: ТНТ — источника с открытым CORS нет ни у нас, ни у конкурентов
+       (у всех либо DRM/access-контроль, либо официальный iframe-embed
+       Одноклассников). Показываем тот же официальный embed, что и
+       конкуренты — это чужой плеер OK.ru внутри рамки, без наших кастомных
+       кнопок (они ему не нужны, OK.ru отдаёт свои элементы управления). */
+    #channel-iframe { position:absolute; inset:0; width:100%; height:100%; border:0; z-index:2; display:none; background:#000; }
     .ch-info { flex:1; min-width:0; }
     .ch-name { font-size:14px; font-weight:700; white-space:normal; line-height:1.25; }
     .live-dot { width:8px; height:8px; background:var(--ch-color,#555); border-radius:50%; animation:pulse 1.2s infinite; flex-shrink:0; }
@@ -98,6 +104,7 @@
     <div class="live-badge" id="live-badge"><span class="dot"></span> ПРЯМОЙ ЭФИР</div>
     <div id="audio-badge"><div class="pill">🎧 Аудио режим</div></div>
     <video id="video" autoplay playsinline webkit-playsinline airplay="allow" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;"></video>
+    <iframe id="channel-iframe" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
     <div class="overlay" id="overlay">
       <div class="controls">
         <button id="back-btn" class="btn channels-btn"></button>
@@ -167,7 +174,10 @@ const PROXY = 'https://stream.russian-tv.com';
 // краевой узел Cloudflare и т.п.) плеер сайта автоматически переключается
 // на резервный, а мини-апп раньше был жёстко привязан к одному URL без
 // какого-либо резерва. Список тот же, что на сайте (/proxy.json).
-var PROXIES = ['https://stream.russian-tv.com', 'https://oak-valley.dyaltd.workers.dev', 'https://birch-creek.dyaltd.workers.dev'];
+// v82.27: пользователь сообщил, что Первый канал заводится только после
+// двух переключений (т.е. первые 2 прокси в списке не срабатывают с
+// первой попытки, а третий — стабильно). Переставил birch-creek первым.
+var PROXIES = ['https://birch-creek.dyaltd.workers.dev', 'https://stream.russian-tv.com', 'https://oak-valley.dyaltd.workers.dev'];
 var _proxyIdx = 0;
 var _proxyFailedAt = {};
 function _currentProxy() { return PROXIES[_proxyIdx % PROXIES.length]; }
@@ -209,6 +219,13 @@ const CHANNEL_GROUPS = [
     label: '🎬 Развлечения',
     channels: [
       { id:'tnt',       name:'ТНТ4',         desc:'Юмор, сериалы и молодёжные шоу', icon:'ТНТ4', color:'#ff6d00', iconBg:'#1a1000', logo:'https://smotret.tv/images/logo-tnt.svg', slug:'tnt-live', stream: PROXY+'/stream?channel=tnt' },
+      // v82.24: ТНТ (обычный, не ТНТ4) — прямого CORS-совместимого потока
+      // нет ни у нас, ни у конкурентов (везде либо DRM, либо официальный
+      // iframe-embed Одноклассников). Показываем тот же embed, что и
+      // smotret.tv — легальный, официально предоставляемый OK.ru способ
+      // встраивания. embedUrl вместо stream — плеер открывается как iframe,
+      // не через hls.js.
+      { id:'tntRegular',name:'ТНТ',          desc:'Юмор, сериалы и шоу (плеер ОК)', icon:'ТНТ',  color:'#ff6d00', iconBg:'#1a1000', embedUrl:'https://ok.ru/videoembed/9344376708726?autoplay=1' },
       { id:'soloviev',  name:'Соловьёв Live', desc:'Политика и аналитика',     icon:'СЛ',   color:'#455a64', iconBg:'#0d1214', logo:'https://smotret.tv/images/logo-solovev-live.svg', slug:'soloviev-live', stream: PROXY+'/stream?channel=soloviev' },
       { id:'istoriya',  name:'История',       desc:'Документальное кино',      icon:'ИСТ',  color:'#5d4037', iconBg:'#120e0a', slug:'istoriya-live', stream: PROXY+'/stream?channel=istoriya' },
     ]
@@ -287,6 +304,7 @@ const backBtn       = document.getElementById('back-btn');
 const chTitle       = document.getElementById('ch-title');
 const liveBadgeTop  = document.getElementById('live-badge-top');
 const video         = document.getElementById('video');
+const channelIframe = document.getElementById('channel-iframe');
 const container     = document.getElementById('video-container');
 const overlay       = document.getElementById('overlay');
 const statusEl      = document.getElementById('status');
@@ -844,11 +862,39 @@ function openChannel(ch) {
   audioOnly = false; document.body.classList.remove('audio-only');
   modeBtn.textContent = t.audioMode;
   _watchdogReconnectCount = 0; // v82.14: новый канал — начинаем счёт сбоев прокси заново
+
+  // v82.24: каналы без прямого CORS-потока (пока только ТНТ) — показываем
+  // официальный iframe-embed вместо нашего hls.js-плеера. Прячем все наши
+  // элементы управления/статус (плеер OK.ru отдаёт свои) кроме кнопки "назад".
+  if (ch.embedUrl) {
+    stopStream();
+    video.style.display = 'none';
+    statusEl.style.display = 'none';
+    liveBadge.style.display = 'none';
+    reloadBtn.style.display = 'none';
+    unmuteBtn.style.display = 'none';
+    modeBtn.style.display = 'none';
+    fullscreenBtn.style.display = 'none';
+    pipBtn.style.display = 'none';
+    siteLinkBtn.style.display = 'none';
+    channelIframe.src = ch.embedUrl;
+    channelIframe.style.display = 'block';
+    return;
+  }
+  video.style.display = '';
+  statusEl.style.display = '';
+  modeBtn.style.display = '';
+  fullscreenBtn.style.display = '';
+  siteLinkBtn.style.display = '';
+  channelIframe.style.display = 'none';
+  channelIframe.src = '';
   stopStream(); init();
 }
 
 function goToHub() {
   stopStream();
+  channelIframe.src = ''; // остановить embed OK.ru, если был открыт
+  channelIframe.style.display = 'none';
   playerScreen.style.display = 'none';
   hubScreen.style.display = 'flex';
   currentCh = null;
