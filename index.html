@@ -197,7 +197,6 @@ const CHANNEL_GROUPS = [
       { id:'rossiya1',  name:'Россия 1',    desc:'Главный федеральный канал',   icon:'Р1',  color:'#D52B1E', iconBg:'#1a0808', logo:SITE+'/assets/logos/rossiya1.svg',            slug:'rossiya-1-live',     stream: PROXY+'/stream?channel=rossiya1' },
       { id:'ntv',       name:'НТВ',         desc:'Новости и кино 24/7',         icon:'НТВ', color:'#2980b9', iconBg:'#0a1020', logo:SITE+'/assets/logos/ntv.svg',                 slug:'ntv-live',           stream: PROXY+'/stream?channel=ntv' },
       { id:'rossiya24', name:'Россия 24',   desc:'Новости круглосуточно',       icon:'Р24', color:'#1565c0', iconBg:'#0a0f1a', logo:SITE+'/assets/logos/rossiya24.svg',           slug:'rossiya-24-live',    stream: PROXY+'/stream?channel=rossiya24' },
-      { id:'russiyaK',  name:'Россия Культура', desc:'Культура, наука и искусство', icon:'РК', color:'#7b5e3a', iconBg:'#120e08', slug:'rossiya-kultura-live', stream: PROXY+'/stream?channel=russiyaK' },
       { id:'pyatyy',    name:'Пятый канал', desc:'Новости и публицистика',      icon:'5',   color:'#1976d2', iconBg:'#0a0f1a', logo:SITE+'/assets/logos/pyatyy.svg',              slug:'pyatyy-kanal-live',  stream: PROXY+'/stream?channel=pyatyy' },
       { id:'tvc',       name:'ТВЦ',         desc:'Московское телевидение',      icon:'ТВЦ', color:'#37474f', iconBg:'#0a0f12', logo:'https://smotret.tv/images/logo-tv-centr.svg', slug:'tv-centr-live',     stream: PROXY+'/stream?channel=tvc' },
       { id:'mir',       name:'МИР',         desc:'СНГ — межгосударственное ТВ', icon:'МИР', color:'#0288d1', iconBg:'#0a1018', logo:'https://smotret.tv/images/logo-mir.svg',      slug:'mir-live',          stream: PROXY+'/stream?channel=mir' },
@@ -587,7 +586,17 @@ function stopStream() {
   // предыдущего канала.
   if (_nativeErrorHandler) { video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null; }
   if (_nativeMetaHandler) { video.removeEventListener('loadedmetadata', _nativeMetaHandler); _nativeMetaHandler = null; }
-  video.src=''; liveBadge.style.display='none'; liveBadgeTop.style.display='none';
+  video.src='';
+  // v82.19: раньше не вызывали video.load() после сброса src — при быстром
+  // переключении каналов (типичное поведение зрителя, листающего список)
+  // предыдущий MediaSource иногда не успевал полностью отвязаться от
+  // <video> до того, как hls.js следующего канала пытался прикрепить свой
+  // новый MediaSource — элемент оставался в "подвисшем" состоянии и
+  // следующий канал не запускался (readyState вечно 0, без единой
+  // hls.js-ошибки). video.load() принудительно и синхронно сбрасывает
+  // состояние элемента перед следующим attachMedia().
+  try { video.load(); } catch(e) {}
+  liveBadge.style.display='none'; liveBadgeTop.style.display='none';
   if (wakeLockSentinel) { wakeLockSentinel.release().catch(()=>{}); wakeLockSentinel=null; }
 }
 
