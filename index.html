@@ -769,6 +769,12 @@ function loadStream(url) {
     };
     video.addEventListener('error', _nativeErrorHandler, { once: true });
     video.addEventListener('loadedmetadata', _nativeMetaHandler, { once: true });
+    // v82.33: в этой (нативной, AVPlayer/iOS) ветке video.muted НИКОГДА не
+    // выставлялся перед play() — в отличие от hls.js-ветки выше. Автовоспроиз-
+    // ведение СО ЗВУКОМ без предшествующего жеста пользователя браузер/AVPlayer
+    // блокирует — именно из-за этого play() здесь стабильно отклонялся и статус
+    // упирался в "Нажмите ▶" без связи с конкретным источником/каналом.
+    if (!userUnmuted) video.muted = true;
     video.src=streamUrl; setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
     video.play()
       .then(() => {
