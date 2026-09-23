@@ -829,17 +829,18 @@ async function init() {
   if (!currentCh) return;
   setStatus('loading'); reloadBtn.style.display='none'; unmuteBtn.style.display='none';
   try {
+    // v82.35: раньше здесь был ручной fetch() плейлиста только чтобы
+    // проверить Content-Type — а затем hls.js/нативный плеер тут же ЗАНОВО
+    // фетчил тот же самый URL сам. То есть КАЖДОЕ открытие канала и КАЖДЫЙ
+    // реконнект стоили 2 запроса к Worker вместо одного. Проверка Content-
+    // Type была нужна для старой ветки "Worker вернул JSON с .url" — при
+    // текущей архитектуре Worker при успехе ВСЕГДА отдаёт m3u8 напрямую
+    // (JSON — только при ошибках, которые и так ловятся через .catch ниже
+    // и обработчики ошибок hls.js/видео), так что эта ветка давно мертва.
+    // Убрали лишний fetch — при том же трафике зрителей нагрузка на Worker
+    // от плейлистов падает примерно вдвое.
     const streamUrl = _streamUrl(currentCh);
-    const r = await fetch(streamUrl + '&t=' + Date.now(), { cache:'no-store' });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const ct = r.headers.get('Content-Type') || '';
-    if (ct.includes('mpegurl') || ct.includes('m3u')) {
-      // Воркер вернул m3u8 напрямую — URL стрима и есть плейлист
-      loadStream(streamUrl);
-    } else {
-      const d = await r.json();
-      if (d.url) loadStream(d.url); else setStatus('errorUrl', true);
-    }
+    loadStream(streamUrl);
   } catch(e) {
     // v82.14: сбой текущего прокси (сеть/HTTP-ошибка) — переключаемся на
     // резервный и пробуем ещё раз, прежде чем показывать ошибку зрителю.
