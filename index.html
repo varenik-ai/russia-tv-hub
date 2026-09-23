@@ -702,7 +702,7 @@ function loadStream(url) {
         unmuteBtn.style.display = audioOnly ? 'none' : 'block';
         setupMediaSession();
         if (!isIOS()) requestWakeLock();
-      } catch(e) { setStatus('pressPlay'); }
+      } catch(e) { setStatus('pressPlay', true); }
     });
     let _fatalNetErrCount = 0;
     hls.on(Hls.Events.ERROR, (e, data) => {
@@ -776,7 +776,7 @@ function loadStream(url) {
         video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null;
         setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock();
       })
-      .catch(() => { setStatus('pressPlay'); });
+      .catch(() => { setStatus('pressPlay', true); });
   }
 
   // Авторефреш токена каждые 20 минут
@@ -829,6 +829,15 @@ async function init() {
 
 // ── Кнопки ─────────────────────────────────────────────────────────────────
 reloadBtn.onclick = () => { userPaused=false; init(); };
+// v82.32: статус "Нажмите ▶" (video.play() отклонён браузером/AVPlayer —
+// чаще всего это autoplay-политика) раньше не давал НИКАКОЙ возможности
+// возобновить воспроизведение: кнопка "Переподключиться" показывалась
+// только при isError=true, а setStatus('pressPlay') вызывался БЕЗ этого
+// флага — пользователь упирался в текст без единого рабочего элемента.
+// Плюс клик по самому видео — самый естественный жест "нажмите ▶".
+video.addEventListener('click', () => {
+  if (video.paused) video.play().catch(() => {});
+});
 unmuteBtn.onclick = () => {
   const ab = document.getElementById('audio-bg');
   if (video.muted) {
