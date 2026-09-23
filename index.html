@@ -507,6 +507,7 @@ function _tryNudgeGap() {
   return false;
 }
 let _watchdogReconnectCount = 0;
+let _nativePlayRetryCount = 0;
 function _watchdogReconnect(statusKey) {
   if (_watchdogReconnecting || !currentCh) return;
   _watchdogReconnecting = true;
@@ -782,7 +783,27 @@ function loadStream(url) {
         video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null;
         setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock();
       })
-      .catch(() => { setStatus('pressPlay', true); });
+      .catch((err) => {
+        // v82.34: раньше ЛЮБОЙ отказ play() (даже из-за разового сетевого
+        // сбоя/битого первого сегмента у источника — "AVPlayer строже, чем
+        // hls.js", см. комментарий выше) сразу и окончательно показывал
+        // "Нажмите ▶", без единой попытки автоматически восстановиться —
+        // в отличие от обработчика 'error' у этой же ветки, который ретраит.
+        // Раз видео теперь всегда замьючено (v82.33), NotAllowedError
+        // (настоящая блокировка автоплея) практически невозможен — почти
+        // любой отказ здесь на деле сетевой/декодерный. Пробуем автоматически
+        // переключить прокси и повторить (как watchdog), и только после
+        // нескольких неудач подряд отдаём управление пользователю.
+        clearTimeout(nativeTimeout);
+        _nativePlayRetryCount++;
+        if (_nativePlayRetryCount <= 2 && currentCh) {
+          _markProxyFailed(); _advanceProxy();
+          setStatus('errorStream', true);
+          setTimeout(() => init(), 1500);
+        } else {
+          setStatus('pressPlay', true);
+        }
+      });
   }
 
   // Авторефреш токена каждые 20 минут
@@ -896,6 +917,7 @@ function openChannel(ch) {
   audioOnly = false; document.body.classList.remove('audio-only');
   modeBtn.textContent = t.audioMode;
   _watchdogReconnectCount = 0; // v82.14: новый канал — начинаем счёт сбоев прокси заново
+  _nativePlayRetryCount = 0; // v82.34: новый канал — счёт неудачных play() в нативной ветке заново
 
   // v82.24: каналы без прямого CORS-потока (пока только ТНТ) — показываем
   // официальный iframe-embed вместо нашего hls.js-плеера. Прячем все наши
