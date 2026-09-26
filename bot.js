@@ -1,6 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN   = 'REDACTED_LEAKED_BOT_TOKEN';
+require('dotenv').config();
+const TOKEN   = process.env.BOT_TOKEN;
+if (!TOKEN) { console.error('❌ BOT_TOKEN не задан. Создай .env с BOT_TOKEN=... (см. .env.example)'); process.exit(1); }
 const CHANNEL = '@RussiaTV_Hub_Live';
 const APP_URL = 'https://t.me/RussiaTVHub_bot/russiatv';
 const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=14';
