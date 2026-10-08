@@ -26,6 +26,13 @@ var STREAMS = {
   sportivnyy: "https://live-3.otcnet.ru/sportivny/index.m3u8",
   detektiv: "https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-01.smil/playlist.m3u8",
   spb: "https://stream.smotrim.ru/hls2/ext_spbtv/playlist_5.m3u8",
+  karuselIntl: "https://fs.uplink.kz/karusel/mono.m3u8?token=onlinetv",
+  muzsoyuz: "https://hls-tvsoyuz.cdnvideo.ru/tvsoyuz2/muzsoyuz.6fw0-58xp-acts-esy0/playlist.m3u8",
+  rtdoc: "https://rt-doc.rttv.com/dvr/rtdru/playlist.m3u8",
+  bigplanet: "https://fs.uplink.kz/big_planet/mono.m3u8?token=onlinetv",
+  bober: "https://fs.uplink.kz/bober/mono.m3u8?token=onlinetv",
+  stranafm: "https://live-stranafm.cdnvideo.ru/stranafm/smil:stranafm.smil/playlist.m3u8",
+  vestifm: "https://stream.smotrim.ru/hls2/vesti_fm/playlist_4.m3u8",
   tnt: "https://fs.uplink.kz/tnt4/mono.m3u8?token=onlinetv",
   soloviev: "https://stream.smotrim.ru/hls/solovievlive/playlist_3.m3u8",
   domkino: "https://streaming.thestream.cyou/live/44-req_offset_28000000-req_window_0-1k_v5.m3u8",
@@ -67,6 +74,10 @@ var CINERAMA_PATH = {
   planeta: "1250/tracks-v1a1/mono.m3u8",
   zoopark: "1417/tracks-v1a1/mono.m3u8",
   drive: "1421/tracks-v1a1/mono.m3u8",
+  zhivotnye: "1426/tracks-v1a1/mono.m3u8",
+  zdorovoe: "1428/tracks-v1a1/mono.m3u8",
+  fonmusic: "1272/tracks-v1a1/mono.m3u8",
+  tracesport: "1274/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8"
 };
 var STITCHED_MASTERS = {
