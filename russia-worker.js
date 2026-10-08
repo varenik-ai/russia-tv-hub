@@ -18,6 +18,14 @@ var STREAMS = {
   mir: "https://tvcdn01.oktv.kz/tv/mir/tracks-v1a1/mono.m3u8",
   ch360: "https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-03-srt.smil/playlist.m3u8",
   moskva24: "https://stream.smotrim.ru/hls2/moscow_24/playlist_3.m3u8",
+  kultura: "https://stream.smotrim.ru/hls2/russia_k/playlist_5.m3u8",
+  patriot: "https://stream.smotrim.ru/hls2/static/playlist_4.m3u8",
+  soyuz: "https://hls-tvsoyuz.cdnvideo.ru/tvsoyuz/soyuz/playlist.m3u8",
+  moymir: "https://moymir.ru/hls/onair.m3u8",
+  prima: "https://tele2dvrnat01-02.cdnvideo.ru/stream/NAT_Prima/hls/index.m3u8",
+  sportivnyy: "https://live-3.otcnet.ru/sportivny/index.m3u8",
+  detektiv: "https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-01.smil/playlist.m3u8",
+  spb: "https://stream.smotrim.ru/hls2/ext_spbtv/playlist_5.m3u8",
   tnt: "https://fs.uplink.kz/tnt4/mono.m3u8?token=onlinetv",
   soloviev: "https://stream.smotrim.ru/hls/solovievlive/playlist_3.m3u8",
   domkino: "https://streaming.thestream.cyou/live/44-req_offset_28000000-req_window_0-1k_v5.m3u8",
@@ -53,6 +61,12 @@ var CINERAMA_PATH = {
   vijuSport: "1229/tracks-v1a1/mono.m3u8",
   m1mma: "1226/mono.m3u8",
   domkino: "1054/tracks-v1a1/mono.m3u8",
+  priklyucheniya: "1420/tracks-v1a1/mono.m3u8",
+  ryzhiy: "1407/tracks-v1a1/mono.m3u8",
+  tochka: "1031/tracks-v1a1/mono.m3u8",
+  planeta: "1250/tracks-v1a1/mono.m3u8",
+  zoopark: "1417/tracks-v1a1/mono.m3u8",
+  drive: "1421/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8"
 };
 var STITCHED_MASTERS = {
