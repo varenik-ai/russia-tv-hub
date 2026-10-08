@@ -2,7 +2,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.34.0";
+var VERSION = "82.35.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -16,7 +16,7 @@ var STREAMS = {
   tvc: "https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8",
   zvezda: "https://tvchannelstream1.tvzvezda.ru/cdn/tvzvezda/playlist_sdhigh.m3u8",
   mir: "https://tvcdn01.oktv.kz/tv/mir/tracks-v1a1/mono.m3u8",
-  ch360: "https://streaming.thestream.cyou/live/7000.m3u8",
+  ch360: "https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-03-srt.smil/playlist.m3u8",
   moskva24: "https://stream.smotrim.ru/hls2/moscow_24/playlist_3.m3u8",
   tnt: "https://fs.uplink.kz/tnt4/mono.m3u8?token=onlinetv",
   soloviev: "https://stream.smotrim.ru/hls/solovievlive/playlist_3.m3u8",
@@ -52,6 +52,7 @@ var CINERAMA_PATH = {
   unikum: "1033/tracks-v1a1/mono.m3u8",
   vijuSport: "1229/tracks-v1a1/mono.m3u8",
   m1mma: "1226/mono.m3u8",
+  domkino: "1054/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8"
 };
 var STITCHED_MASTERS = {
@@ -217,8 +218,25 @@ function latestProgramDateTimeMs(content) {
   return latest;
 }
 __name(latestProgramDateTimeMs, "latestProgramDateTimeMs");
+async function segmentReachable(playlistBody, playlistUrl) {
+  const lines = playlistBody.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+  const last = lines.length > 1 ? lines[lines.length - 2] : lines[0];
+  if (!last || !isSegment(last)) return true;
+  try {
+    const r = await fetch(resolveUrl(baseDir(playlistUrl), last), {
+      headers: { "User-Agent": UA, "Referer": "https://russian-tv.com/", "Range": "bytes=0-0" },
+      cf: { cacheTtl: 0, cacheEverything: false }
+    });
+    return r.status === 200 || r.status === 206;
+  } catch {
+    return false;
+  }
+}
+__name(segmentReachable, "segmentReachable");
 async function fetchCinerama(path, workerOrigin) {
   let lastError = null;
+  let staleFallback = null;
+  let unprobedFallback = null;
   for (const host of CINERAMA_MIRRORS) {
     const streamUrl = `https://${host}.cinerama.uz/${path}`;
     let res;
@@ -235,17 +253,34 @@ async function fetchCinerama(path, workerOrigin) {
       lastError = { mirror: host, status: res.status };
       continue;
     }
+    if (res.url && res.url.includes("/blocked/")) {
+      lastError = { mirror: host, error: "redirected to cinerama.uz /blocked/ stub" };
+      continue;
+    }
     const body = await res.text();
     if (isSelfLoopingMaster(body, streamUrl)) {
       lastError = { mirror: host, error: "self-referencing master (datacenter-IP block)" };
       continue;
     }
+    if (!await segmentReachable(body, streamUrl)) {
+      lastError = { mirror: host, error: "recent segment not downloadable (mirror out of sync)" };
+      if (!unprobedFallback) unprobedFallback = { body, streamUrl };
+      continue;
+    }
     const latestMs = latestProgramDateTimeMs(body);
     if (latestMs !== null && Date.now() - latestMs > STALE_THRESHOLD_MS) {
-      lastError = { mirror: host, error: `stale playlist (last segment ${Math.round((Date.now() - latestMs) / 1e3)}s old)` };
+      const age = Date.now() - latestMs;
+      lastError = { mirror: host, error: `stale playlist (last segment ${Math.round(age / 1e3)}s old)` };
+      if (!staleFallback || age < staleFallback.age) staleFallback = { age, body, streamUrl };
       continue;
     }
     return buildPlaylistResponse(body, streamUrl, workerOrigin);
+  }
+  if (unprobedFallback) {
+    return buildPlaylistResponse(unprobedFallback.body, unprobedFallback.streamUrl, workerOrigin);
+  }
+  if (staleFallback && staleFallback.age < 5 * 60 * 1e3) {
+    return buildPlaylistResponse(staleFallback.body, staleFallback.streamUrl, workerOrigin);
   }
   return new Response(
     JSON.stringify({ error: "All cinerama.uz mirrors blocked, unavailable or stale", path, lastError }),
