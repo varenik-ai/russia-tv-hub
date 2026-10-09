@@ -178,7 +178,8 @@ const PROXY = 'https://stream.russian-tv.com';
 // v82.27: пользователь сообщил, что Первый канал заводится только после
 // двух переключений (т.е. первые 2 прокси в списке не срабатывают с
 // первой попытки, а третий — стабильно). Переставил birch-creek первым.
-var PROXIES = ['https://birch-creek.dyaltd.workers.dev', 'https://stream.russian-tv.com', 'https://oak-valley.dyaltd.workers.dev'];
+// v82.36: основной воркер первым, как на сайте (старая перестановка birch-creek под Первый канал устарела).
+var PROXIES = ['https://stream.russian-tv.com', 'https://birch-creek.dyaltd.workers.dev', 'https://oak-valley.dyaltd.workers.dev'];
 var _proxyIdx = 0;
 var _proxyFailedAt = {};
 function _currentProxy() { return PROXIES[_proxyIdx % PROXIES.length]; }
@@ -606,6 +607,11 @@ async function requestWakeLock() {
 }
 
 // ── Сторож зависания: см. комментарий у объявления переменных выше ──────────
+// v82.36: до первого кадра даём источнику больше времени на старт (медленные thestream/cinerama
+// отдают первые сегменты >12 с — раньше сторож рвал такой старт и крутил циклы переподключений).
+let _playedOnce = false;
+video.addEventListener('playing', () => { _playedOnce = true; });
+const START_GRACE_MS = 30000;
 video.addEventListener('timeupdate', () => {
   if (video.currentTime !== _lastVideoTime) {
     _lastVideoTime = video.currentTime;
@@ -678,13 +684,13 @@ setInterval(() => {
     // В мини-аппе нет пользовательской паузы во время просмотра (кроме userPaused,
     // который здесь исключаем) — остановка без буфера означает зависание/сбой.
     if (userPaused) return;
-    if (Date.now() - _lastProgressTime > 12000) {
+    if (Date.now() - _lastProgressTime > (_playedOnce ? 12000 : START_GRACE_MS)) {
       if (_tryNudgeGap()) { _lastProgressTime = Date.now(); return; }
       _watchdogReconnect('errorStream');
     }
     return;
   }
-  if (Date.now() - _lastProgressTime > 18000) {
+  if (Date.now() - _lastProgressTime > (_playedOnce ? 18000 : START_GRACE_MS)) {
     if (_tryNudgeGap()) { _lastProgressTime = Date.now(); return; }
     _watchdogReconnect('errorStream'); return;
   }
@@ -769,6 +775,7 @@ function loadStream(url) {
   stopStream(); setStatus('connecting'); unmuteBtn.style.display='none';
   _lastProgressTime = Date.now(); _lastVideoTime = 0; _sessionStart = Date.now();
   _lastFrameCount = 0; _lastFrameProgressTime = Date.now();
+  _playedOnce = false;
 
   // Web Worker внутри WebView Telegram (особенно старые версии Android/Desktop
   // клиента) нередко не даёт hls.js создать воркер через blob: URL — тогда
@@ -885,7 +892,7 @@ function loadStream(url) {
       // v82.14: тоже переключаем прокси перед повтором — раньше повторяли
       // тот же самый URL, что бессмысленно, если сломан именно прокси.
       if (!nativeStarted && currentCh) { _markProxyFailed(); _advanceProxy(); setStatus('errorStream', true); setTimeout(() => init(), 2000); }
-    }, 10000);
+    }, 25000);
     _nativeErrorHandler = () => {
       clearTimeout(nativeTimeout);
       video.removeEventListener('loadedmetadata', _nativeMetaHandler); _nativeMetaHandler = null;
