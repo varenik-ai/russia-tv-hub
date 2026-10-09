@@ -9,7 +9,7 @@ var CORS = {
   "Access-Control-Allow-Headers": "*"
 };
 var STREAMS = {
-  perviy: "https://streaming.thestream.cyou/live/210-req_offset_28000000-req_window_0-2k_v5.m3u8",
+  perviy: "https://streaming.thestream.cyou/live/210.m3u8",
   rossiya1: "https://stream.smotrim.ru/hls2/russia_hd/playlist_2.m3u8",
   ntv: "https://streaming.thestream.cyou/live/213.m3u8",
   pyatyy: "https://cdn4.skygo.mn/live/disk1/Channel_5/HLSv3-FTA/Channel_5.m3u8",
@@ -19,7 +19,6 @@ var STREAMS = {
   ch360: "https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-03-srt.smil/playlist.m3u8",
   moskva24: "https://stream.smotrim.ru/hls2/moscow_24/playlist_3.m3u8",
   kultura: "https://stream.smotrim.ru/hls2/russia_k/playlist_5.m3u8",
-  patriot: "https://stream.smotrim.ru/hls2/static/playlist_4.m3u8",
   soyuz: "https://hls-tvsoyuz.cdnvideo.ru/tvsoyuz/soyuz/playlist.m3u8",
   moymir: "https://moymir.ru/hls/onair.m3u8",
   prima: "https://tele2dvrnat01-02.cdnvideo.ru/stream/NAT_Prima/hls/index.m3u8",
@@ -42,6 +41,15 @@ var STREAMS = {
   redbull: "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
   unbeaten: "https://unbeaten-tcl.amagi.tv/playlist.m3u8",
   freesports: "https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/playlist.m3u8"
+};
+var SYNTH_MASTERS = {
+  rossiya1: { dir: "hls2/russia_hd", ladder: [[1, 486], [2, 837], [3, 2501], [4, 4062], [6, 6990]] },
+  rossiya24: { dir: "hls2/russia_24", ladder: [[1, 733], [2, 1365], [3, 2033]] },
+  moskva24: { dir: "hls2/moscow_24", ladder: [[1, 764], [2, 1394], [3, 2045]] },
+  kultura: { dir: "hls2/russia_k", ladder: [[1, 397], [2, 765], [3, 2273], [4, 3776], [5, 6907]] },
+  spb: { dir: "hls2/ext_spbtv", ladder: [[1, 712], [2, 1302], [3, 1955], [4, 2847], [5, 8379]] },
+  karusel: { dir: "hls2/karusel", ladder: [[1, 717], [2, 1304], [3, 1971]] },
+  soloviev: { dir: "hls/solovievlive", ladder: [[1, 741], [2, 1372], [3, 2022], [4, 3067], [6, 8324]] }
 };
 var CINERAMA_MIRRORS = ["stream1", "stream3", "stream8"];
 var CINERAMA_PATH = {
@@ -93,6 +101,10 @@ var index_default = {
     }
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
+      if (SYNTH_MASTERS[channel]) {
+        const sm = await fetchSynthMaster(channel, url.origin);
+        if (sm) return sm;
+      }
       if (CINERAMA_PATH[channel]) {
         return fetchCinerama(CINERAMA_PATH[channel], url.origin);
       }
@@ -258,6 +270,26 @@ async function segmentReachable(playlistBody, playlistUrl) {
   }
 }
 __name(segmentReachable, "segmentReachable");
+async function fetchSynthMaster(channel, workerOrigin) {
+  const cfg = SYNTH_MASTERS[channel];
+  if (!cfg) return null;
+  const variants = cfg.ladder.map(([n, kbps]) => ({ url: `https://stream.smotrim.ru/${cfg.dir}/playlist_${n}.m3u8`, bw: kbps * 1e3 }));
+  try {
+    const probe = await fetch(variants[variants.length > 1 ? 1 : 0].url, {
+      headers: { "User-Agent": UA, "Referer": "https://stream.smotrim.ru/" },
+      cf: { cacheTtl: 0, cacheEverything: false }
+    });
+    if (!probe.ok) return null;
+  } catch {
+    return null;
+  }
+  let body = "#EXTM3U\n#EXT-X-VERSION:3\n";
+  for (const v of variants) {
+    body += `#EXT-X-STREAM-INF:BANDWIDTH=${v.bw},AVERAGE-BANDWIDTH=${v.bw}\n${workerOrigin}/playlist?url=${encodeURIComponent(v.url)}\n`;
+  }
+  return new Response(body, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
+}
+__name(fetchSynthMaster, "fetchSynthMaster");
 async function fetchCinerama(path, workerOrigin) {
   let lastError = null;
   let staleFallback = null;
