@@ -330,6 +330,59 @@ function getLang() {
 }
 const t = T[getLang()];
 
+// ── Выбор качества для нативного HLS (iPhone/iPad): уровни читаем из мастер-плейлиста, фиксированный уровень — через воркер /stream-q ──
+function initQualityNative(streamUrl) {
+  const btn = document.getElementById('quality-btn'), cont = document.getElementById('video-container');
+  if (!btn || !cont || streamUrl.indexOf('/stream?') < 0) return;
+  btn.style.display = 'none'; btn.onclick = null;
+  const old = document.getElementById('quality-menu'); if (old) old.remove();
+  const ru = getLang() === 'ru', X = { a: ru ? 'Авто' : 'Auto', m: ru ? 'Мбит/с' : 'Mbit/s' };
+  const KEY = 'rtv_quality';
+  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const set = v => { try { localStorage.setItem(KEY, v); } catch (e) {} };
+  const lab = l => { const mb = l.bitrate / 1e6; return l.height ? l.height + 'p' : (mb ? (mb >= 10 ? mb.toFixed(0) : mb.toFixed(1)) + ' ' + X.m : ''); };
+  fetch(streamUrl, { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(txt => {
+    const levels = [];
+    txt.split('\n').forEach(line => { if (line.indexOf('#EXT-X-STREAM-INF') === 0) { const b = line.match(/BANDWIDTH=(\d+)/), h = line.match(/RESOLUTION=\d+x(\d+)/); levels.push({ bitrate: b ? +b[1] : 0, height: h ? +h[1] : 0 }); } });
+    if (levels.length < 2) return;
+    const qUrl = l => streamUrl.replace('/stream?', '/stream-q?') + '&q=' + Math.round(l.bitrate / 1000);
+    const pick = () => {
+      const p = get(); if (p === 'auto') return null; let idx = -1;
+      if (p[0] === 'b') { const w = parseInt(p.slice(1), 10) * 1000; let d = 1e12; levels.forEach((l, i) => { const x = Math.abs(l.bitrate - w); if (x < d) { d = x; idx = i; } }); }
+      else { const w = parseInt(p, 10); let bh = -1; levels.forEach((l, i) => { if (l.height && l.height <= w && l.height > bh) { bh = l.height; idx = i; } }); }
+      return idx >= 0 ? levels[idx] : null;
+    };
+    const label = () => { const l = pick(); return '⚙ ' + (l ? lab(l) : X.a); };
+    const apply = reload => {
+      const l = pick(), target = l ? qUrl(l) : streamUrl;
+      if (video.getAttribute('data-rtvq') !== target) {
+        video.setAttribute('data-rtvq', target);
+        if (reload || l) { video.src = target; const p = video.play(); if (p && p.catch) p.catch(() => {}); }
+      }
+      btn.textContent = label();
+    };
+    const closeMenu = () => { const m = document.getElementById('quality-menu'); if (m) m.remove(); };
+    btn.style.display = '';
+    btn.onclick = e => {
+      e.stopPropagation();
+      if (document.getElementById('quality-menu')) { closeMenu(); return; }
+      const m = document.createElement('div'); m.id = 'quality-menu';
+      m.style.cssText = 'position:absolute;right:10px;bottom:76px;z-index:60;background:#12121f;border:1px solid #2a2a40;border-radius:10px;padding:6px;min-width:170px;box-shadow:0 8px 28px rgba(0,0,0,.55);color:#e2e2f0;font:13px/1.3 -apple-system,BlinkMacSystemFont,sans-serif';
+      const add = (text, value) => {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = text;
+        b.style.cssText = 'display:block;width:100%;text-align:left;background:' + (get() === value ? '#1a3a7a' : 'none') + ';border:0;color:inherit;padding:9px 10px;border-radius:7px;cursor:pointer;font:inherit';
+        b.onclick = ev => { ev.stopPropagation(); set(value); apply(true); closeMenu(); };
+        m.appendChild(b);
+      };
+      add(X.a, 'auto');
+      levels.slice().sort((a, b) => b.bitrate - a.bitrate).forEach(l => add(lab(l) + (l.height ? ' · ' + (l.bitrate / 1e6).toFixed(1) + ' ' + X.m : ''), l.height ? String(l.height) : 'b' + Math.round(l.bitrate / 1000)));
+      cont.appendChild(m);
+    };
+    document.addEventListener('click', closeMenu);
+    apply(false);
+  }).catch(() => {});
+}
+
 // ── Выбор качества (Авто / фиксированный уровень), если источник отдаёт несколько уровней ──
 function initQuality(h) {
   const btn = document.getElementById('quality-btn'), cont = document.getElementById('video-container');
@@ -852,7 +905,7 @@ function loadStream(url) {
     // блокирует — именно из-за этого play() здесь стабильно отклонялся и статус
     // упирался в "Нажмите ▶" без связи с конкретным источником/каналом.
     if (!userUnmuted) video.muted = true;
-    video.src=streamUrl; setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
+    video.src=streamUrl; try { initQualityNative(streamUrl); } catch (e) {} setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
     video.play()
       .then(() => {
         nativeStarted = true; clearTimeout(nativeTimeout);
