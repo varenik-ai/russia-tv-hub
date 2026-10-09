@@ -112,6 +112,7 @@
         <button id="unmute-btn" class="btn danger" style="display:none"></button>
         <button id="mode-btn" class="btn"></button>
         <button id="fullscreen-btn" class="btn"></button>
+        <button id="quality-btn" class="btn" style="display:none"></button>
         <button id="pip-btn" class="btn" style="display:none"></button>
         <button id="site-link-btn" class="btn site-link-btn">🌐 Смотреть на сайте</button>
       </div>
@@ -215,7 +216,7 @@ const CHANNEL_GROUPS = [
       { id:'moskva24',  name:'Москва 24',    desc:'Новости и жизнь столицы',     icon:'М24', color:'#e53935', iconBg:'#1a0808', stream: PROXY+'/stream?channel=moskva24' },
       { id:'kultura',   name:'Россия-К',     desc:'Культура и искусство',        icon:'К',   color:'#6a1b9a', iconBg:'#12081a', stream: PROXY+'/stream?channel=kultura' },
       { id:'spb', name:'Санкт-Петербург', desc:'Телеканал Петербурга', icon:'СПБ', color:'#1565c0', iconBg:'#080d1a', stream: PROXY+'/stream?channel=spb' },
-      { id:'patriot', name:'Патриот', desc:'Армия, история, патриотика', icon:'ПАТ', color:'#2e7d32', iconBg:'#081208', stream: PROXY+'/stream?channel=patriot' },
+      { id:'soloviev',  name:'Соловьёв Live', desc:'Политика и аналитика',     icon:'СЛ',   color:'#455a64', iconBg:'#0d1214', logo:'https://smotret.tv/images/logo-solovev-live.svg', slug:'soloviev-live', stream: PROXY+'/stream?channel=soloviev' },
     ]
   },
   {
@@ -238,14 +239,10 @@ const CHANNEL_GROUPS = [
       // CORS-потока (искали несколько раз), ни рабочего iframe-embed (OK.ru
       // гео-блокирует) для него нет — оставлять заведомо неработающую
       // карточку хуже, чем не показывать канал вовсе.
-      { id:'soloviev',  name:'Соловьёв Live', desc:'Политика и аналитика',     icon:'СЛ',   color:'#455a64', iconBg:'#0d1214', logo:'https://smotret.tv/images/logo-solovev-live.svg', slug:'soloviev-live', stream: PROXY+'/stream?channel=soloviev' },
       { id:'istoriya',  name:'История',       desc:'Документальное кино',      icon:'ИСТ',  color:'#5d4037', iconBg:'#120e0a', slug:'istoriya-live', stream: PROXY+'/stream?channel=istoriya' },
       { id:'soyuz', name:'Союз', desc:'Православное и семейное ТВ', icon:'СОЮ', color:'#8d6e63', iconBg:'#120e0a', stream: PROXY+'/stream?channel=soyuz' },
-      { id:'detektiv', name:'Честный детектив', desc:'Детективы и криминал', icon:'ЧД', color:'#546e7a', iconBg:'#0c1216', stream: PROXY+'/stream?channel=detektiv' },
       { id:'prima', name:'Прима', desc:'Развлекательный канал', icon:'ПРИ', color:'#ad1457', iconBg:'#180810', stream: PROXY+'/stream?channel=prima' },
-      { id:'ryzhiy', name:'Рыжий', desc:'Развлекательный канал', icon:'РЫЖ', color:'#e65100', iconBg:'#1a0e08', stream: PROXY+'/stream?channel=ryzhiy' },
       { id:'rtdoc', name:'RT Documentary', desc:'Документальные фильмы на русском', icon:'RTD', color:'#c62828', iconBg:'#180808', stream: PROXY+'/stream?channel=rtdoc' },
-      { id:'bober', name:'Бобер', desc:'Развлекательный канал', icon:'БОБ', color:'#8d6e63', iconBg:'#120e0a', stream: PROXY+'/stream?channel=bober' },
     ]
   },
   {
@@ -261,6 +258,7 @@ const CHANNEL_GROUPS = [
       { id:'indiyskoekino',name:'Индийское кино',   desc:'Лучшие фильмы Болливуда',  icon:'ИНД', color:'#f57f17', iconBg:'#1a1200', slug:'indiyskoekino-live', stream: PROXY+'/stream?channel=indiyskoekino' },
       { id:'kinodetektiv', name:'Viju TV1000 Русское кино',    desc:'Русское кино и сериалы 24/7', icon:'VRK', color:'#546e7a', iconBg:'#0c1216', slug:'kino-detektiv-live', stream: PROXY+'/stream?channel=kinodetektiv' },
       { id:'kinoekshn',    name:'Кино Экшн',        desc:'Боевики и экшн 24/7',      icon:'ЭКШ', color:'#d84315', iconBg:'#1a0d08', slug:'kino-ekshn-live', stream: PROXY+'/stream?channel=kinoekshn' },
+      { id:'detektiv', name:'Честный детектив', desc:'Детективы и криминал', icon:'ЧД', color:'#546e7a', iconBg:'#0c1216', stream: PROXY+'/stream?channel=detektiv' },
     ]
   },
   {
@@ -269,6 +267,7 @@ const CHANNEL_GROUPS = [
       { id:'karusel',  name:'Карусель',    desc:'Для малышей и детей', icon:'КАР', color:'#ff6f00', iconBg:'#1a1200', logo:'https://smotret.tv/images/logo-karusel.svg', slug:'karusel-live', stream: PROXY+'/stream?channel=karusel' },
       { id:'mult',     name:'Мульт',       desc:'Мультфильмы 24/7',    icon:'МЛТ', color:'#ff8f00', iconBg:'#1a1400', slug:'mult-live', stream: PROXY+'/stream?channel=mult' },
       { id:'karuselIntl', name:'Карусель International', desc:'Для малышей и детей', icon:'КИ', color:'#ff6f00', iconBg:'#1a1200', stream: PROXY+'/stream?channel=karuselIntl' },
+      { id:'ryzhiy', name:'Рыжий', desc:'Развлекательный канал', icon:'РЫЖ', color:'#e65100', iconBg:'#1a0e08', stream: PROXY+'/stream?channel=ryzhiy' },
     ]
   },
   {
@@ -295,6 +294,7 @@ const CHANNEL_GROUPS = [
       { id:'zhivotnye', name:'Домашние животные', desc:'Всё о питомцах', icon:'ДЖ', color:'#558b2f', iconBg:'#0c1408', stream: PROXY+'/stream?channel=zhivotnye' },
       { id:'zdorovoe', name:'Здоровое ТВ', desc:'Здоровье и образ жизни', icon:'ЗТВ', color:'#00897b', iconBg:'#081412', stream: PROXY+'/stream?channel=zdorovoe' },
       { id:'bigplanet', name:'Большая планета', desc:'Путешествия и природа', icon:'БП', color:'#2e7d32', iconBg:'#081208', stream: PROXY+'/stream?channel=bigplanet' },
+      { id:'bober', name:'Бобер', desc:'Развлекательный канал', icon:'БОБ', color:'#8d6e63', iconBg:'#120e0a', stream: PROXY+'/stream?channel=bober' },
     ]
   },
   {
@@ -329,6 +329,56 @@ function getLang() {
   const b=(navigator.language||'en').split('-')[0].toLowerCase(); return T[b]?b:'ru';
 }
 const t = T[getLang()];
+
+// ── Выбор качества (Авто / фиксированный уровень), если источник отдаёт несколько уровней ──
+function initQuality(h) {
+  const btn = document.getElementById('quality-btn'), cont = document.getElementById('video-container');
+  if (!btn || !cont) return;
+  btn.style.display = 'none'; btn.onclick = null;
+  const old = document.getElementById('quality-menu'); if (old) old.remove();
+  const ru = getLang() === 'ru', X = { q: ru ? 'Качество' : 'Quality', a: ru ? 'Авто' : 'Auto', m: ru ? 'Мбит/с' : 'Mbit/s' };
+  const KEY = 'rtv_quality';
+  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const set = v => { try { localStorage.setItem(KEY, v); } catch (e) {} };
+  const lab = l => { const mb = l.bitrate ? l.bitrate / 1e6 : 0; return l.height ? l.height + 'p' : (mb ? (mb >= 10 ? mb.toFixed(0) : mb.toFixed(1)) + ' ' + X.m : ''); };
+  const apply = () => {
+    const p = get(), lv = h.levels || [];
+    if (p === 'auto' || !lv.length) { h.currentLevel = -1; return; }
+    let idx = -1;
+    if (p[0] === 'b') { const w = parseInt(p.slice(1), 10) * 1000; let d = 1e12; lv.forEach((l, i) => { const x = Math.abs((l.bitrate || 0) - w); if (x < d) { d = x; idx = i; } }); }
+    else { const w = parseInt(p, 10); let bh = -1; lv.forEach((l, i) => { const hh = l.height || 0; if (hh <= w && hh > bh) { bh = hh; idx = i; } }); }
+    h.currentLevel = idx;
+  };
+  const label = () => {
+    const p = get(); const lv = h.levels || [];
+    if (p === 'auto') { const l = lv[h.currentLevel >= 0 ? h.currentLevel : 0]; const hh = (l && l.height) || video.videoHeight || 0; return '⚙ ' + X.a + (hh ? ' (' + hh + 'p)' : ''); }
+    const cl = lv[h.currentLevel]; return '⚙ ' + (cl ? lab(cl) : p);
+  };
+  const closeMenu = () => { const m = document.getElementById('quality-menu'); if (m) m.remove(); };
+  const build = () => {
+    const lv = h.levels || []; if (lv.length < 2) return;
+    apply(); btn.style.display = ''; btn.textContent = label();
+    btn.onclick = e => {
+      e.stopPropagation();
+      if (document.getElementById('quality-menu')) { closeMenu(); return; }
+      const m = document.createElement('div'); m.id = 'quality-menu';
+      m.style.cssText = 'position:absolute;right:10px;bottom:76px;z-index:60;background:#12121f;border:1px solid #2a2a40;border-radius:10px;padding:6px;min-width:170px;box-shadow:0 8px 28px rgba(0,0,0,.55);color:#e2e2f0;font:13px/1.3 -apple-system,BlinkMacSystemFont,sans-serif';
+      const add = (text, value) => {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = text;
+        b.style.cssText = 'display:block;width:100%;text-align:left;background:' + (get() === value ? '#1a3a7a' : 'none') + ';border:0;color:inherit;padding:9px 10px;border-radius:7px;cursor:pointer;font:inherit';
+        b.onclick = ev => { ev.stopPropagation(); set(value); apply(); btn.textContent = label(); closeMenu(); };
+        m.appendChild(b);
+      };
+      add(X.a, 'auto');
+      lv.map(l => l).sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0)).forEach(l => add(lab(l) + (l.height && l.bitrate ? ' · ' + (l.bitrate / 1e6).toFixed(1) + ' ' + X.m : ''), l.height ? String(l.height) : 'b' + Math.round((l.bitrate || 0) / 1000)));
+      cont.appendChild(m);
+    };
+  };
+  if ((h.levels || []).length) build(); else h.once(Hls.Events.MANIFEST_PARSED, build);
+  h.on(Hls.Events.LEVEL_SWITCHED, () => { if (btn.style.display !== 'none') btn.textContent = label(); });
+  document.addEventListener('click', closeMenu);
+}
+
 
 // ── DOM ────────────────────────────────────────────────────────────────────
 const hubScreen     = document.getElementById('hub-screen');
@@ -720,6 +770,7 @@ function loadStream(url) {
   if (Hls.isSupported()) {
     hls = new Hls({ ...HLS_BUFFER_OPTS, enableWorker:HLS_WORKER_SAFE, backBufferLength:30 });
     hls.loadSource(streamUrl); hls.attachMedia(video);
+    try { initQuality(hls); } catch (e) {}
     hls.on(Hls.Events.MANIFEST_PARSED, async () => {
       setStatus('live'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
       try {
