@@ -230,7 +230,7 @@ function buildPlaylistResponse(body, streamUrl, workerOrigin) {
   });
 }
 __name(buildPlaylistResponse, "buildPlaylistResponse");
-var STALE_THRESHOLD_MS = 45 * 1e3;
+var STALE_THRESHOLD_MS = 120 * 1e3;
 function latestProgramDateTimeMs(content) {
   const matches = content.match(/#EXT-X-PROGRAM-DATE-TIME:([^\r\n]+)/g);
   if (!matches || !matches.length) return null;
