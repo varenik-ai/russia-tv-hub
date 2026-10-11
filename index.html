@@ -610,6 +610,23 @@ async function requestWakeLock() {
 // v82.36: до первого кадра даём источнику больше времени на старт (медленные thestream/cinerama
 // отдают первые сегменты >12 с — раньше сторож рвал такой старт и крутил циклы переподключений).
 let _playedOnce = false;
+// v82.37: пользователь включил звук — после автопереподключения (сторож, смена воркера, выход из
+// полноэкранного режима) звук возвращается сам, раньше каждый реконнект глушил трансляцию.
+let _soundWanted = false;
+function _restoreSound() {
+  if (!_soundWanted || !currentCh) return;
+  try {
+    video.muted = false; video.volume = 1; userUnmuted = true;
+    unmuteBtn.textContent = '🔇 ' + t.mute;
+    const ab = document.getElementById('audio-bg'); if (ab) { ab.muted = true; ab.pause(); }
+    setTimeout(() => {
+      if (!currentCh || !video.paused) return;
+      // браузер не дал включить звук без жеста — возвращаем безопасный режим без звука
+      video.muted = true; userUnmuted = false; unmuteBtn.textContent = '🔊 ' + t.unmute;
+      video.play().catch(() => {});
+    }, 1500);
+  } catch (e) {}
+}
 video.addEventListener('playing', () => { _playedOnce = true; });
 const START_GRACE_MS = 30000;
 video.addEventListener('timeupdate', () => {
@@ -837,6 +854,7 @@ function loadStream(url) {
         if (!userUnmuted) video.muted=true;
         await video.play();
         unmuteBtn.style.display = audioOnly ? 'none' : 'block';
+        _restoreSound();
         setupMediaSession();
         if (!isIOS()) requestWakeLock();
       } catch(e) { setStatus('pressPlay', true); }
@@ -917,7 +935,7 @@ function loadStream(url) {
       .then(() => {
         nativeStarted = true; clearTimeout(nativeTimeout);
         video.removeEventListener('error', _nativeErrorHandler); _nativeErrorHandler = null;
-        setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; setupMediaSession(); if(!isIOS())requestWakeLock();
+        setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; _restoreSound(); setupMediaSession(); if(!isIOS())requestWakeLock();
       })
       .catch((err) => {
         // v82.34: раньше ЛЮБОЙ отказ play() (даже из-за разового сетевого
@@ -1005,11 +1023,11 @@ video.addEventListener('click', () => {
 unmuteBtn.onclick = () => {
   const ab = document.getElementById('audio-bg');
   if (video.muted) {
-    video.muted=false; video.volume=1; userUnmuted=true;
+    video.muted=false; video.volume=1; userUnmuted=true; _soundWanted=true;
     unmuteBtn.textContent = '🔇 '+t.mute;
     if (ab) { ab.muted=true; ab.pause(); }
   } else {
-    video.muted=true; userUnmuted=false;
+    video.muted=true; userUnmuted=false; _soundWanted=false;
     unmuteBtn.textContent = '🔊 '+t.unmute;
     if (ab && isIOS()) { ab.muted=false; ab.volume=0; ab.play().catch(()=>{}); }
   }
@@ -1045,7 +1063,7 @@ function buildHub() {
 }
 
 function openChannel(ch) {
-  currentCh = ch;
+  currentCh = ch; _soundWanted = false;
   hubScreen.style.display = 'none';
   playerScreen.style.display = 'flex';
   chTitle.textContent = ch.name;
