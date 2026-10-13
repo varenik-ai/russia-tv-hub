@@ -844,7 +844,9 @@ function loadStream(url) {
   }
 
   video.muted=true;
-  if (Hls.isSupported()) {
+  // v82.38: НТВ на iOS играем встроенным плеером Apple и официальным источником cdn.ntv.ru (воркер /stream?native=1, CORS не нужен)
+  const _ntvNative = !!currentCh && currentCh.id === 'ntv' && isIOS() && !!video.canPlayType('application/vnd.apple.mpegurl');
+  if (Hls.isSupported() && !_ntvNative) {
     hls = new Hls({ ...HLS_BUFFER_OPTS, enableWorker:HLS_WORKER_SAFE, backBufferLength:30 });
     hls.loadSource(streamUrl); hls.attachMedia(video);
     try { initQuality(hls); } catch (e) {}
@@ -930,7 +932,8 @@ function loadStream(url) {
     // блокирует — именно из-за этого play() здесь стабильно отклонялся и статус
     // упирался в "Нажмите ▶" без связи с конкретным источником/каналом.
     if (!userUnmuted) video.muted = true;
-    video.src=streamUrl; try { initQualityNative(streamUrl); } catch (e) {} setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
+    const _nUrl = streamUrl + '&native=1';
+    video.src=_nUrl; try { initQualityNative(_nUrl); } catch (e) {} setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
     video.play()
       .then(() => {
         nativeStarted = true; clearTimeout(nativeTimeout);
