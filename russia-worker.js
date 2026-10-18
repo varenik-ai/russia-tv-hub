@@ -1,8 +1,10 @@
+// Копия боевого кода воркера (Cloudflare: russia-worker / birch-creek / oak-valley — код одинаковый). Версия 82.36.0.
+// Файл собран esbuild (отсюда __name). Синхронизируется вручную: источник правды — Cloudflare, эту копию не деплоить вслепую.
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.35.0";
+var VERSION = "82.36.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -35,6 +37,9 @@ var STREAMS = {
   tnt: "https://fs.uplink.kz/tnt4/mono.m3u8?token=onlinetv",
   soloviev: "https://stream.smotrim.ru/hls/solovievlive/playlist_3.m3u8",
   domkino: "https://streaming.thestream.cyou/live/44-req_offset_28000000-req_window_0-1k_v5.m3u8",
+  kinokomediya: "https://cityeden.catcast.tv/content/41331/index.m3u8",
+  kinodetektiv: "https://cityeden.catcast.tv/content/38398/index.m3u8",
+  kinoekshn: "https://cityeden.catcast.tv/content/45268/index.m3u8",
   karusel: "https://stream.smotrim.ru/hls2/karusel/playlist_3.m3u8",
   floHockey: "https://amg02278-amg02278c2-flosports-worldwide-9916.playouts.now.amagi.tv/playlist.m3u8",
   floRacing: "https://amg02278-amg02278c1-flosports-worldwide-7592.playouts.now.amagi.tv/playlist.m3u8",
@@ -58,9 +63,7 @@ var CINERAMA_PATH = {
   kinohit: "1055/tracks-v1a1/mono.m3u8",
   retro: "1047/tracks-v1a1/mono.m3u8",
   kinopremiera: "1207/tracks-v1a1/mono.m3u8",
-  viju: "1058/tracks-v1a1/mono.m3u8",
-  kinokomediya: "1056/tracks-v2a1/mono.m3u8",
-  kinodetektiv: "1059/tracks-v2a1/mono.m3u8",
+  viju: "1058/tracks-v1a1/mono.m3u8", kinokomediya: "1056/tracks-v2a1/mono.m3u8", kinodetektiv: "1059/tracks-v2a1/mono.m3u8",
   nasheKino: "1051/tracks-v1a1/mono.m3u8",
   rodnoeKino: "1052/tracks-v1a1/mono.m3u8",
   kinopokaz: "1057/tracks-v1a1/mono.m3u8",
@@ -88,9 +91,7 @@ var CINERAMA_PATH = {
   tracesport: "1274/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8"
 };
-var STITCHED_MASTERS = {
-  
-};
+var STITCHED_MASTERS = {  };
 var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 var index_default = {
   async fetch(request) {
@@ -99,8 +100,35 @@ var index_default = {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS });
     }
+    if (path === "/stream-q") {
+      const qChannel = url.searchParams.get("channel") || "";
+      const want = (parseInt(url.searchParams.get("q") || "0", 10) || 0) * 1e3;
+      const qNative = url.searchParams.get("native") === "1" ? "&native=1" : "";
+      const inner = await index_default.fetch(new Request(url.origin + "/stream?channel=" + encodeURIComponent(qChannel) + qNative));
+      if (!inner.ok) return inner;
+      const text = await inner.text();
+      const rows = text.split("\n");
+      const pairs = [];
+      const head = [];
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].startsWith("#EXT-X-STREAM-INF")) { pairs.push([rows[i], rows[i + 1] || ""]); i++; }
+        else if (!pairs.length && rows[i].trim()) head.push(rows[i]);
+      }
+      if (!want || !pairs.length) return new Response(text, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
+      let best = pairs[0], bestD = Infinity;
+      for (const p of pairs) {
+        const m = p[0].match(/BANDWIDTH=(\d+)/);
+        const d = Math.abs((m ? +m[1] : 0) - want);
+        if (d < bestD) { bestD = d; best = p; }
+      }
+      return new Response(head.join("\n") + "\n" + best[0] + "\n" + best[1] + "\n", { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
+    }
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
+      if (channel === "ntv" && url.searchParams.get("native") === "1") {
+        const nr = await fetchPlaylistOnly("https://cdn.ntv.ru/ntv0/playlist.m3u8", url.origin);
+        if (nr.ok) return nr;
+      }
       if (SYNTH_MASTERS[channel]) {
         const sm = await fetchSynthMaster(channel, url.origin);
         if (sm) return sm;
@@ -108,10 +136,7 @@ var index_default = {
       if (CINERAMA_PATH[channel]) {
         return fetchCinerama(CINERAMA_PATH[channel], url.origin);
       }
-      if (STITCHED_MASTERS[channel]) {
-        return fetchStitchedMaster(STITCHED_MASTERS[channel], url.origin);
-      }
-      const streamUrl = STREAMS[channel];
+      if (STITCHED_MASTERS[channel]) { return fetchStitchedMaster(STITCHED_MASTERS[channel], url.origin); } const streamUrl = STREAMS[channel];
       if (!streamUrl) {
         return new Response(JSON.stringify({ error: "Channel not found", channel }), {
           status: 404,
@@ -129,17 +154,17 @@ var index_default = {
       return fetchPlaylistOnly(target, url.origin);
     }
     if (path === "/proxy") {
-      return new Response("Proxy disabled — CF ToS compliance. Segments served directly.", {
+      return new Response("Proxy disabled \u2014 CF ToS compliance. Segments served directly.", {
         status: 410,
         headers: { ...CORS, "Content-Type": "text/plain" }
       });
     }
     if (path === "/version") {
-      return new Response(JSON.stringify({ version: VERSION, channels: Object.keys(STREAMS).length + Object.keys(CINERAMA_PATH).length + Object.keys(STITCHED_MASTERS).length, mode: "cors-only" }), {
+      return new Response(JSON.stringify({ version: VERSION, channels: Object.keys(STREAMS).length + Object.keys(CINERAMA_PATH).length, mode: "cors-only" }), {
         headers: { ...CORS, "Content-Type": "application/json" }
       });
     }
-    return new Response(`Russia TV Worker v${VERSION} — CORS-only mode`, { headers: CORS });
+    return new Response(`Russia TV Worker v${VERSION} \u2014 CORS-only mode`, { headers: CORS });
   }
 };
 function isSegment(url) {
@@ -345,66 +370,6 @@ async function fetchCinerama(path, workerOrigin) {
   );
 }
 __name(fetchCinerama, "fetchCinerama");
-function firstVariantUri(masterBody) {
-  const lines = masterBody.split("\n").map((l) => l.trim()).filter(Boolean);
-  const idx = lines.findIndex((l) => l.startsWith("#EXT-X-STREAM-INF"));
-  if (idx === -1) return null;
-  const variantLine = lines[idx + 1];
-  if (!variantLine || variantLine.startsWith("#")) return null;
-  return variantLine;
-}
-__name(firstVariantUri, "firstVariantUri");
-async function fetchStitchedMaster(masterUrl, workerOrigin) {
-  let res;
-  try {
-    res = await fetch(masterUrl, {
-      headers: { "User-Agent": UA, "Referer": new URL(masterUrl).origin + "/" },
-      cf: { cacheTtl: 0, cacheEverything: false }
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e.message, masterUrl }), {
-      status: 502,
-      headers: { ...CORS, "Content-Type": "application/json" }
-    });
-  }
-  if (!res.ok) {
-    return new Response(`Source returned ${res.status}`, { status: res.status, headers: CORS });
-  }
-  const masterBody = await res.text();
-  const variantUri = firstVariantUri(masterBody);
-  if (!variantUri) {
-    return new Response(
-      JSON.stringify({ error: "No variant found in master playlist", masterUrl }),
-      { status: 502, headers: { ...CORS, "Content-Type": "application/json" } }
-    );
-  }
-  const variantUrl = resolveUrl(baseDir(masterUrl), variantUri);
-  let vres;
-  try {
-    vres = await fetch(variantUrl, {
-      headers: { "User-Agent": UA, "Referer": new URL(masterUrl).origin + "/" },
-      cf: { cacheTtl: 0, cacheEverything: false }
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e.message, variantUrl }), {
-      status: 502,
-      headers: { ...CORS, "Content-Type": "application/json" }
-    });
-  }
-  if (!vres.ok) {
-    return new Response(`Variant source returned ${vres.status}`, { status: vres.status, headers: CORS });
-  }
-  const body = await vres.text();
-  const latestMs = latestProgramDateTimeMs(body);
-  if (latestMs !== null && Date.now() - latestMs > STALE_THRESHOLD_MS) {
-    return new Response(
-      JSON.stringify({ error: `Stale playlist (last segment ${Math.round((Date.now() - latestMs) / 1e3)}s old)`, variantUrl }),
-      { status: 502, headers: { ...CORS, "Content-Type": "application/json" } }
-    );
-  }
-  return buildPlaylistResponse(body, variantUrl, workerOrigin);
-}
-__name(fetchStitchedMaster, "fetchStitchedMaster");
-export {
+function firstVariantUri(b) { var l = b.split("\n").map(function (x) { return x.trim(); }).filter(Boolean); var i = l.findIndex(function (x) { return x.startsWith("#EXT-X-STREAM-INF"); }); if (i === -1) return null; var v = l[i + 1]; if (!v || v.startsWith("#")) return null; return v; } async function fetchStitchedMaster(masterUrl, workerOrigin) { const H = { headers: { "User-Agent": UA, "Referer": new URL(masterUrl).origin + "/" }, cf: { cacheTtl: 0, cacheEverything: false } }; const J = { ...CORS, "Content-Type": "application/json" }; let res; try { res = await fetch(masterUrl, H); } catch (e) { return new Response(JSON.stringify({ error: e.message, masterUrl }), { status: 502, headers: J }); } if (!res.ok) return new Response("Source returned " + res.status, { status: res.status, headers: CORS }); const variantUri = firstVariantUri(await res.text()); if (!variantUri) return new Response(JSON.stringify({ error: "No variant found in master playlist", masterUrl }), { status: 502, headers: J }); const variantUrl = resolveUrl(baseDir(masterUrl), variantUri); let vres; try { vres = await fetch(variantUrl, H); } catch (e) { return new Response(JSON.stringify({ error: e.message, variantUrl }), { status: 502, headers: J }); } if (!vres.ok) return new Response("Variant source returned " + vres.status, { status: vres.status, headers: CORS }); const body = await vres.text(); const latestMs = latestProgramDateTimeMs(body); if (latestMs !== null && Date.now() - latestMs > STALE_THRESHOLD_MS) return new Response(JSON.stringify({ error: "Stale playlist", variantUrl }), { status: 502, headers: J }); return buildPlaylistResponse(body, variantUrl, workerOrigin); } export {
   index_default as default
 };
