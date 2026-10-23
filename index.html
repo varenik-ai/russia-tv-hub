@@ -114,7 +114,7 @@
         <button id="fullscreen-btn" class="btn"></button>
         <button id="quality-btn" class="btn" style="display:none"></button>
         <button id="pip-btn" class="btn" style="display:none"></button>
-        <button id="airplay-btn" class="btn" style="display:none">📺 AirPlay</button>
+        <button id="airplay-btn" class="btn" style="display:none">📲 AirPlay</button>
         <button id="site-link-btn" class="btn site-link-btn">🌐 Смотреть на сайте</button>
       </div>
     </div>
@@ -616,18 +616,28 @@ pipBtn.onclick = async () => {
     else if (!isIOS() && video.requestPictureInPicture) { await video.requestPictureInPicture(); pipBtn.textContent='✕ PiP'; }
   } catch(e) {}
 };
-// ── AirPlay (iOS): передача видео на Apple TV / телевизор с AirPlay без зеркала экрана (v82.41) ──
+// ── AirPlay (iOS): передача видео на Apple TV / телевизор с AirPlay без зеркала экрана (v82.42) ──
 // Системный выбор устройства работает только для нативного HLS (не blob/MSE от hls.js). Если канал идёт через hls.js,
-// первое нажатие переключает канал на нативный плеер, второе открывает выбор устройства.
+// первое нажатие переключает канал на нативный плеер, второе открывает выбор устройства. Если WebView Telegram
+// не отдаёт AirPlay API — кнопка открывает страницу канала в Safari, где AirPlay есть.
 let _forceNative = false;
-if (isIOS() && window.WebKitPlaybackTargetAvailabilityEvent) {
-  try { video.setAttribute('x-webkit-airplay', 'allow'); video.disableRemotePlayback = false; } catch (e) {}
+if (isIOS()) {
+  const hasAir = !!window.WebKitPlaybackTargetAvailabilityEvent && typeof video.webkitShowPlaybackTargetPicker === 'function';
   const isBlob = () => !video.currentSrc || /^blob:/.test(video.currentSrc);
   const airVis = () => { airBtn.style.display = (currentCh && !currentCh.embedUrl) ? 'block' : 'none'; };
-  video.addEventListener('webkitplaybacktargetavailabilitychanged', (e) => { if (e.availability !== 'available' && !isBlob()) airBtn.style.display = 'none'; else airVis(); });
+  if (hasAir) {
+    try { video.setAttribute('x-webkit-airplay', 'allow'); video.disableRemotePlayback = false; } catch (e) {}
+    video.addEventListener('webkitplaybacktargetavailabilitychanged', (e) => { if (e.availability !== 'available' && !isBlob()) airBtn.style.display = 'none'; else airVis(); });
+  }
   ['loadstart', 'playing'].forEach(ev => video.addEventListener(ev, airVis));
   airBtn.onclick = () => {
-    if (isBlob()) { _forceNative = true; airBtn.textContent = '📺 AirPlay ▶'; stopStream(); init(); return; }
+    if (!hasAir) {
+      const url = SITE + '/' + (currentCh && currentCh.slug ? currentCh.slug + '/' : '');
+      const w = window.open(url, '_blank');
+      if (!w) { try { tg.openLink(url, { try_instant_view: false }); } catch (e) {} }
+      return;
+    }
+    if (isBlob()) { _forceNative = true; airBtn.textContent = '📲 AirPlay ▶'; stopStream(); init(); return; }
     try { video.webkitShowPlaybackTargetPicker(); } catch (e) {}
   };
 }
