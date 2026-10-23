@@ -114,6 +114,7 @@
         <button id="fullscreen-btn" class="btn"></button>
         <button id="quality-btn" class="btn" style="display:none"></button>
         <button id="pip-btn" class="btn" style="display:none"></button>
+        <button id="airplay-btn" class="btn" style="display:none">📺 AirPlay</button>
         <button id="site-link-btn" class="btn site-link-btn">🌐 Смотреть на сайте</button>
       </div>
     </div>
@@ -452,6 +453,7 @@ const unmuteBtn     = document.getElementById('unmute-btn');
 const modeBtn       = document.getElementById('mode-btn');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const pipBtn        = document.getElementById('pip-btn');
+const airBtn        = document.getElementById('airplay-btn');
 const siteLinkBtn   = document.getElementById('site-link-btn');
 
 let currentCh=null, hls=null, hlsAudio=null, hideTimeout=null, tokenRefreshTimer=null;
@@ -614,6 +616,21 @@ pipBtn.onclick = async () => {
     else if (!isIOS() && video.requestPictureInPicture) { await video.requestPictureInPicture(); pipBtn.textContent='✕ PiP'; }
   } catch(e) {}
 };
+// ── AirPlay (iOS): передача видео на Apple TV / телевизор с AirPlay без зеркала экрана (v82.41) ──
+// Системный выбор устройства работает только для нативного HLS (не blob/MSE от hls.js). Если канал идёт через hls.js,
+// первое нажатие переключает канал на нативный плеер, второе открывает выбор устройства.
+let _forceNative = false;
+if (isIOS() && window.WebKitPlaybackTargetAvailabilityEvent) {
+  try { video.setAttribute('x-webkit-airplay', 'allow'); video.disableRemotePlayback = false; } catch (e) {}
+  const isBlob = () => !video.currentSrc || /^blob:/.test(video.currentSrc);
+  const airVis = () => { airBtn.style.display = (currentCh && !currentCh.embedUrl) ? 'block' : 'none'; };
+  video.addEventListener('webkitplaybacktargetavailabilitychanged', (e) => { if (e.availability !== 'available' && !isBlob()) airBtn.style.display = 'none'; else airVis(); });
+  ['loadstart', 'playing'].forEach(ev => video.addEventListener(ev, airVis));
+  airBtn.onclick = () => {
+    if (isBlob()) { _forceNative = true; airBtn.textContent = '📺 AirPlay ▶'; stopStream(); init(); return; }
+    try { video.webkitShowPlaybackTargetPicker(); } catch (e) {}
+  };
+}
 video.addEventListener('leavepictureinpicture', async () => {
   pipBtn.textContent='🎥 PiP'; userUnmuted=false; video.muted=true;
   if (video.paused) { try { await video.play(); } catch(e) {} }
@@ -864,7 +881,7 @@ function loadStream(url) {
 
   video.muted=true;
   // v82.38: НТВ на iOS играем встроенным плеером Apple и официальным источником cdn.ntv.ru (воркер /stream?native=1, CORS не нужен)
-  const _ntvNative = !!currentCh && currentCh.id === 'ntv' && isIOS() && !!video.canPlayType('application/vnd.apple.mpegurl');
+  const _ntvNative = !!currentCh && (currentCh.id === 'ntv' || _forceNative) && isIOS() && !!video.canPlayType('application/vnd.apple.mpegurl');
   if (Hls.isSupported() && !_ntvNative) {
     // v82.39: НТВ — источник отдаёт сегменты неравномерно, держим больший запас буфера
     hls = new Hls({ ...HLS_BUFFER_OPTS, ...(currentCh && currentCh.id === 'ntv' ? { liveSyncDurationCount:8, maxBufferLength:60, maxMaxBufferLength:90, fragLoadingTimeOut:30000 } : {}), enableWorker:HLS_WORKER_SAFE, backBufferLength:30 });
@@ -1094,6 +1111,7 @@ function openChannel(ch) {
     modeBtn.style.display = 'none';
     fullscreenBtn.style.display = 'none';
     pipBtn.style.display = 'none';
+    airBtn.style.display = 'none';
     siteLinkBtn.style.display = 'none';
     channelIframe.src = ch.embedUrl;
     channelIframe.style.display = 'block';
