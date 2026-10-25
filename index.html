@@ -1009,6 +1009,12 @@ function loadStream(url) {
         setStatus('live'); unmuteBtn.style.display=audioOnly?'none':'block'; _restoreSound(); setupMediaSession(); if(!isIOS())requestWakeLock();
       })
       .catch((err) => {
+        // v82.46: меню качества сразу после старта подменяет video.src → первый play() получает AbortError («прервано новой загрузкой»).
+        // Это не сбой источника: раньше из-за него дважды писало «Ошибка — переподключаемся» и перезапускало канал по кругу.
+        if (err && err.name === 'AbortError') {
+          video.addEventListener('playing', () => { clearTimeout(nativeTimeout); nativeStarted = true; _nativePlayRetryCount = 0; setStatus('live'); unmuteBtn.style.display = audioOnly ? 'none' : 'block'; _restoreSound(); try { setupMediaSession(); } catch (e) {} }, { once: true });
+          return;
+        }
         // v82.34: раньше ЛЮБОЙ отказ play() (даже из-за разового сетевого
         // сбоя/битого первого сегмента у источника — "AVPlayer строже, чем
         // hls.js", см. комментарий выше) сразу и окончательно показывал
