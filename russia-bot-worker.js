@@ -10,6 +10,8 @@ const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=14';
 const SITE_URL = 'https://russian-tv.com/';
 const TOTAL = 59;
 const STARS = [25, 100, 500];
+const DONATE_AMOUNTS = [25, 50, 100, 250];   // суммы окна «Поблагодарить» в мини-аппе (/invoice)
+const DONATE_URL = APP_URL + '?startapp=donate';   // кнопка под постом открывает мини-апп сразу с окном выбора ⭐
 
 const LANGS = ['ru', 'en', 'bg', 'uk', 'de', 'fr', 'es', 'tr'];
 const pickLang = (code) => { const l = (code || 'ru').split('-')[0].toLowerCase(); return LANGS.includes(l) ? l : 'en'; };
@@ -135,12 +137,23 @@ async function handleMessage(env, msg) {
     return send(env, chatId, body, { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: t.open, web_app: { url: WEB_URL } }]] } });
   }
   if (cmd === 'donate') return send(env, chatId, t.donate_ask, { reply_markup: donateKb() });
+  if (cmd === 'fixpost') {
+    if (!env.ADMIN_ID || String(msg.from && msg.from.id) !== String(env.ADMIN_ID)) return;   // только администратор
+    // Правит кнопки закреплённого поста на месте (editMessageReplyMarkup): новое сообщение не уходит, подписчики ничего не получают
+    const chat = await tg(env, 'getChat', { chat_id: CHANNEL });
+    const pin = chat.ok && chat.result.pinned_message;
+    if (!pin) return send(env, chatId, '❌ Закреплённый пост не найден: ' + (chat.description || 'нет закреплённого сообщения'));
+    const ru = L.ru;
+    const old = JSON.stringify(pin.reply_markup ? pin.reply_markup.inline_keyboard.map((r) => r.map((b) => b.text + ' → ' + (b.url || ''))) : null);
+    const r = await tg(env, 'editMessageReplyMarkup', { chat_id: CHANNEL, message_id: pin.message_id, reply_markup: { inline_keyboard: [[{ text: ru.open, url: APP_URL }], [{ text: ru.site, url: SITE_URL }], [{ text: ru.help, url: `https://t.me/${BOT_USERNAME}?start=help` }, { text: ru.donate, url: DONATE_URL }]] } });
+    return send(env, chatId, r.ok ? '✅ Кнопки закреплённого поста (id ' + pin.message_id + ') обновлены, подписчикам ничего не отправлено.\nБыло: ' + old : '❌ Не удалось: ' + (r.description || 'unknown') + '\nКнопки сейчас: ' + old);
+  }
   if (cmd === 'post') {
     if (!env.ADMIN_ID || String(msg.from && msg.from.id) !== String(env.ADMIN_ID)) return;   // только администратор
     const ru = L.ru;
     const post = await send(env, CHANNEL, `📺 <b>Русское ТВ в Telegram — ${TOTAL} каналов в прямом эфире</b>\n\nНовости, кино, детям, спорт, музыка. Бесплатно, без регистрации, из любой страны.\n\n👇 Откройте приложение и выберите канал`, {
       parse_mode: 'HTML',
-      reply_markup: { inline_keyboard: [[{ text: ru.open, url: APP_URL }], [{ text: ru.site, url: SITE_URL }], [{ text: ru.help, url: `https://t.me/${BOT_USERNAME}?start=help` }, { text: ru.donate, url: `https://t.me/${BOT_USERNAME}?start=donate` }]] },
+      reply_markup: { inline_keyboard: [[{ text: ru.open, url: APP_URL }], [{ text: ru.site, url: SITE_URL }], [{ text: ru.help, url: `https://t.me/${BOT_USERNAME}?start=help` }, { text: ru.donate, url: DONATE_URL }]] },
     });
     if (post && post.ok) { await tg(env, 'pinChatMessage', { chat_id: CHANNEL, message_id: post.result.message_id }); return send(env, chatId, '✅ Пост опубликован и закреплён в ' + CHANNEL); }
     return send(env, chatId, '❌ Ошибка: ' + ((post && post.description) || 'не удалось опубликовать'));
@@ -187,6 +200,13 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (!env.BOT_TOKEN) return new Response('BOT_TOKEN не задан: добавьте секрет в настройках воркера', { status: 500 });
+    if (url.pathname === '/invoice') {   // /invoice?amount=50 — ссылка на оплату Stars для мини-аппа: tg.openInvoice(url)
+      const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+      const amount = parseInt(url.searchParams.get('amount'), 10);
+      if (!DONATE_AMOUNTS.includes(amount)) return new Response(JSON.stringify({ error: 'bad amount' }), { status: 400, headers: cors });
+      const r = await tg(env, 'createInvoiceLink', { title: L.ru.donate_t, description: L.ru.donate_d, payload: 'donate_' + amount, provider_token: '', currency: 'XTR', prices: [{ label: 'Russia TV', amount }] });
+      return new Response(JSON.stringify(r.ok ? { url: r.result } : { error: r.description }), { status: r.ok ? 200 : 502, headers: cors });
+    }
     if (url.pathname === '/setup') return new Response(JSON.stringify(await setup(env, url.origin), null, 2), { headers: { 'content-type': 'application/json' } });
     if (request.method === 'POST' && url.pathname === '/hook') {
       if (request.headers.get('x-telegram-bot-api-secret-token') !== (await webhookSecret(env))) return new Response('forbidden', { status: 403 });
