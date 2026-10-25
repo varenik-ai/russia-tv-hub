@@ -156,7 +156,9 @@ async function handleCallback(env, q) {
   const m = /^don:(\d+)$/.exec(q.data || '');
   if (m && STARS.includes(Number(m[1]))) {
     const amount = Number(m[1]);
-    return tg(env, 'sendInvoice', { chat_id: chatId, title: t.donate_t, description: t.donate_d, payload: 'donate_' + amount, provider_token: '', currency: 'XTR', prices: [{ label: t.donate_t, amount }] });
+    const inv = await tg(env, 'sendInvoice', { chat_id: chatId, title: t.donate_t, description: t.donate_d, payload: 'donate_' + amount, provider_token: '', currency: 'XTR', prices: [{ label: t.donate_t, amount }] });
+    if (!inv.ok) await send(env, chatId, '⚠️ ' + t.donate_t + ' — ' + (inv.description || 'error'));   // показываем причину отказа Telegram, а не молчим
+    return inv;
   }
 }
 
