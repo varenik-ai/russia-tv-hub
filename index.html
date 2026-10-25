@@ -997,7 +997,11 @@ function loadStream(url) {
     // упирался в "Нажмите ▶" без связи с конкретным источником/каналом.
     if (!userUnmuted) video.muted = true;
     const _nUrl = streamUrl + '&native=1';
-    video.src=_nUrl; try { initQualityNative(_nUrl); } catch (e) {} setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
+    // v82.46: НТВ (cdn.ntv.ru) — варианты качества идут с разной задержкой, и при автовыборе AVPlayer плеер «прыгает» между ними.
+    // Пока пользователь не выбрал качество сам (меню ⚙), фиксируем один вариант (480p) через /stream-q.
+    let _pin = _nUrl;
+    try { if (currentCh && currentCh.id === 'ntv' && (localStorage.getItem('rtv_quality') || 'auto') === 'auto') _pin = streamUrl.replace('/stream?', '/stream-q?') + '&q=1250&native=1'; } catch (e) {}
+    video.src=_pin; try { initQualityNative(_nUrl); } catch (e) {} setStatus('connecting'); liveBadge.style.display='flex'; liveBadgeTop.style.display='inline';
     video.play()
       .then(() => {
         nativeStarted = true; clearTimeout(nativeTimeout);
