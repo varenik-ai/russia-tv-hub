@@ -1055,6 +1055,7 @@ async function init() {
     // достаточно было просто быстрее повторить запрос. СТАЛО 1000мс.
     _markProxyFailed(); _advanceProxy();
     setStatus('errorServer', true);
+    try { statusEl.innerHTML += ' <small>[' + ((e && (e.name + ': ' + e.message)) || e) + ']</small>'; } catch (x) {}   // диагностика: показать причину
     _scheduleInit(1000);
   }
 }
