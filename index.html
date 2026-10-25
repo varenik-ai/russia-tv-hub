@@ -1149,6 +1149,11 @@ function goToHub() {
 backBtn.onclick = () => goToHub();
 
 buildHub();
+// v82.43: t.me/RussiaTVHub_bot/russiatv?startapp=<id канала> (например ntv) открывает мини-апп сразу на этом канале — для кнопок «Смотреть НТВ» в постах канала
+try {
+  const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
+  if (sp) { const chx = CHANNEL_GROUPS.flatMap(g => g.channels).find(c => c.id === sp); if (chx) openChannel(chx); }
+} catch (e) {}
 </script>
 </body>
 </html>
