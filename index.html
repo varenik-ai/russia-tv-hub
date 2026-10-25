@@ -17,6 +17,14 @@
     .hub-logo .red   { color:#D52B1E; }
     .hub-logo .white { color:white; }
     .hub-logo .blue  { color:#003F8F; }
+    .thank-btn { margin:22px 0 4px; padding:12px 22px; border-radius:999px; border:1px solid #3a3a2a; background:#1f1d12; color:#ffd54a; font-size:14px; font-weight:700; cursor:pointer; }
+    .thank-btn:active { transform:scale(.96); }
+    #donate-modal { position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.7); display:none; align-items:flex-end; justify-content:center; }
+    #donate-modal .sheet { width:100%; max-width:560px; background:#14141f; border-radius:18px 18px 0 0; padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px)); text-align:center; }
+    #donate-modal h3 { font-size:17px; margin-bottom:14px; }
+    #donate-modal .amounts { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    #donate-modal .amounts button { padding:14px 0; border-radius:12px; border:1px solid #3a3a2a; background:#1f1d12; color:#ffd54a; font-size:15px; font-weight:800; cursor:pointer; }
+    #donate-modal .close { margin-top:12px; background:none; border:none; color:#666; font-size:14px; cursor:pointer; }
     .hub-sub { font-size:13px; color:#555; margin-bottom:24px; }
     .channels-grid { width:100%; max-width:560px; display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
 
@@ -93,7 +101,14 @@
   <div class="hub-logo"><span class="white">РОС</span><span class="blue">СИЯ</span><span class="red">·ТВ</span></div>
   <div class="hub-sub">Прямой эфир — Бесплатно — 24/7</div>
   <div class="channels-grid" id="channels-grid"></div>
+  <button class="thank-btn" id="thank-btn-hub"></button>
 </div>
+
+<div id="donate-modal"><div class="sheet">
+  <h3 id="donate-title"></h3>
+  <div class="amounts" id="donate-amounts"></div>
+  <button class="close" id="donate-close">✕</button>
+</div></div>
 
 <div id="player-screen">
   <div class="player-header">
@@ -115,6 +130,7 @@
         <button id="quality-btn" class="btn" style="display:none"></button>
         <button id="pip-btn" class="btn" style="display:none"></button>
         <button id="airplay-btn" class="btn" style="display:none">📲 AirPlay</button>
+        <button id="thank-btn-player" class="btn"></button>
         <button id="site-link-btn" class="btn site-link-btn">🌐 Смотреть на сайте</button>
       </div>
     </div>
@@ -1149,10 +1165,43 @@ function goToHub() {
 backBtn.onclick = () => goToHub();
 
 buildHub();
-// v82.43: t.me/RussiaTVHub_bot/russiatv?startapp=<id канала> (например ntv) открывает мини-апп сразу на этом канале — для кнопок «Смотреть НТВ» в постах канала
+// ── Благодарность через Telegram Stars (⭐): окно выбора суммы, оплата tg.openInvoice (v82.44) ──
+const BOT_API = 'https://russia-bot-worker.dyaltd.workers.dev';
+const THANK = { ru:'⭐ Поблагодарить', en:'⭐ Say thanks', bg:'⭐ Благодаря', uk:'⭐ Подякувати', de:'⭐ Danke sagen', fr:'⭐ Remercier', es:'⭐ Agradecer', tr:'⭐ Teşekkür et' };
+const thankText = THANK[getLang()] || THANK.ru;
+const donateModal = document.getElementById('donate-modal');
+function openDonate() {
+  document.getElementById('donate-title').textContent = thankText;
+  const box = document.getElementById('donate-amounts'); box.innerHTML = '';
+  [25, 50, 100, 250].forEach(n => {
+    const b = document.createElement('button'); b.textContent = '⭐ ' + n;
+    b.onclick = () => payStars(n); box.appendChild(b);
+  });
+  donateModal.style.display = 'flex';
+}
+async function payStars(amount) {
+  try {
+    const r = await fetch(BOT_API + '/invoice?amount=' + amount);
+    const d = await r.json();
+    if (!d.url || !tg?.openInvoice) return;
+    donateModal.style.display = 'none';
+    tg.openInvoice(d.url);
+  } catch (e) {}
+}
+document.getElementById('donate-close').onclick = () => { donateModal.style.display = 'none'; };
+donateModal.addEventListener('click', e => { if (e.target === donateModal) donateModal.style.display = 'none'; });
+['thank-btn-hub', 'thank-btn-player'].forEach(id => {
+  const el = document.getElementById(id); el.textContent = thankText; el.onclick = openDonate;
+});
+
+// v82.43/44: t.me/RussiaTVHub_bot/russiatv?startapp=<id канала> (например ntv) открывает мини-апп сразу на этом канале, startapp=donate — окно ⭐
+// В Telegram location.hash непустой (#tgWebAppData=...), поэтому параметр запуска берём из initDataUnsafe, tgWebAppStartParam или простого #id
 try {
-  const sp = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
-  if (sp) { const chx = CHANNEL_GROUPS.flatMap(g => g.channels).find(c => c.id === sp); if (chx) openChannel(chx); }
+  const hp = new URLSearchParams((location.hash || '').replace('#', ''));
+  const hashId = (location.hash || '').indexOf('=') < 0 ? (location.hash || '').replace('#', '') : '';
+  const sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || hp.get('tgWebAppStartParam') || hashId || '';
+  if (sp === 'donate') openDonate();
+  else if (sp) { const chx = CHANNEL_GROUPS.flatMap(g => g.channels).find(c => c.id === sp); if (chx) openChannel(chx); }
 } catch (e) {}
 </script>
 </body>
