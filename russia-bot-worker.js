@@ -145,7 +145,7 @@ async function handleMessage(env, msg) {
     if (!pin) return send(env, chatId, '❌ Закреплённый пост не найден: ' + (chat.description || 'нет закреплённого сообщения'));
     const ru = L.ru;
     const old = JSON.stringify(pin.reply_markup ? pin.reply_markup.inline_keyboard.map((r) => r.map((b) => b.text + ' → ' + (b.url || ''))) : null);
-    const r = await tg(env, 'editMessageReplyMarkup', { chat_id: CHANNEL, message_id: pin.message_id, reply_markup: { inline_keyboard: [[{ text: ru.open, url: APP_URL }], [{ text: ru.site, url: SITE_URL }], [{ text: ru.help, url: `https://t.me/${BOT_USERNAME}?start=help` }, { text: ru.donate, url: DONATE_URL }]] } });
+    const r = await tg(env, 'editMessageReplyMarkup', { chat_id: CHANNEL, message_id: pin.message_id, reply_markup: { inline_keyboard: [[{ text: ru.open, url: APP_URL, style: 'success' }], [{ text: ru.site, url: SITE_URL }], [{ text: ru.help, url: `https://t.me/${BOT_USERNAME}?start=help` }, { text: ru.donate, url: DONATE_URL }]] } });
     return send(env, chatId, r.ok ? '✅ Кнопки закреплённого поста (id ' + pin.message_id + ') обновлены, подписчикам ничего не отправлено.\nБыло: ' + old : '❌ Не удалось: ' + (r.description || 'unknown') + '\nКнопки сейчас: ' + old);
   }
   if (cmd === 'post') {
@@ -153,7 +153,7 @@ async function handleMessage(env, msg) {
     const ru = L.ru;
     const post = await send(env, CHANNEL, `📺 <b>Русское ТВ в Telegram — ${TOTAL} каналов в прямом эфире</b>\n\nНовости, кино, детям, спорт, музыка. Бесплатно, без регистрации, из любой страны.\n\n👇 Откройте приложение и выберите канал`, {
       parse_mode: 'HTML',
-      reply_markup: { inline_keyboard: [[{ text: ru.open, url: APP_URL }], [{ text: ru.site, url: SITE_URL }], [{ text: ru.help, url: `https://t.me/${BOT_USERNAME}?start=help` }, { text: ru.donate, url: DONATE_URL }]] },
+      reply_markup: { inline_keyboard: [[{ text: ru.open, url: APP_URL, style: 'success' }], [{ text: ru.site, url: SITE_URL }], [{ text: ru.help, url: `https://t.me/${BOT_USERNAME}?start=help` }, { text: ru.donate, url: DONATE_URL }]] },
     });
     if (post && post.ok) { await tg(env, 'pinChatMessage', { chat_id: CHANNEL, message_id: post.result.message_id }); return send(env, chatId, '✅ Пост опубликован и закреплён в ' + CHANNEL); }
     return send(env, chatId, '❌ Ошибка: ' + ((post && post.description) || 'не удалось опубликовать'));
