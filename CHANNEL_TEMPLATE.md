@@ -195,4 +195,4 @@ video.webkitEnterFullscreen()   // нативный iOS плеер
 - [ ] при нескольких уровнях появляется кнопка качества и переключение работает;
 - [ ] Android: fullscreen через `requestFullscreen`; iOS: через `webkitEnterFullscreen`;
 - [ ] копия `russia-worker.js` в этом репозитории обновлена;
-- [ ] коммит и push — GitHub Pages обновится (кеш браузера до 10 минут).
+- [ ] коммит и push — GitHub Pages обновится; мини-апп сразу, а страницы `russian-tv.com` отдаются с `cache-control: max-age=14400`, поэтому у зрителей новая версия может появиться только через 4 часа.
