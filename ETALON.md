@@ -1,4 +1,4 @@
-# Russia TV Hub — Эталон v1.7 (4 ноября 2026)
+# Russia TV Hub — Эталон v1.8 (4 ноября 2026)
 
 Список того, что в мини-аппе работает и **не должно ломаться** при правках.
 
@@ -22,6 +22,7 @@
 - **«📺 На ТВ» (Android, v82.50):** кнопка `#airplay-btn` у каналов с обычным видео передаёт номер канала телевизору, где открыта `russian-tv.com/tv` (воркер `russia-tv-pair`, адрес `pair.russian-tv.com`, код лежит в `russia-tv-pair-worker.js`). Первый раз окно `#tv-modal` просит код из 6 цифр с экрана ТВ, затем id телевизора хранится в `localStorage` (`rtv_paired_tv`). Пока идёт на ТВ (`_tvOn`), телефон не играет: `init()` и сторож молчат, смена канала в мини-аппе переключает ТВ, кнопка «📱 Смотреть на телефоне» возвращает видео. Запасной путь в окне: сайт в браузере (Google Cast). В Android WebView нет Remote Playback и Presentation API (MDN), а AirPlay на Android нет вообще, поэтому прямая передача из мини-аппа невозможна.
 - **Прямые ссылки на канал:** `t.me/RussiaTVHub_bot/russiatv?startapp=<id канала>` (например `ntv`) открывает мини-апп сразу на этом канале; параметр читается из `tg.initDataUnsafe.start_param` в конце скрипта (для кнопок «Смотреть НТВ» в постах)
 - **«⭐ Поблагодарить» (Stars):** кнопки `#thank-btn-hub` (хаб) и `#thank-btn-player` (панель плеера) открывают окно `#donate-modal` с суммами ⭐ 25 / 50 / 100 / 250; оплата — `tg.openInvoice` со ссылкой от `GET {BOT_API}/invoice?amount=N` (воркер `russia-bot-worker`). Ссылка `t.me/RussiaTVHub_bot/russiatv?startapp=donate` открывает мини-апп сразу с этим окном; параметр запуска читается из `tg.initDataUnsafe.start_param`, `tgWebAppStartParam` или `#id` (в Telegram `location.hash` непустой, поэтому голый `location.hash` не годится). Тексты кнопки — словарь `THANK` на 8 языках. Плеер этот блок не затрагивает
+- **Плейлисты напрямую (v82.51):** скрипт сразу после hls.js задаёт `Hls.DefaultConfig.xhrSetup`: запросы `/playlist?url=` к `stream.smotrim.ru`, `streaming.thestream.cyou`, `tvc-hls.cdnvideo.ru` идут прямо к источнику, минуя воркер. При ошибке или зависании на 8 с источник отключается для вкладки (`sessionStorage`, `rtv_direct_off`), и повтор идёт через воркер. Копия кода: `assets/direct.js` на сайте. Встроенный плеер (НТВ на iOS, AirPlay) это не затрагивает
 - Каналы сгруппированы по темам: Новости и общие, Развлечения, Кино, Детские, Музыка, Хобби и стиль, Спорт
 
 ## Критичные правила
