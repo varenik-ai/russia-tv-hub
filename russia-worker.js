@@ -41,6 +41,7 @@ var STREAMS = {
   kinodetektiv: "https://cityeden.catcast.tv/content/38398/index.m3u8",
   kinoekshn: "https://cityeden.catcast.tv/content/45268/index.m3u8",
   karusel: "https://stream.smotrim.ru/hls2/karusel/playlist_3.m3u8",
+  news360: "https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-04-srt.smil/playlist.m3u8",
   floHockey: "https://amg02278-amg02278c2-flosports-worldwide-9916.playouts.now.amagi.tv/playlist.m3u8",
   floRacing: "https://amg02278-amg02278c1-flosports-worldwide-7592.playouts.now.amagi.tv/playlist.m3u8",
   redbull: "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
@@ -48,6 +49,7 @@ var STREAMS = {
   freesports: "https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/playlist.m3u8"
 };
 var SYNTH_MASTERS = {
+  doverie: { dir: "hls2/doverie", ladder: [[1, 733], [2, 1332], [3, 1888]] },
   rossiya1: { dir: "hls2/russia_hd", ladder: [[1, 486], [2, 837], [3, 2501], [4, 4062], [6, 6990]] },
   rossiya24: { dir: "hls2/russia_24", ladder: [[1, 733], [2, 1365], [3, 2033]] },
   moskva24: { dir: "hls2/moscow_24", ladder: [[1, 764], [2, 1394], [3, 2045]] },
