@@ -60,3 +60,7 @@ Webhook защищён: Telegram присылает заголовок `X-Telegr
 Через веб-интерфейс Cloudflare (Edit code) или API (как для воркеров потоков): загрузить `russia-bot-worker.js` как ES-модуль, **сохранив привязки** (`keep_bindings: secret_text, plain_text`), иначе секреты пропадут. После деплоя при необходимости снова открыть `/setup`.
 
 Прямые ссылки на каналы из постов: `https://t.me/RussiaTVHub_bot/russiatv?startapp=<id канала>` (см. `CHANNEL_TEMPLATE.md`).
+
+## Воркер russia-tv-pair
+
+`russia-tv-pair-worker.js` связывает телефон и телевизор: `POST /code`, `/pair`, `/play`, WebSocket `/ws`. Адрес `https://pair.russian-tv.com`, хранилище Durable Objects (класс `PairDO`, SQLite), видео через него не идёт. Деплой: `wrangler deploy` с привязкой `PAIR` и миграцией `new_sqlite_classes = ["PairDO"]`. Секретов нет.

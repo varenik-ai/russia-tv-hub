@@ -25,6 +25,15 @@
     #donate-modal h3 { font-size:17px; margin-bottom:14px; }
     #donate-modal .amounts { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
     #donate-modal .amounts button { padding:14px 0; border-radius:12px; border:1px solid #3a3a2a; background:#1f1d12; color:#ffd54a; font-size:15px; font-weight:800; cursor:pointer; }
+    #tv-modal { position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.7); display:none; align-items:flex-end; justify-content:center; }
+    #tv-modal .sheet { width:100%; max-width:560px; background:#14141f; border-radius:18px 18px 0 0; padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px)); text-align:center; }
+    #tv-modal h3 { font-size:17px; margin-bottom:10px; }
+    #tv-modal p { font-size:13px; line-height:1.45; color:#a8a8c0; margin-bottom:12px; }
+    #tv-modal b { color:#fff; }
+    #tv-code { width:100%; padding:14px; border-radius:12px; border:1px solid #33334a; background:#0d0d18; color:#fff; font-size:24px; letter-spacing:6px; text-align:center; }
+    #tv-go { width:100%; margin-top:10px; padding:14px; border:none; border-radius:12px; background:#2a5fd0; color:#fff; font-size:15px; font-weight:700; cursor:pointer; }
+    #tv-err { min-height:18px; margin-top:8px; font-size:13px; color:#ff7b7b; }
+    #tv-chrome, #tv-close { display:block; width:100%; margin-top:6px; padding:6px; background:none; border:none; color:#7d7d96; font-size:13px; cursor:pointer; }
     #donate-modal .close { margin-top:12px; background:none; border:none; color:#666; font-size:14px; cursor:pointer; }
     .hub-sub { font-size:13px; color:#555; margin-bottom:24px; }
     .channels-grid { width:100%; max-width:560px; display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
@@ -110,6 +119,16 @@
   <h3 id="donate-title"></h3>
   <div class="amounts" id="donate-amounts"></div>
   <button class="close" id="donate-close">✕</button>
+</div></div>
+
+<div id="tv-modal"><div class="sheet">
+  <h3 id="tv-title"></h3>
+  <p id="tv-hint"></p>
+  <input id="tv-code" inputmode="numeric" maxlength="6" autocomplete="off">
+  <button id="tv-go" type="button"></button>
+  <div id="tv-err"></div>
+  <button id="tv-chrome" type="button"></button>
+  <button id="tv-close" type="button">✕</button>
 </div></div>
 
 <div id="player-screen">
@@ -335,14 +354,14 @@ const CHANNEL_GROUPS = [
 
 // ── Переводы ────────────────────────────────────────────────────────────────
 const T = {
-  ru:{ castTv:'📺 На ТВ', airAgain:'📲 Нажмите ещё раз, чтобы выбрать ТВ', unavailable:'Канал временно недоступен — попробуйте позже или выберите другой', loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео', channels:'📺 Все каналы', watchOnSite:'🌐 Смотреть на сайте' },
-  en:{ castTv:'📺 To TV', airAgain:'📲 Tap again to choose your TV', unavailable:'Channel temporarily unavailable — try again later or pick another', loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video', channels:'📺 All channels', watchOnSite:'🌐 Watch on website' },
-  bg:{ castTv:'📺 Към ТВ', airAgain:'📲 Натиснете отново, за да изберете ТВ', unavailable:'Каналът временно не е достъпен — опитайте по-късно или изберете друг', loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео', channels:'📺 Всички канали', watchOnSite:'🌐 Гледай в сайта' },
-  uk:{ castTv:'📺 На ТБ', airAgain:'📲 Натисніть ще раз, щоб вибрати ТБ', unavailable:'Канал тимчасово недоступний — спробуйте пізніше або оберіть інший', loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео', channels:'📺 Усі канали', watchOnSite:'🌐 Дивитись на сайті' },
-  de:{ castTv:'📺 Auf TV', airAgain:'📲 Nochmal tippen, um den TV zu wählen', unavailable:'Kanal vorübergehend nicht verfügbar — später erneut versuchen oder anderen wählen', loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Alle Sender', watchOnSite:'🌐 Auf der Website ansehen' },
-  fr:{ castTv:'📺 Sur TV', airAgain:'📲 Touchez encore pour choisir la TV', unavailable:'Chaîne temporairement indisponible — réessayez plus tard ou choisissez-en une autre', loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo', channels:'📺 Toutes les chaînes', watchOnSite:'🌐 Voir sur le site' },
-  es:{ castTv:'📺 A la TV', airAgain:'📲 Toca otra vez para elegir la TV', unavailable:'Canal temporalmente no disponible — inténtalo más tarde o elige otro', loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Todos los canales', watchOnSite:'🌐 Ver en el sitio' },
-  tr:{ castTv:"📺 TV'ye", airAgain:'📲 TV’yi seçmek için tekrar dokunun', unavailable:'Kanal geçici olarak kullanılamıyor — daha sonra deneyin veya başka seçin', loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video', channels:'📺 Tüm kanallar', watchOnSite:'🌐 Sitede izle' },
+  ru:{ tvTitle:'На телевизор', tvHint:'Откройте на телевизоре <b>russian-tv.com/tv</b>, нажмите «Подключить телефон» и введите код.', tvGo:'Подключить', tvBad:'Неверный код. Проверьте цифры на экране телевизора.', tvOffline:'Телевизор не на связи. Откройте на нём russian-tv.com/tv или введите новый код.', tvNet:'Нет связи с сервером, попробуйте ещё раз.', tvOn:'📺 Идёт на телевизоре', tvPhone:'📱 Смотреть на телефоне', tvChrome:'Открыть сайт в браузере (Google Cast)', castTv:'📺 На ТВ', airAgain:'📲 Нажмите ещё раз, чтобы выбрать ТВ', unavailable:'Канал временно недоступен — попробуйте позже или выберите другой', loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео', channels:'📺 Все каналы', watchOnSite:'🌐 Смотреть на сайте' },
+  en:{ tvTitle:'To TV', tvHint:'On your TV open <b>russian-tv.com/tv</b>, tap “Подключить телефон” and enter the code.', tvGo:'Connect', tvBad:'Wrong code. Check the digits on the TV screen.', tvOffline:'The TV is offline. Open russian-tv.com/tv on it or enter a new code.', tvNet:'Cannot reach the server, try again.', tvOn:'📺 Playing on TV', tvPhone:'📱 Watch on phone', tvChrome:'Open the site in a browser (Google Cast)', castTv:'📺 To TV', airAgain:'📲 Tap again to choose your TV', unavailable:'Channel temporarily unavailable — try again later or pick another', loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video', channels:'📺 All channels', watchOnSite:'🌐 Watch on website' },
+  bg:{ tvTitle:'Към телевизор', tvHint:'Отворете на телевизора <b>russian-tv.com/tv</b>, натиснете „Подключить телефон“ и въведете кода.', tvGo:'Свържи', tvBad:'Грешен код. Проверете цифрите на екрана.', tvOffline:'Телевизорът не е на линия. Отворете на него russian-tv.com/tv или въведете нов код.', tvNet:'Няма връзка със сървъра, опитайте отново.', tvOn:'📺 Върви на телевизора', tvPhone:'📱 Гледай на телефона', tvChrome:'Отвори сайта в браузър (Google Cast)', castTv:'📺 Към ТВ', airAgain:'📲 Натиснете отново, за да изберете ТВ', unavailable:'Каналът временно не е достъпен — опитайте по-късно или изберете друг', loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео', channels:'📺 Всички канали', watchOnSite:'🌐 Гледай в сайта' },
+  uk:{ tvTitle:'На телевізор', tvHint:'Відкрийте на телевізорі <b>russian-tv.com/tv</b>, натисніть «Подключить телефон» і введіть код.', tvGo:'Підключити', tvBad:'Неправильний код. Перевірте цифри на екрані телевізора.', tvOffline:"Телевізор не на зв'язку. Відкрийте на ньому russian-tv.com/tv або введіть новий код.", tvNet:"Немає зв'язку із сервером, спробуйте ще раз.", tvOn:'📺 Іде на телевізорі', tvPhone:'📱 Дивитися на телефоні', tvChrome:'Відкрити сайт у браузері (Google Cast)', castTv:'📺 На ТБ', airAgain:'📲 Натисніть ще раз, щоб вибрати ТБ', unavailable:'Канал тимчасово недоступний — спробуйте пізніше або оберіть інший', loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео', channels:'📺 Усі канали', watchOnSite:'🌐 Дивитись на сайті' },
+  de:{ tvTitle:'Auf den TV', tvHint:'Öffnen Sie am TV <b>russian-tv.com/tv</b>, wählen Sie „Подключить телефон“ und geben Sie den Code ein.', tvGo:'Verbinden', tvBad:'Falscher Code. Prüfen Sie die Ziffern am TV.', tvOffline:'Der TV ist nicht verbunden. Öffnen Sie dort russian-tv.com/tv oder geben Sie einen neuen Code ein.', tvNet:'Keine Verbindung zum Server, bitte erneut versuchen.', tvOn:'📺 Läuft auf dem TV', tvPhone:'📱 Auf dem Handy ansehen', tvChrome:'Website im Browser öffnen (Google Cast)', castTv:'📺 Auf TV', airAgain:'📲 Nochmal tippen, um den TV zu wählen', unavailable:'Kanal vorübergehend nicht verfügbar — später erneut versuchen oder anderen wählen', loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Alle Sender', watchOnSite:'🌐 Auf der Website ansehen' },
+  fr:{ tvTitle:'Sur la TV', tvHint:'Sur la TV, ouvrez <b>russian-tv.com/tv</b>, choisissez « Подключить телефон » et saisissez le code.', tvGo:'Connecter', tvBad:'Code incorrect. Vérifiez les chiffres sur la TV.', tvOffline:"La TV n'est pas connectée. Ouvrez russian-tv.com/tv dessus ou saisissez un nouveau code.", tvNet:'Serveur injoignable, réessayez.', tvOn:'📺 Lecture sur la TV', tvPhone:'📱 Regarder sur le téléphone', tvChrome:'Ouvrir le site dans un navigateur (Google Cast)', castTv:'📺 Sur TV', airAgain:'📲 Touchez encore pour choisir la TV', unavailable:'Chaîne temporairement indisponible — réessayez plus tard ou choisissez-en une autre', loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo', channels:'📺 Toutes les chaînes', watchOnSite:'🌐 Voir sur le site' },
+  es:{ tvTitle:'A la TV', tvHint:'En la TV abre <b>russian-tv.com/tv</b>, elige «Подключить телефон» e introduce el código.', tvGo:'Conectar', tvBad:'Código incorrecto. Revisa los dígitos en la TV.', tvOffline:'La TV no está conectada. Abre russian-tv.com/tv en ella o introduce un código nuevo.', tvNet:'No hay conexión con el servidor, inténtalo de nuevo.', tvOn:'📺 Reproduciendo en la TV', tvPhone:'📱 Ver en el teléfono', tvChrome:'Abrir el sitio en un navegador (Google Cast)', castTv:'📺 A la TV', airAgain:'📲 Toca otra vez para elegir la TV', unavailable:'Canal temporalmente no disponible — inténtalo más tarde o elige otro', loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Todos los canales', watchOnSite:'🌐 Ver en el sitio' },
+  tr:{ tvTitle:"TV'ye", tvHint:"TV'de <b>russian-tv.com/tv</b> adresini açın, “Подключить телефон” seçeneğine basın ve kodu girin.", tvGo:'Bağlan', tvBad:'Kod yanlış. TV ekranındaki rakamları kontrol edin.', tvOffline:"TV bağlı değil. TV'de russian-tv.com/tv adresini açın veya yeni kod girin.", tvNet:'Sunucuya ulaşılamıyor, tekrar deneyin.', tvOn:"📺 TV'de oynatılıyor", tvPhone:'📱 Telefonda izle', tvChrome:'Siteyi tarayıcıda aç (Google Cast)', castTv:"📺 TV'ye", airAgain:'📲 TV’yi seçmek için tekrar dokunun', unavailable:'Kanal geçici olarak kullanılamıyor — daha sonra deneyin veya başka seçin', loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video', channels:'📺 Tüm kanallar', watchOnSite:'🌐 Sitede izle' },
 };
 function getLang() {
   try { const s=tg?.initDataUnsafe?.user?.language_code?.split('-')[0].toLowerCase(); if(s&&T[s]) return s; } catch(e) {}
@@ -640,6 +659,8 @@ pipBtn.onclick = async () => {
 // первое нажатие переключает канал на нативный плеер (кнопка просит нажать ещё раз), второе открывает выбор устройства.
 // Если WebView Telegram не отдаёт AirPlay API — кнопка открывает страницу канала в Safari, где AirPlay есть.
 let _forceNative = false;
+let _tvOn = false, _tvSend = null;
+const PAIR_API = 'https://pair.russian-tv.com';
 if (isIOS()) {
   const hasAir = !!window.WebKitPlaybackTargetAvailabilityEvent && typeof video.webkitShowPlaybackTargetPicker === 'function';
   const isBlob = () => !video.currentSrc || /^blob:/.test(video.currentSrc);
@@ -667,11 +688,45 @@ if (isIOS()) {
     try { video.webkitShowPlaybackTargetPicker(); } catch (e) {}
   };
 } else if (/Android/i.test(navigator.userAgent) || window.Telegram?.WebApp?.platform === 'android') {
-  // v82.48 (без изменений): на Android внутри Telegram Cast недоступен — кнопка «📺 На ТВ» открывает страницу канала в Chrome.
-  const airVis = () => { airBtn.style.display = (currentCh && currentCh.slug && !currentCh.embedUrl) ? 'block' : 'none'; };
+  // v82.50: Cast и AirPlay в WebView Android нет. Телефон передаёт номер канала телевизору, на котором открыта russian-tv.com/tv (воркер russia-tv-pair).
+  // Телевизор сам берёт поток, локальное видео на это время остановлено. Первый раз нужен код с экрана ТВ, потом id телевизора хранится в localStorage.
+  const airVis = () => { airBtn.style.display = (currentCh && !currentCh.embedUrl) ? 'block' : 'none'; };
   ['loadstart', 'playing'].forEach(ev => video.addEventListener(ev, airVis));
-  airBtn.onclick = () => {
-    const url = SITE + '/' + currentCh.slug + '/';
+  const tvModal = document.getElementById('tv-modal'), tvCode = document.getElementById('tv-code'), tvErr = document.getElementById('tv-err'), tvChrome = document.getElementById('tv-chrome');
+  document.getElementById('tv-title').textContent = t.tvTitle;
+  document.getElementById('tv-hint').innerHTML = t.tvHint;
+  document.getElementById('tv-go').textContent = t.tvGo;
+  tvChrome.textContent = t.tvChrome;
+  const tvId = { get() { try { return localStorage.getItem('rtv_paired_tv'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('rtv_paired_tv', v); } catch (e) {} } };
+  const pairPost = (path, body) => fetch(PAIR_API + path, { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(body) });
+  const tvAsk = (msg) => { tvErr.textContent = msg || ''; tvCode.value = ''; tvModal.style.display = 'flex'; try { tvCode.focus(); } catch (e) {} };
+  // режим «на телевизоре»: телефон не играет и не переподключается (init и сторож молчат)
+  const tvEnter = () => { _tvOn = true; userPaused = true; _gaveUp = true; stopStream(); statusEl.textContent = t.tvOn; airBtn.textContent = t.tvPhone; airBtn.style.display = 'block'; liveBadge.style.display = 'none'; unmuteBtn.style.display = 'none'; };
+  const tvLeave = () => { _tvOn = false; userPaused = false; _resetRetry(); airBtn.textContent = t.castTv; init(); };
+  _tvSend = async (ch) => {
+    const tv = tvId.get();
+    if (!tv) { tvAsk(); return; }
+    try {
+      const r = await pairPost('/play', { tv, channel:new URL(ch.stream).searchParams.get('channel'), name:ch.name });
+      const d = await r.json();
+      if (d.delivered) tvEnter(); else { if (_tvOn) tvLeave(); tvAsk(t.tvOffline); }
+    } catch (e) { if (_tvOn) tvLeave(); tvAsk(t.tvNet); }
+  };
+  airBtn.onclick = () => { if (_tvOn) tvLeave(); else if (currentCh) _tvSend(currentCh); };
+  document.getElementById('tv-go').onclick = async () => {
+    const code = tvCode.value.trim();
+    if (!/^[0-9]{6}$/.test(code)) { tvErr.textContent = t.tvBad; return; }
+    try {
+      const r = await pairPost('/pair', { code });
+      const d = await r.json();
+      if (!d.tv) { tvErr.textContent = t.tvBad; return; }
+      tvId.set(d.tv); tvModal.style.display = 'none';
+      if (currentCh) _tvSend(currentCh);
+    } catch (e) { tvErr.textContent = t.tvNet; }
+  };
+  document.getElementById('tv-close').onclick = () => { tvModal.style.display = 'none'; };
+  tvChrome.onclick = () => {
+    const url = SITE + '/' + (currentCh && currentCh.slug ? currentCh.slug + '/' : '');
     if (tg?.openLink) { try { tg.openLink(url); return; } catch (e) {} }
     window.open(url, '_blank');
   };
@@ -1063,7 +1118,7 @@ function loadStream(url) {
 }
 
 async function init() {
-  if (!currentCh) return;
+  if (!currentCh || _tvOn) return;
   setStatus('loading'); reloadBtn.style.display='none'; unmuteBtn.style.display='none';
   try {
     // v82.35: раньше здесь был ручной fetch() плейлиста только чтобы
@@ -1184,7 +1239,8 @@ function openChannel(ch) {
   siteLinkBtn.style.display = '';
   channelIframe.style.display = 'none';
   channelIframe.src = '';
-  stopStream(); init();
+  stopStream();
+  if (_tvOn) { _gaveUp = true; _tvSend(ch); } else init();
 }
 
 function goToHub() {
