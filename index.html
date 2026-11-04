@@ -89,6 +89,7 @@
     .btn { padding:12px 18px; color:white; border:none; border-radius:10px; font-size:14px; cursor:pointer; transition:all .2s; flex:1; max-width:160px; background:rgba(255,255,255,.12); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.1); }
     .btn:active { transform:scale(.96); }
     .btn.danger { background:#D52B1E; }
+    .btn.air-next { flex:1 0 100%; max-width:none; background:#D52B1E; font-weight:600; }
     .btn.reload { background:#333; }
 
     #status { font-size:13px; color:#888; text-align:center; padding:8px 0 0; flex-shrink:0; }
@@ -334,14 +335,14 @@ const CHANNEL_GROUPS = [
 
 // ── Переводы ────────────────────────────────────────────────────────────────
 const T = {
-  ru:{ castTv:'📺 На ТВ', unavailable:'Канал временно недоступен — попробуйте позже или выберите другой', loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео', channels:'📺 Все каналы', watchOnSite:'🌐 Смотреть на сайте' },
-  en:{ castTv:'📺 To TV', unavailable:'Channel temporarily unavailable — try again later or pick another', loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video', channels:'📺 All channels', watchOnSite:'🌐 Watch on website' },
-  bg:{ castTv:'📺 Към ТВ', unavailable:'Каналът временно не е достъпен — опитайте по-късно или изберете друг', loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео', channels:'📺 Всички канали', watchOnSite:'🌐 Гледай в сайта' },
-  uk:{ castTv:'📺 На ТБ', unavailable:'Канал тимчасово недоступний — спробуйте пізніше або оберіть інший', loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео', channels:'📺 Усі канали', watchOnSite:'🌐 Дивитись на сайті' },
-  de:{ castTv:'📺 Auf TV', unavailable:'Kanal vorübergehend nicht verfügbar — später erneut versuchen oder anderen wählen', loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Alle Sender', watchOnSite:'🌐 Auf der Website ansehen' },
-  fr:{ castTv:'📺 Sur TV', unavailable:'Chaîne temporairement indisponible — réessayez plus tard ou choisissez-en une autre', loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo', channels:'📺 Toutes les chaînes', watchOnSite:'🌐 Voir sur le site' },
-  es:{ castTv:'📺 A la TV', unavailable:'Canal temporalmente no disponible — inténtalo más tarde o elige otro', loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Todos los canales', watchOnSite:'🌐 Ver en el sitio' },
-  tr:{ castTv:"📺 TV'ye", unavailable:'Kanal geçici olarak kullanılamıyor — daha sonra deneyin veya başka seçin', loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video', channels:'📺 Tüm kanallar', watchOnSite:'🌐 Sitede izle' },
+  ru:{ castTv:'📺 На ТВ', airAgain:'📲 Нажмите ещё раз, чтобы выбрать ТВ', unavailable:'Канал временно недоступен — попробуйте позже или выберите другой', loading:'Получаем поток...', connecting:'Подключение...', live:'ПРЯМОЙ ЭФИР', pressPlay:'Нажмите ▶', errorStream:'Ошибка — переподключаемся...', errorUrl:'Не удалось получить URL', errorServer:'Ошибка сервера', reconnect:'🔄 Переподключиться', unmute:'🔊 Включить звук', mute:'🔇 Выключить звук', fullscreen:'🔳 Полный экран', exitFs:'✕ Выйти', audioMode:'🎧 Только звук', videoMode:'🎥 Видео', channels:'📺 Все каналы', watchOnSite:'🌐 Смотреть на сайте' },
+  en:{ castTv:'📺 To TV', airAgain:'📲 Tap again to choose your TV', unavailable:'Channel temporarily unavailable — try again later or pick another', loading:'Loading...', connecting:'Connecting...', live:'LIVE', pressPlay:'Press ▶', errorStream:'Error — reconnecting...', errorUrl:'Failed to get URL', errorServer:'Server error', reconnect:'🔄 Reconnect', unmute:'🔊 Unmute', mute:'🔇 Mute', fullscreen:'🔳 Fullscreen', exitFs:'✕ Exit', audioMode:'🎧 Audio only', videoMode:'🎥 Video', channels:'📺 All channels', watchOnSite:'🌐 Watch on website' },
+  bg:{ castTv:'📺 Към ТВ', airAgain:'📲 Натиснете отново, за да изберете ТВ', unavailable:'Каналът временно не е достъпен — опитайте по-късно или изберете друг', loading:'Зареждаме...', connecting:'Свързване...', live:'НА ЖИВО', pressPlay:'Натиснете ▶', errorStream:'Грешка...', errorUrl:'Неуспешно', errorServer:'Грешка', reconnect:'🔄 Свържи', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудио', videoMode:'🎥 Видео', channels:'📺 Всички канали', watchOnSite:'🌐 Гледай в сайта' },
+  uk:{ castTv:'📺 На ТБ', airAgain:'📲 Натисніть ще раз, щоб вибрати ТБ', unavailable:'Канал тимчасово недоступний — спробуйте пізніше або оберіть інший', loading:'Отримуємо...', connecting:'Підключення...', live:'ПРЯМИЙ ЕФІР', pressPlay:'Натисніть ▶', errorStream:'Помилка...', errorUrl:'Помилка URL', errorServer:'Помилка', reconnect:'🔄 Повторити', unmute:'🔊 Звук', mute:'🔇 Тихо', fullscreen:'🔳 Екран', exitFs:'✕', audioMode:'🎧 Аудіо', videoMode:'🎥 Відео', channels:'📺 Усі канали', watchOnSite:'🌐 Дивитись на сайті' },
+  de:{ castTv:'📺 Auf TV', airAgain:'📲 Nochmal tippen, um den TV zu wählen', unavailable:'Kanal vorübergehend nicht verfügbar — später erneut versuchen oder anderen wählen', loading:'Laden...', connecting:'Verbinden...', live:'LIVE', pressPlay:'▶ drücken', errorStream:'Fehler...', errorUrl:'Fehler', errorServer:'Serverfehler', reconnect:'🔄 Neu', unmute:'🔊 Ton', mute:'🔇 Still', fullscreen:'🔳 Vollbild', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Alle Sender', watchOnSite:'🌐 Auf der Website ansehen' },
+  fr:{ castTv:'📺 Sur TV', airAgain:'📲 Touchez encore pour choisir la TV', unavailable:'Chaîne temporairement indisponible — réessayez plus tard ou choisissez-en une autre', loading:'Chargement...', connecting:'Connexion...', live:'EN DIRECT', pressPlay:'▶', errorStream:'Erreur...', errorUrl:'Erreur', errorServer:'Erreur', reconnect:'🔄 Reconnecter', unmute:'🔊 Son', mute:'🔇 Muet', fullscreen:'🔳 Plein', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Vidéo', channels:'📺 Toutes les chaînes', watchOnSite:'🌐 Voir sur le site' },
+  es:{ castTv:'📺 A la TV', airAgain:'📲 Toca otra vez para elegir la TV', unavailable:'Canal temporalmente no disponible — inténtalo más tarde o elige otro', loading:'Cargando...', connecting:'Conectando...', live:'EN VIVO', pressPlay:'▶', errorStream:'Error...', errorUrl:'Error', errorServer:'Error', reconnect:'🔄 Reconectar', unmute:'🔊 Sonido', mute:'🔇 Silencio', fullscreen:'🔳 Pantalla', exitFs:'✕', audioMode:'🎧 Audio', videoMode:'🎥 Video', channels:'📺 Todos los canales', watchOnSite:'🌐 Ver en el sitio' },
+  tr:{ castTv:"📺 TV'ye", airAgain:'📲 TV’yi seçmek için tekrar dokunun', unavailable:'Kanal geçici olarak kullanılamıyor — daha sonra deneyin veya başka seçin', loading:'Yükleniyor...', connecting:'Bağlanıyor...', live:'CANLI', pressPlay:'▶', errorStream:'Hata...', errorUrl:'Hata', errorServer:'Hata', reconnect:'🔄 Bağlan', unmute:'🔊 Ses', mute:'🔇 Sessiz', fullscreen:'🔳 Tam ekran', exitFs:'✕', audioMode:'🎧 Ses', videoMode:'🎥 Video', channels:'📺 Tüm kanallar', watchOnSite:'🌐 Sitede izle' },
 };
 function getLang() {
   try { const s=tg?.initDataUnsafe?.user?.language_code?.split('-')[0].toLowerCase(); if(s&&T[s]) return s; } catch(e) {}
@@ -634,10 +635,39 @@ pipBtn.onclick = async () => {
     else if (!isIOS() && video.requestPictureInPicture) { await video.requestPictureInPicture(); pipBtn.textContent='✕ PiP'; }
   } catch(e) {}
 };
-// ── На ТВ (телефон): v82.48 — внутри Telegram трансляции нет: WebView iOS отдаёт по AirPlay только звук, Cast недоступен.
-// Кнопка открывает страницу канала на сайте во внешнем браузере: там AirPlay (Safari) и Google Cast (Chrome на Android).
-// У канала без страницы на сайте (Россия-К) кнопки нет.
-if (isIOS() || /Android/i.test(navigator.userAgent) || window.Telegram?.WebApp?.platform === 'android') {
+// ── AirPlay (iOS): передача видео на Apple TV / телевизор с AirPlay без зеркала экрана (v82.42, как в Bulgaria TV) ──
+// Системный выбор устройства работает только для нативного HLS (не blob/MSE от hls.js). Если канал идёт через hls.js,
+// первое нажатие переключает канал на нативный плеер (кнопка просит нажать ещё раз), второе открывает выбор устройства.
+// Если WebView Telegram не отдаёт AirPlay API — кнопка открывает страницу канала в Safari, где AirPlay есть.
+let _forceNative = false;
+if (isIOS()) {
+  const hasAir = !!window.WebKitPlaybackTargetAvailabilityEvent && typeof video.webkitShowPlaybackTargetPicker === 'function';
+  const isBlob = () => !video.currentSrc || /^blob:/.test(video.currentSrc);
+  const airVis = () => { airBtn.style.display = (currentCh && !currentCh.embedUrl) ? 'block' : 'none'; };
+  airBtn.textContent = '📲 AirPlay';
+  if (hasAir) {
+    try { video.setAttribute('x-webkit-airplay', 'allow'); video.disableRemotePlayback = false; } catch (e) {}
+    video.addEventListener('webkitplaybacktargetavailabilitychanged', (e) => { if (e.availability !== 'available' && !isBlob()) airBtn.style.display = 'none'; else airVis(); });
+  }
+  ['loadstart', 'playing'].forEach(ev => video.addEventListener(ev, airVis));
+  airBtn.onclick = () => {
+    // Заглушённое видео iOS не передаёт на ТВ: включаем звук прямо в жесте нажатия
+    try { video.muted = false; video.volume = 1; userUnmuted = true; _soundWanted = true; unmuteBtn.textContent = '🔇 ' + t.mute; } catch (e) {}
+    if (!hasAir) {
+      const url = SITE + '/' + (currentCh && currentCh.slug ? currentCh.slug + '/' : '');
+      const w = window.open(url, '_blank');
+      if (!w) { try { tg.openLink(url, { try_instant_view: false }); } catch (e) {} }
+      return;
+    }
+    if (isBlob()) {
+      if (_forceNative) return;   // нативный плеер ещё запускается
+      _forceNative = true; airBtn.textContent = t.airAgain; airBtn.classList.add('air-next'); stopStream(); init(); return;
+    }
+    airBtn.textContent = '📲 AirPlay'; airBtn.classList.remove('air-next');
+    try { video.webkitShowPlaybackTargetPicker(); } catch (e) {}
+  };
+} else if (/Android/i.test(navigator.userAgent) || window.Telegram?.WebApp?.platform === 'android') {
+  // v82.48 (без изменений): на Android внутри Telegram Cast недоступен — кнопка «📺 На ТВ» открывает страницу канала в Chrome.
   const airVis = () => { airBtn.style.display = (currentCh && currentCh.slug && !currentCh.embedUrl) ? 'block' : 'none'; };
   ['loadstart', 'playing'].forEach(ev => video.addEventListener(ev, airVis));
   airBtn.onclick = () => {
@@ -728,7 +758,11 @@ function _watchdogReconnect(statusKey) {
   stopStream();
   init().finally(() => { _watchdogReconnecting = false; });
 }
+// Во время AirPlay кадры показывает ТВ: счётчик кадров на телефоне стоит, и сторож сбрасывал бы поток каждые ~10 с
+const _onTv = () => !!video.webkitCurrentPlaybackTargetIsWireless;
+video.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', () => { _lastProgressTime = _lastFrameProgressTime = Date.now(); });
 setInterval(() => {
+  if (_onTv()) return;
   // v82.12: раньше требовался `hls` (созданный только в ветке hls.js) —
   // на нативном пути Safari/iOS (canPlayType) hls всегда null, и весь
   // сторож зависания для него не работал вообще. Логика внутри ни от
@@ -803,7 +837,7 @@ document.addEventListener('visibilitychange', async () => {
     if (isAndroid()) { const a=document.getElementById('audio-bg'); if(a) a.muted=true; }
     if (!userPaused && video.paused) {
       try { await video.play(); } catch(e) { if(currentCh){stopStream();init();} }
-    } else if (!userPaused && video.readyState<2) {
+    } else if (!userPaused && video.readyState<2 && !video.webkitCurrentPlaybackTargetIsWireless) {
       if (currentCh) { stopStream(); init(); }
     }
   }
@@ -894,9 +928,9 @@ function loadStream(url) {
     }
   }
 
-  video.muted=true;
+  video.muted = !(_forceNative && _soundWanted);   // для AirPlay звук должен остаться включённым
   // v82.38: НТВ на iOS играем встроенным плеером Apple и официальным источником cdn.ntv.ru (воркер /stream?native=1, CORS не нужен)
-  const _ntvNative = !!currentCh && currentCh.id === 'ntv' && isIOS() && !!video.canPlayType('application/vnd.apple.mpegurl');
+  const _ntvNative = !!currentCh && (currentCh.id === 'ntv' || _forceNative) && isIOS() && !!video.canPlayType('application/vnd.apple.mpegurl');
   if (Hls.isSupported() && !_ntvNative) {
     // v82.39: НТВ — источник отдаёт сегменты неравномерно, держим больший запас буфера
     hls = new Hls({ ...HLS_BUFFER_OPTS, ...(currentCh && currentCh.id === 'ntv' ? { liveSyncDurationCount:8, maxBufferLength:60, maxMaxBufferLength:90, fragLoadingTimeOut:30000 } : {}), enableWorker:HLS_WORKER_SAFE, backBufferLength:30 });
