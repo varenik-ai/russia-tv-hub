@@ -538,7 +538,7 @@ let _watchdogReconnecting = false;
 const PREEMPTIVE_REFRESH_MS = 6 * 60 * 1000; // профилактический реконнект с запасом до наблюдаемых сбоев источника
 // v82.40: профилактический реконнект нужен только каналам на cinerama.uz (источник сам обрывает сессию через ~10–12 мин);
 // остальным он лишь рвал картинку и нагружал воркеры. Список = CINERAMA_PATH воркера без каналов, переведённых на smotrim.
-const PREEMPTIVE_IDS = new Set(['t24','istoriya','kinohit','retro','kinopremiera','viju','nasheKino','rodnoeKino','kinopokaz','kinosvidanie','indiyskoekino','mult','muztv','muzykaPervogo','rutv','ohotarybalka','zagorodnaya','unikum','vijuSport','m1mma','domkino','priklyucheniya','ryzhiy','tochka','planeta','zoopark','drive','zhivotnye','zdorovoe','fonmusic','tracesport']);
+const PREEMPTIVE_IDS = new Set(['t24','istoriya','kinohit','retro','kinopremiera','viju','nasheKino','rodnoeKino','kinopokaz','kinosvidanie','indiyskoekino','mult','muztv','muzykaPervogo','rutv','ohotarybalka','zagorodnaya','unikum','vijuSport','m1mma','domkino','priklyucheniya','ryzhiy','tochka','planeta','zoopark','drive','zhivotnye','zdorovoe','tracesport']);
 // v82.40: потолок повторных подключений — пауза растёт (1–3 с → до 30 с), после MAX_FAIL_STREAK неудач подряд
 // показываем «Канал временно недоступен» с кнопкой «Повторить», чтобы не долбить воркеры бесконечно.
 const MAX_FAIL_STREAK = 6;
