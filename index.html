@@ -304,7 +304,6 @@ const CHANNEL_GROUPS = [
       // поток fs.uplink.kz — там нет гео-блока, хотя есть отдельная
       // проблема с зависанием декодера (см. историю версий), которая
       // остаётся нерешённой честно — альтернативы пока не нашли.
-      { id:'tnt',       name:'ТНТ4',         desc:'Юмор, сериалы и молодёжные шоу', icon:'ТНТ4', color:'#ff6d00', iconBg:'#1a1000', logo:'https://smotret.tv/images/logo-tnt.svg', slug:'tnt-live', stream: PROXY+'/stream?channel=tnt' },
       // "ТНТ" (обычный, id: tntRegular) — карточка УБРАНА. Ни прямого
       // CORS-потока (искали несколько раз), ни рабочего iframe-embed (OK.ru
       // гео-блокирует) для него нет — оставлять заведомо неработающую
@@ -336,7 +335,6 @@ const CHANNEL_GROUPS = [
     channels: [
       { id:'karusel',  name:'Карусель',    desc:'Для малышей и детей', icon:'КАР', color:'#ff6f00', iconBg:'#1a1200', logo:'https://smotret.tv/images/logo-karusel.svg', slug:'karusel-live', stream: PROXY+'/stream?channel=karusel' },
       { id:'mult',     name:'Мульт',       desc:'Мультфильмы 24/7',    icon:'МЛТ', color:'#ff8f00', iconBg:'#1a1400', slug:'mult-live', stream: PROXY+'/stream?channel=mult' },
-      { id:'karuselIntl', name:'Карусель International', desc:'Для малышей и детей', icon:'КИ', color:'#ff6f00', iconBg:'#1a1200', slug:'karusel-international-live', stream: PROXY+'/stream?channel=karuselIntl' },
       { id:'ryzhiy', name:'Рыжий', desc:'Развлекательный канал', icon:'РЫЖ', color:'#e65100', iconBg:'#1a0e08', slug:'ryzhiy-live', stream: PROXY+'/stream?channel=ryzhiy' },
     ]
   },
@@ -346,7 +344,6 @@ const CHANNEL_GROUPS = [
       { id:'muztv',        name:'МУЗ-ТВ',         desc:'Хиты и клипы',            icon:'МУЗ', color:'#e91e63', iconBg:'#1a0a10', logo:'https://smotret.tv/images/logo-muz-tv.svg', slug:'muz-tv-live', stream: PROXY+'/stream?channel=muztv' },
       { id:'muzykaPervogo',name:'Музыка Первого', desc:'Канал Первого',            icon:'М1',  color:'#1565c0', iconBg:'#080d1a', slug:'muzyka-pervogo-live', stream: PROXY+'/stream?channel=muzykaPervogo' },
       { id:'muzsoyuz', name:'Муз Союз', desc:'Музыка и клипы', icon:'МС', color:'#e91e63', iconBg:'#1a0a10', slug:'muz-soyuz-live', stream: PROXY+'/stream?channel=muzsoyuz' },
-      { id:'fonmusic', name:'FON Music', desc:'Музыкальные клипы', icon:'FON', color:'#7b1fa2', iconBg:'#130a18', slug:'fon-music-live', stream: PROXY+'/stream?channel=fonmusic' },
       { id:'stranafm', name:'Страна FM', desc:'Радио — аудио-эфир', icon:'FM', color:'#e53935', iconBg:'#1a0808', slug:'strana-fm-live', stream: PROXY+'/stream?channel=stranafm' },
       { id:'vestifm', name:'Вести FM', desc:'Радио — новости и аналитика', icon:'ВФМ', color:'#1565c0', iconBg:'#0a0f1a', slug:'vesti-fm-live', stream: PROXY+'/stream?channel=vestifm' },
     ]
@@ -363,8 +360,6 @@ const CHANNEL_GROUPS = [
       { id:'zhivotnye', name:'Домашние животные', desc:'Всё о питомцах', icon:'ДЖ', color:'#558b2f', iconBg:'#0c1408', slug:'domashnie-zhivotnye-live', stream: PROXY+'/stream?channel=zhivotnye' },
       { id:'drive', name:'Драйв', desc:'Авто и мото', icon:'ДРВ', color:'#37474f', iconBg:'#0d1214', slug:'drive-live', stream: PROXY+'/stream?channel=drive' },
       { id:'zdorovoe', name:'Здоровое ТВ', desc:'Здоровье и образ жизни', icon:'ЗТВ', color:'#00897b', iconBg:'#081412', slug:'zdorovoe-tv-live', stream: PROXY+'/stream?channel=zdorovoe' },
-      { id:'bigplanet', name:'Большая планета', desc:'Путешествия и природа', icon:'БП', color:'#2e7d32', iconBg:'#081208', slug:'bolshaya-planeta-live', stream: PROXY+'/stream?channel=bigplanet' },
-      { id:'bober', name:'Бобер', desc:'Развлекательный канал', icon:'БОБ', color:'#8d6e63', iconBg:'#120e0a', slug:'bober-live', stream: PROXY+'/stream?channel=bober' },
     ]
   },
   {
@@ -377,7 +372,6 @@ const CHANNEL_GROUPS = [
       { id:'redbull',    name:'Red Bull TV',         desc:'Экстремальный спорт и приключения',    icon:'RB',  color:'#c62828', iconBg:'#1a0808', slug:'red-bull-tv-live', stream: PROXY+'/stream?channel=redbull' },
       { id:'unbeaten',   name:'Unbeaten Boxing',     desc:'Бокс без цензуры — бои 24/7',          icon:'UB',  color:'#4a148c', iconBg:'#110818', slug:'unbeaten-boxing-live', stream: PROXY+'/stream?channel=unbeaten' },
       { id:'freesports', name:'World of Freesports', desc:'Мировой спорт — бесплатно 24/7',       icon:'WFS', color:'#37474f', iconBg:'#08100a', slug:'world-freesports-live', stream: PROXY+'/stream?channel=freesports' },
-      { id:'sportivnyy', name:'Спортивный', desc:'Спорт 24/7', icon:'СПО', color:'#d84315', iconBg:'#1a0d08', slug:'sportivnyy-live', stream: PROXY+'/stream?channel=sportivnyy' },
       { id:'tracesport', name:'Trace Sport Stars', desc:'Звёзды спорта', icon:'TSS', color:'#0277bd', iconBg:'#080d1a', slug:'trace-sport-stars-live', stream: PROXY+'/stream?channel=tracesport' },
     ]
   },

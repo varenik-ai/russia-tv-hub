@@ -13,7 +13,7 @@ const BOT_USERNAME = 'RussiaTVHub_bot';
 const APP_URL = 'https://t.me/RussiaTVHub_bot/russiatv';          // прямая ссылка на мини-апп (для постов в канале; ?startapp=<id канала> откроет канал)
 const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=14'; // адрес мини-аппа (кнопка web_app в личных сообщениях)
 const SITE_URL = 'https://russian-tv.com/';
-const TOTAL = 61;
+const TOTAL = 55;
 const STARS = [25, 100, 500];
 
 const bot = new TelegramBot(TOKEN, { polling: { interval: 2000, autoStart: true, params: { timeout: 10 } } });
@@ -93,12 +93,12 @@ const L = {
 // Каналы по темам (названия одинаковы на всех языках; список совпадает с мини-аппом)
 const GROUPS = [
   ['📡', 'Новости', 'Первый канал · Россия 1 · НТВ · Россия 24 · Пятый канал · ТВЦ · МИР · Звезда · 360° · Москва 24 · Россия-К · Санкт-Петербург · Соловьёв Live · Москва. Доверие · 360 Новости'],
-  ['🎬', 'Развлечения', 'ТНТ4 · История · Союз · Прима · RT Documentary'],
+  ['🎬', 'Развлечения', 'История · Союз · Прима · RT Documentary'],
   ['🎥', 'Кино', 'Дом Кино · Кинохит · Кинокомедия · Viju TV1000 · Наше кино · Родное кино · Киносвидание · Индийское кино · Кино Экшн · Честный детектив'],
-  ['👶', 'Детские', 'Карусель · Мульт · Карусель International · Рыжий'],
-  ['🎵', 'Музыка и радио', 'МУЗ-ТВ · Музыка Первого · Муз Союз · FON Music · Страна FM · Вести FM'],
-  ['🌿', 'Хобби', 'Охота и рыбалка · Мой мир · Приключения · Точка отрыва · Живая планета · Зоопарк · Драйв · Домашние животные · Здоровое ТВ · Большая планета · Бобер'],
-  ['⚽', 'Спорт', 'FloSports Hockey · FloSports Racing · Viju+ Sport · M1 Global MMA · Red Bull TV · Unbeaten Boxing · World of Freesports · Спортивный · Trace Sport Stars'],
+  ['👶', 'Детские', 'Карусель · Мульт · Рыжий'],
+  ['🎵', 'Музыка и радио', 'МУЗ-ТВ · Музыка Первого · Муз Союз · Страна FM · Вести FM'],
+  ['🌿', 'Хобби', 'Охота и рыбалка · Мой мир · Приключения · Точка отрыва · Живая планета · Зоопарк · Драйв · Домашние животные · Здоровое ТВ'],
+  ['⚽', 'Спорт', 'FloSports Hockey · FloSports Racing · Viju+ Sport · M1 Global MMA · Red Bull TV · Unbeaten Boxing · World of Freesports · Trace Sport Stars'],
 ];
 
 function kb(lang, withDonate = true) {
