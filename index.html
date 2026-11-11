@@ -853,7 +853,8 @@ setInterval(() => {
     if (_vpq.totalVideoFrames > _lastFrameCount) {
       _lastFrameCount = _vpq.totalVideoFrames;
       _lastFrameProgressTime = Date.now();
-    } else if (!video.paused && Date.now() - _lastFrameProgressTime > 9000) {
+    } else if (document.hidden) { _lastFrameProgressTime = Date.now(); /*playfix2*/
+    } else if (_lastFrameCount > 0 && !video.paused && Date.now() - _lastFrameProgressTime > 9000) {
       // currentTime может тикать (аудио/системные часы), пока сам видеокадр не
       // обновляется — картинка визуально замирает/чернеет при формально "живом"
       // потоке. Проверка по currentTime одна это не ловит.
