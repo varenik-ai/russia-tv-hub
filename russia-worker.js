@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.0";
+var VERSION = "82.37.1";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -93,8 +93,8 @@ var CINERAMA_PATH = {
   tracesport: "1274/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8"
 };
-// 13.11.2026: в странах ЕС (cf.isEUCountry) часть российских хостов блокируется на стороне провайдера (в Болгарии не открывается stream.smotrim.ru
-// и cdn.ntv.ru, проверено из браузера зрителя на /diag/), поэтому для этих каналов отдаём запасной источник cinerama (один поток без ступеней качества).
+// 13.11.2026: в Болгарии (cf.country = BG) не открывается stream.smotrim.ru (проверено из браузера зрителя на /diag/), поэтому для этих каналов там отдаём
+// запасной источник cinerama (один поток без ступеней). Только Болгария: из Нидерландов cinerama отдаёт 64-134 КБ/с при нужных ~340 КБ/с, а smotrim быстрый (0,6 с на сегмент).
 // Принудительно: ?eu=1 (для проверки и для /stream-q). Если у cinerama нет ответа, выдаётся обычный источник.
 var EU_ALT = {
   ntv: "1023/tracks-v1a1/mono.m3u8",
@@ -103,7 +103,7 @@ var EU_ALT = {
   tvc: "1025/tracks-v1a1/mono.m3u8"
 };
 function isEuRequest(request, url) {
-  return url.searchParams.get("eu") === "1" || !!(request.cf && String(request.cf.isEUCountry) === "1");
+  return url.searchParams.get("eu") === "1" || !!(request.cf && request.cf.country === "BG");
 }
 var STITCHED_MASTERS = {  };
 var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
