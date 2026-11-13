@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.6";
+var VERSION = "82.37.7";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -103,6 +103,7 @@ var EU_ALT = {
   tvc: "1025/tracks-v1a1/mono.m3u8",
   kultura: "1048/tracks-v1a1/mono.m3u8"
 };
+var EU_MIRRORS = ["stream1", "stream8", "stream3"];
 function isEuRequest(request, url) {
   return url.searchParams.get("eu") === "1" || !!(request.cf && request.cf.country === "BG");
 }
@@ -121,7 +122,7 @@ var index_default = {
       const out = { version: VERSION, country: (request.cf && request.cf.country) || null, colo: (request.cf && request.cf.colo) || null, euRule: isEuRequest(request, url), channel: dch, alt: EU_ALT[dch] || null, mirrors: [] };
       if (EU_ALT[dch]) {
         const t0 = Date.now();
-        const rs = await Promise.all(["stream1", "stream3", "stream8"].map(async (h) => { const t1 = Date.now(); const r = await probeCineramaMirror(h, EU_ALT[dch]); return { host: h, state: r.state, ms: Date.now() - t1, err: r.err || null }; }));
+        const rs = await Promise.all(EU_MIRRORS.map(async (h) => { const t1 = Date.now(); const r = await probeCineramaMirror(h, EU_ALT[dch]); return { host: h, state: r.state, ms: Date.now() - t1, err: r.err || null }; }));
         out.mirrors = rs; out.totalMs = Date.now() - t0;
       }
       return new Response(JSON.stringify(out), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -153,7 +154,7 @@ var index_default = {
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
       if (EU_ALT[channel] && isEuRequest(request, url)) {
-        const alt = await fetchCinerama(EU_ALT[channel], url.origin, ["stream3", "stream1", "stream8"]); // из Болгарии (13.11.2026, 2 прогона): stream1 и stream3 всегда ok, stream8 временами отдаёт заглушку /blocked/
+        const alt = await fetchCinerama(EU_ALT[channel], url.origin, EU_MIRRORS); // Болгария (дата-центр SOF, 13.11.2026): stream1 и stream8 отвечают за 0,2-0,6 с; stream3 4+ с и «segment not downloadable»
         if (alt.ok) return alt;
       }
       if (channel === "ntv" && url.searchParams.get("native") === "1") {
@@ -374,10 +375,16 @@ async function probeCineramaMirror(host, path) {
 }
 __name(probeCineramaMirror, "probeCineramaMirror");
 async function fetchCinerama(path, workerOrigin, mirrors) {
+  // Пробы всех зеркал стартуют сразу, но ответ отдаётся, как только готово первое «хорошее» зеркало в порядке предпочтения
+  // (не ждём самое медленное: из Болгарии stream3 отвечает 4+ с и не отдаёт сегменты, 82.37.7).
   const list = mirrors || CINERAMA_MIRRORS;
-  const results = await Promise.all(list.map((h) => probeCineramaMirror(h, path)));
-  const good = results.find((r) => r.state === "good");
-  if (good) return buildPlaylistResponse(good.body, good.streamUrl, workerOrigin);
+  const probes = list.map((h) => probeCineramaMirror(h, path));
+  const results = [];
+  for (const pr of probes) {
+    const r = await pr;
+    results.push(r);
+    if (r.state === "good") return buildPlaylistResponse(r.body, r.streamUrl, workerOrigin);
+  }
   const unprobed = results.find((r) => r.state === "unprobed");
   if (unprobed) return buildPlaylistResponse(unprobed.body, unprobed.streamUrl, workerOrigin);
   const stale = results.filter((r) => r.state === "stale").sort((a, b) => a.age - b.age)[0];
