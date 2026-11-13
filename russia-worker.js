@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.2";
+var VERSION = "82.37.3";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -100,7 +100,8 @@ var EU_ALT = {
   ntv: "1023/tracks-v1a1/mono.m3u8",
   rossiya1: "1020/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8",
-  tvc: "1025/tracks-v1a1/mono.m3u8"
+  tvc: "1025/tracks-v1a1/mono.m3u8",
+  kultura: "1048/tracks-v1a1/mono.m3u8"
 };
 function isEuRequest(request, url) {
   return url.searchParams.get("eu") === "1" || !!(request.cf && request.cf.country === "BG");
