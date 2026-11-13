@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.36.0";
+var VERSION = "82.37.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -93,6 +93,18 @@ var CINERAMA_PATH = {
   tracesport: "1274/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8"
 };
+// 13.11.2026: в странах ЕС (cf.isEUCountry) часть российских хостов блокируется на стороне провайдера (в Болгарии не открывается stream.smotrim.ru
+// и cdn.ntv.ru, проверено из браузера зрителя на /diag/), поэтому для этих каналов отдаём запасной источник cinerama (один поток без ступеней качества).
+// Принудительно: ?eu=1 (для проверки и для /stream-q). Если у cinerama нет ответа, выдаётся обычный источник.
+var EU_ALT = {
+  ntv: "1023/tracks-v1a1/mono.m3u8",
+  rossiya1: "1020/tracks-v1a1/mono.m3u8",
+  rossiya24: "1021/tracks-v1a1/mono.m3u8",
+  tvc: "1025/tracks-v1a1/mono.m3u8"
+};
+function isEuRequest(request, url) {
+  return url.searchParams.get("eu") === "1" || !!(request.cf && String(request.cf.isEUCountry) === "1");
+}
 var STITCHED_MASTERS = {  };
 var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 var index_default = {
@@ -106,7 +118,8 @@ var index_default = {
       const qChannel = url.searchParams.get("channel") || "";
       const want = (parseInt(url.searchParams.get("q") || "0", 10) || 0) * 1e3;
       const qNative = url.searchParams.get("native") === "1" ? "&native=1" : "";
-      const inner = await index_default.fetch(new Request(url.origin + "/stream?channel=" + encodeURIComponent(qChannel) + qNative));
+      const qEu = isEuRequest(request, url) ? "&eu=1" : "";
+      const inner = await index_default.fetch(new Request(url.origin + "/stream?channel=" + encodeURIComponent(qChannel) + qNative + qEu));
       if (!inner.ok) return inner;
       const text = await inner.text();
       const rows = text.split("\n");
@@ -127,6 +140,10 @@ var index_default = {
     }
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
+      if (EU_ALT[channel] && isEuRequest(request, url)) {
+        const alt = await fetchCinerama(EU_ALT[channel], url.origin);
+        if (alt.ok) return alt;
+      }
       if (channel === "ntv" && url.searchParams.get("native") === "1") {
         const nr = await fetchPlaylistOnly("https://cdn.ntv.ru/ntv0/playlist.m3u8", url.origin);
         if (nr.ok) return nr;
