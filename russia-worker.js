@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.5";
+var VERSION = "82.37.6";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -114,6 +114,17 @@ var index_default = {
     const path = url.pathname;
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS });
+    }
+    if (path === "/eu-debug") {
+      // 13.11.2026: диагностика для /diag/: страна и дата-центр глазами воркера, состояние зеркал cinerama и время ответа каждого
+      const dch = url.searchParams.get("channel") || "";
+      const out = { version: VERSION, country: (request.cf && request.cf.country) || null, colo: (request.cf && request.cf.colo) || null, euRule: isEuRequest(request, url), channel: dch, alt: EU_ALT[dch] || null, mirrors: [] };
+      if (EU_ALT[dch]) {
+        const t0 = Date.now();
+        const rs = await Promise.all(["stream1", "stream3", "stream8"].map(async (h) => { const t1 = Date.now(); const r = await probeCineramaMirror(h, EU_ALT[dch]); return { host: h, state: r.state, ms: Date.now() - t1, err: r.err || null }; }));
+        out.mirrors = rs; out.totalMs = Date.now() - t0;
+      }
+      return new Response(JSON.stringify(out), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" } });
     }
     if (path === "/stream-q") {
       const qChannel = url.searchParams.get("channel") || "";
