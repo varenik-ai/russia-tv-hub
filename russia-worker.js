@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.1";
+var VERSION = "82.37.2";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -141,7 +141,7 @@ var index_default = {
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
       if (EU_ALT[channel] && isEuRequest(request, url)) {
-        const alt = await fetchCinerama(EU_ALT[channel], url.origin);
+        const alt = await fetchCinerama(EU_ALT[channel], url.origin, ["stream8", "stream3", "stream1"]); // stream8: из Болгарии замерено 3,4 МБ/с
         if (alt.ok) return alt;
       }
       if (channel === "ntv" && url.searchParams.get("native") === "1") {
@@ -334,11 +334,11 @@ async function fetchSynthMaster(channel, workerOrigin) {
   return new Response(body, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
 }
 __name(fetchSynthMaster, "fetchSynthMaster");
-async function fetchCinerama(path, workerOrigin) {
+async function fetchCinerama(path, workerOrigin, mirrors) {
   let lastError = null;
   let staleFallback = null;
   let unprobedFallback = null;
-  for (const host of CINERAMA_MIRRORS) {
+  for (const host of (mirrors || CINERAMA_MIRRORS)) {
     const streamUrl = `https://${host}.cinerama.uz/${path}`;
     let res;
     try {
