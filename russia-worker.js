@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.3";
+var VERSION = "82.37.4";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -142,7 +142,7 @@ var index_default = {
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
       if (EU_ALT[channel] && isEuRequest(request, url)) {
-        const alt = await fetchCinerama(EU_ALT[channel], url.origin, ["stream8", "stream3", "stream1"]); // stream8: из Болгарии замерено 3,4 МБ/с
+        const alt = await fetchCinerama(EU_ALT[channel], url.origin, ["stream3", "stream1", "stream8"]); // из Болгарии (13.11.2026, 2 прогона): stream1 и stream3 всегда ok, stream8 временами отдаёт заглушку /blocked/
         if (alt.ok) return alt;
       }
       if (channel === "ntv" && url.searchParams.get("native") === "1") {
