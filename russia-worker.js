@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.4";
+var VERSION = "82.37.5";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -307,7 +307,8 @@ async function segmentReachable(playlistBody, playlistUrl) {
   try {
     const r = await fetch(resolveUrl(baseDir(playlistUrl), last), {
       headers: { "User-Agent": UA, "Referer": "https://russian-tv.com/", "Range": "bytes=0-0" },
-      cf: { cacheTtl: 0, cacheEverything: false }
+      cf: { cacheTtl: 0, cacheEverything: false },
+      signal: AbortSignal.timeout(4000)
     });
     return r.status === 200 || r.status === 206;
   } catch {
@@ -335,55 +336,42 @@ async function fetchSynthMaster(channel, workerOrigin) {
   return new Response(body, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
 }
 __name(fetchSynthMaster, "fetchSynthMaster");
-async function fetchCinerama(path, workerOrigin, mirrors) {
-  let lastError = null;
-  let staleFallback = null;
-  let unprobedFallback = null;
-  for (const host of (mirrors || CINERAMA_MIRRORS)) {
-    const streamUrl = `https://${host}.cinerama.uz/${path}`;
-    let res;
-    try {
-      res = await fetch(streamUrl, {
-        headers: { "User-Agent": UA, "Referer": "https://russian-tv.com/" },
-        cf: { cacheTtl: 0, cacheEverything: false }
-      });
-    } catch (e) {
-      lastError = { mirror: host, error: e.message };
-      continue;
-    }
-    if (!res.ok) {
-      lastError = { mirror: host, status: res.status };
-      continue;
-    }
-    if (res.url && res.url.includes("/blocked/")) {
-      lastError = { mirror: host, error: "redirected to cinerama.uz /blocked/ stub" };
-      continue;
-    }
+// 13.11.2026 (82.37.5): зеркала проверяются параллельно и с таймаутом 4 с. Раньше они шли по очереди без таймаута: если первое зеркало
+// «зависало» из дата-центра Cloudflare (Болгария), ответ воркера занимал больше 10 с, и hls.js давал levelLoadTimeOut.
+async function probeCineramaMirror(host, path) {
+  const streamUrl = `https://${host}.cinerama.uz/${path}`;
+  try {
+    const res = await fetch(streamUrl, {
+      headers: { "User-Agent": UA, "Referer": "https://russian-tv.com/" },
+      cf: { cacheTtl: 0, cacheEverything: false },
+      signal: AbortSignal.timeout(4000)
+    });
+    if (!res.ok) return { host, state: "bad", err: { mirror: host, status: res.status } };
+    if (res.url && res.url.includes("/blocked/")) return { host, state: "bad", err: { mirror: host, error: "redirected to cinerama.uz /blocked/ stub" } };
     const body = await res.text();
-    if (isSelfLoopingMaster(body, streamUrl)) {
-      lastError = { mirror: host, error: "self-referencing master (datacenter-IP block)" };
-      continue;
-    }
-    if (!await segmentReachable(body, streamUrl)) {
-      lastError = { mirror: host, error: "recent segment not downloadable (mirror out of sync)" };
-      if (!unprobedFallback) unprobedFallback = { body, streamUrl };
-      continue;
-    }
+    if (isSelfLoopingMaster(body, streamUrl)) return { host, state: "bad", err: { mirror: host, error: "self-referencing master (datacenter-IP block)" } };
+    if (!await segmentReachable(body, streamUrl)) return { host, state: "unprobed", body, streamUrl, err: { mirror: host, error: "recent segment not downloadable (mirror out of sync)" } };
     const latestMs = latestProgramDateTimeMs(body);
     if (latestMs !== null && Date.now() - latestMs > STALE_THRESHOLD_MS) {
       const age = Date.now() - latestMs;
-      lastError = { mirror: host, error: `stale playlist (last segment ${Math.round(age / 1e3)}s old)` };
-      if (!staleFallback || age < staleFallback.age) staleFallback = { age, body, streamUrl };
-      continue;
+      return { host, state: "stale", age, body, streamUrl, err: { mirror: host, error: `stale playlist (last segment ${Math.round(age / 1e3)}s old)` } };
     }
-    return buildPlaylistResponse(body, streamUrl, workerOrigin);
+    return { host, state: "good", body, streamUrl };
+  } catch (e) {
+    return { host, state: "bad", err: { mirror: host, error: e.message } };
   }
-  if (unprobedFallback) {
-    return buildPlaylistResponse(unprobedFallback.body, unprobedFallback.streamUrl, workerOrigin);
-  }
-  if (staleFallback && staleFallback.age < 5 * 60 * 1e3) {
-    return buildPlaylistResponse(staleFallback.body, staleFallback.streamUrl, workerOrigin);
-  }
+}
+__name(probeCineramaMirror, "probeCineramaMirror");
+async function fetchCinerama(path, workerOrigin, mirrors) {
+  const list = mirrors || CINERAMA_MIRRORS;
+  const results = await Promise.all(list.map((h) => probeCineramaMirror(h, path)));
+  const good = results.find((r) => r.state === "good");
+  if (good) return buildPlaylistResponse(good.body, good.streamUrl, workerOrigin);
+  const unprobed = results.find((r) => r.state === "unprobed");
+  if (unprobed) return buildPlaylistResponse(unprobed.body, unprobed.streamUrl, workerOrigin);
+  const stale = results.filter((r) => r.state === "stale").sort((a, b) => a.age - b.age)[0];
+  if (stale && stale.age < 5 * 60 * 1e3) return buildPlaylistResponse(stale.body, stale.streamUrl, workerOrigin);
+  const lastError = results.map((r) => r.err).filter(Boolean).pop() || null;
   return new Response(
     JSON.stringify({ error: "All cinerama.uz mirrors blocked, unavailable or stale", path, lastError }),
     { status: 502, headers: { ...CORS, "Content-Type": "application/json" } }
