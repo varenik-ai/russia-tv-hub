@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.37.7";
+var VERSION = "82.38.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -46,7 +46,10 @@ var STREAMS = {
   floRacing: "https://amg02278-amg02278c1-flosports-worldwide-7592.playouts.now.amagi.tv/playlist.m3u8",
   redbull: "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
   unbeaten: "https://unbeaten-tcl.amagi.tv/playlist.m3u8",
-  freesports: "https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/playlist.m3u8"
+  freesports: "https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/playlist.m3u8",
+  // 15.11.2026: международные версии канала «Россия» (РТР-Планета) для Европы и США, официальный поток ВГТРК; подпись sign постоянная, дочерние плейлисты её не требуют
+  rtrEuro: "https://stream.smotrim.ru/hls/planeta_rtr_euro/playlist.m3u8?entity=channel&id=510&sign=5c0ac65d75140fac2fd938d77c92138d",
+  rtrUsa: "https://stream.smotrim.ru/hls/planeta_rtr_usa/playlist.m3u8?entity=channel&id=513&sign=3ac5d8e2db71ef7fc3d4becbff7512d8"
 };
 var SYNTH_MASTERS = {
   doverie: { dir: "hls2/doverie", ladder: [[1, 733], [2, 1332], [3, 1888]] },
@@ -104,6 +107,13 @@ var EU_ALT = {
   kultura: "1048/tracks-v1a1/mono.m3u8"
 };
 var EU_MIRRORS = ["stream1", "stream8", "stream3"];
+// 15.11.2026: для Болгарии сначала thestream.cyou (тот же источник, что у Первого и НТВ, у мамы в Варне открывается), потом cinerama.
+// Россия 1 (id 211) у них идёт как международная версия «Россия РТР»; Россия 24 (30), Карусель (232).
+var EU_ALT_STREAM = {
+  rossiya1: "https://streaming.thestream.cyou/live/211.m3u8",
+  rossiya24: "https://streaming.thestream.cyou/live/30.m3u8",
+  karusel: "https://streaming.thestream.cyou/live/232.m3u8"
+};
 function isEuRequest(request, url) {
   return url.searchParams.get("eu") === "1" || !!(request.cf && request.cf.country === "BG");
 }
@@ -153,6 +163,10 @@ var index_default = {
     }
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
+      if (EU_ALT_STREAM[channel] && isEuRequest(request, url)) {
+        const as = await fetchPlaylistOnly(EU_ALT_STREAM[channel], url.origin);
+        if (as.ok) return as;
+      }
       if (EU_ALT[channel] && isEuRequest(request, url)) {
         const alt = await fetchCinerama(EU_ALT[channel], url.origin, EU_MIRRORS); // Болгария (дата-центр SOF, 13.11.2026): stream1 и stream8 отвечают за 0,2-0,6 с; stream3 4+ с и «segment not downloadable»
         if (alt.ok) return alt;
