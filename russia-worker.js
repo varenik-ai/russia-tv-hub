@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.38.0";
+var VERSION = "82.39.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -117,6 +117,20 @@ var EU_ALT_STREAM = {
 function isEuRequest(request, url) {
   return url.searchParams.get("eu") === "1" || !!(request.cf && request.cf.country === "BG");
 }
+// 16.11.2026: запасные источники для автоматического переключения у зрителя (?alt=N, N = 1…длина цепочки; 0 или нет параметра — обычный источник).
+// Мониторинг (rtv-monitor) показал, что у части зрителей из Германии, Греции, Эстонии, Болгарии и Македонии основной источник не открывается;
+// monitor.js на странице при сбое сам просит следующий источник. ["ts", id] — streaming.thestream.cyou/live/<id>.m3u8, ["cin", путь] — cinerama.uz.
+var ALT_CHAINS = {
+  rossiya1: [["ts", 211], ["cin", "1020/tracks-v1a1/mono.m3u8"]],
+  rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
+  ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
+  tvc: [["cin", "1025/tracks-v1a1/mono.m3u8"]],
+  kultura: [["cin", "1048/tracks-v1a1/mono.m3u8"]],
+  karusel: [["ts", 232]],
+  domkino: [["ts", 44]],
+  zvezda: [["ts", 748]],
+  muztv: [["ts", 618]]
+};
 var STITCHED_MASTERS = {  };
 var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 var index_default = {
@@ -141,7 +155,7 @@ var index_default = {
       const qChannel = url.searchParams.get("channel") || "";
       const want = (parseInt(url.searchParams.get("q") || "0", 10) || 0) * 1e3;
       const qNative = url.searchParams.get("native") === "1" ? "&native=1" : "";
-      const qEu = isEuRequest(request, url) ? "&eu=1" : "";
+      const qEu = (isEuRequest(request, url) ? "&eu=1" : "") + (url.searchParams.get("alt") ? "&alt=" + encodeURIComponent(url.searchParams.get("alt")) : "");
       const inner = await index_default.fetch(new Request(url.origin + "/stream?channel=" + encodeURIComponent(qChannel) + qNative + qEu));
       if (!inner.ok) return inner;
       const text = await inner.text();
@@ -163,6 +177,12 @@ var index_default = {
     }
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
+      const altN = parseInt(url.searchParams.get("alt") || "0", 10);
+      if (altN > 0 && ALT_CHAINS[channel] && ALT_CHAINS[channel][altN - 1]) {
+        const [at, av] = ALT_CHAINS[channel][altN - 1];
+        const ar = at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : await fetchCinerama(av, url.origin, EU_MIRRORS);
+        if (ar.ok) return ar;
+      }
       if (EU_ALT_STREAM[channel] && isEuRequest(request, url)) {
         const as = await fetchPlaylistOnly(EU_ALT_STREAM[channel], url.origin);
         if (as.ok) return as;

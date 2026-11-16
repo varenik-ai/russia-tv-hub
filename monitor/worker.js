@@ -16,7 +16,7 @@ async function record(request, env) {
   const row = {
     day: new Date().toISOString().slice(0, 10), ch, src: SRC.includes(p.s) ? p.s : "site", cc: s(cf.country, 2) || "XX", asn: Number(cf.asn) || 0,
     dev: DEV.includes(p.d) ? p.d : "desktop", br: BR.includes(p.b) ? p.b : "other", kind, ok, code: ok ? "" : (s(p.e, 40) || "unknown"),
-    http: ok ? 0 : Math.min(Math.max(parseInt(p.h, 10) || 0, 0), 999), host: ok ? "" : s(p.x, 60), wk: s(p.w, 60), ttf: ok && kind === "s" ? Math.min(Math.max(parseInt(p.t, 10) || 0, 0), 120000) : 0,
+    http: ok ? 0 : Math.min(Math.max(parseInt(p.h, 10) || 0, 0), 999), host: s(p.x, 60), wk: s(p.w, 60), ttf: ok && kind === "s" ? Math.min(Math.max(parseInt(p.t, 10) || 0, 0), 120000) : 0,
   };
   await env.DB.batch([
     env.DB.prepare("INSERT INTO ev (day,ch,src,cc,asn,dev,br,kind,ok,code,http,host,wk,n,ttf) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1,?) ON CONFLICT(day,ch,src,cc,asn,dev,br,kind,ok,code,http,host,wk) DO UPDATE SET n=n+1, ttf=ttf+excluded.ttf")
@@ -36,7 +36,7 @@ async function api(url, env) {
   const W = where.join(" AND ");
   const q = (sql, extra = []) => env.DB.prepare(sql).bind(...bind, ...extra).all().then(r => r.results);
   const F = "SUM(CASE WHEN ok=0 THEN n ELSE 0 END)";
-  const [daily, channels, problems, geo, errors, drops, ttf] = await Promise.all([
+  const [daily, channels, problems, geo, errors, drops, ttf, sources] = await Promise.all([
     q(`SELECT day, SUM(n) n, ${F} fail FROM ev WHERE ${W} AND kind='s' GROUP BY day ORDER BY day`),
     q(`SELECT ch, SUM(n) n, ${F} fail FROM ev WHERE ${W} AND kind='s' GROUP BY ch ORDER BY ${F} DESC, SUM(n) DESC LIMIT 200`),
     q(`SELECT ev.ch, cc, ev.asn, COALESCE(o.org,'') org, SUM(n) n, ${F} fail FROM ev LEFT JOIN asn_org o ON o.asn = ev.asn WHERE ${W} AND kind='s' GROUP BY ev.ch, cc, ev.asn HAVING SUM(n) >= 3 AND ${F} * 2 >= SUM(n) ORDER BY SUM(n) DESC LIMIT 150`),
@@ -44,8 +44,9 @@ async function api(url, env) {
     q(`SELECT ch, code, http, host, wk, SUM(n) n FROM ev WHERE ${W} AND kind='s' AND ok=0 GROUP BY ch, code, http, host, wk ORDER BY SUM(n) DESC LIMIT 100`),
     q(`SELECT ch, SUM(n) n FROM ev WHERE ${W} AND kind='d' GROUP BY ch ORDER BY SUM(n) DESC LIMIT 50`),
     q(`SELECT ch, SUM(ttf) t, SUM(n) n FROM ev WHERE ${W} AND kind='s' AND ok=1 GROUP BY ch`),
+    q(`SELECT ch, wk, host, SUM(CASE WHEN ok=1 THEN n ELSE 0 END) good, ${F} fail FROM ev WHERE ${W} AND kind='s' GROUP BY ch, wk, host HAVING host <> '' OR wk LIKE '%:a%' ORDER BY SUM(n) DESC LIMIT 120`),
   ]);
-  return { days, src: src || "", ch: ch || "", daily, channels, problems, geo, errors, drops, ttf, now: new Date().toISOString() };
+  return { days, src: src || "", ch: ch || "", daily, channels, problems, geo, errors, drops, ttf, sources, now: new Date().toISOString() };
 }
 
 // ---- ежедневный отчёт администратору в Telegram (через /notify бота) ----
@@ -87,7 +88,7 @@ h2{font-size:15px;margin:22px 0 8px}table{width:100%;border-collapse:collapse;ba
 <main><div class="cards" id="cards"></div><h2>По дням (попытки запуска, красным — не пошли)</h2><div class="bars" id="bars"></div>
 <h2>Где не работает: канал × страна × провайдер (не пошёл в 50% и больше попыток, от 3 попыток)</h2><div class="scroll"><table id="prob"></table></div>
 <h2>Каналы</h2><div class="scroll"><table id="chs"></table></div><h2>Ошибки</h2><div class="scroll"><table id="errs"></table></div>
-<h2>Страны и провайдеры</h2><div class="scroll"><table id="geo"></table></div><h2>Обрывы после начала просмотра</h2><div class="scroll"><table id="drops"></table></div>
+<h2>Источники: хост сегментов и воркер (запасные источники — метка :a1, :a2)</h2><div class="scroll"><table id="srcs"></table></div><h2>Страны и провайдеры</h2><div class="scroll"><table id="geo"></table></div><h2>Обрывы после начала просмотра</h2><div class="scroll"><table id="drops"></table></div>
 <p class="note">Считаются попытки запуска: «пошёл» — hls.js или встроенный плеер получил первый кадр за 40 секунд. Данные без IP и идентификаторов; страна и провайдер определяются сетью Cloudflare. Хранение 90 дней.</p></main>
 <script>
 var K=new URLSearchParams(location.search).get('k')||'',CH='',$=function(i){return document.getElementById(i)};
@@ -105,6 +106,7 @@ function show(d){
  var tt={};d.ttf.forEach(function(x){tt[x.ch]=x.n?Math.round(x.t/x.n/100)/10:0});
  tbl('chs',[['Канал'],['Попыток',1],['Не пошло',1],['%',1],['Первый кадр, с',1]],d.channels.map(function(x){var p=pct(x.fail,x.n);return'<tr class="cl" onclick="CH=\\''+esc(x.ch)+'\\';load()"><td>'+esc(x.ch)+'</td><td class="num">'+x.n+'</td><td class="num">'+x.fail+'</td><td class="num '+cl(p)+'">'+p+'%</td><td class="num">'+(tt[x.ch]||'')+'</td></tr>'}));
  tbl('errs',[['Канал'],['Код'],['HTTP',1],['Хост'],['Воркер'],['Раз',1]],d.errors.map(function(x){return'<tr><td>'+esc(x.ch)+'</td><td>'+esc(x.code)+'</td><td class="num">'+(x.http||'')+'</td><td>'+esc(x.host)+'</td><td>'+esc(x.wk)+'</td><td class="num">'+x.n+'</td></tr>'}));
+ tbl('srcs',[['Канал'],['Воркер'],['Хост'],['Пошло',1],['Не пошло',1],['%',1]],d.sources.map(function(x){var p=pct(x.fail,x.good+x.fail);return'<tr><td>'+esc(x.ch)+'</td><td>'+esc(x.wk)+'</td><td>'+esc(x.host)+'</td><td class="num">'+x.good+'</td><td class="num">'+x.fail+'</td><td class="num '+cl(p)+'">'+p+'%</td></tr>'}));
  tbl('geo',[['Страна'],['Провайдер (ASN)'],['Попыток',1],['Не пошло',1],['%',1]],d.geo.map(function(x){var p=pct(x.fail,x.n);return'<tr><td>'+esc(x.cc)+'</td><td>'+esc(x.org)+' (AS'+x.asn+')</td><td class="num">'+x.n+'</td><td class="num">'+x.fail+'</td><td class="num '+cl(p)+'">'+p+'%</td></tr>'}));
  tbl('drops',[['Канал'],['Обрывов',1]],d.drops.map(function(x){return'<tr><td>'+esc(x.ch)+'</td><td class="num">'+x.n+'</td></tr>'}));
 }
