@@ -207,6 +207,13 @@ export default {
       const r = await tg(env, 'createInvoiceLink', { title: L.ru.donate_t, description: L.ru.donate_d, payload: 'donate_' + amount, provider_token: '', currency: 'XTR', prices: [{ label: 'Russia TV', amount }] });
       return new Response(JSON.stringify(r.ok ? { url: r.result } : { error: r.description }), { status: r.ok ? 200 : 502, headers: cors });
     }
+    if (request.method === 'POST' && url.pathname === '/notify') {   // служебное сообщение администратору (отчёт rtv-monitor); ключ — секрет NOTIFY_KEY
+      if (!env.NOTIFY_KEY || !env.ADMIN_ID || request.headers.get('x-notify-key') !== env.NOTIFY_KEY) return new Response('forbidden', { status: 403 });
+      let b; try { b = await request.json(); } catch (e) { return new Response('bad request', { status: 400 }); }
+      const text = String((b && b.text) || '').slice(0, 3900); if (!text) return new Response('empty', { status: 400 });
+      const r = await send(env, env.ADMIN_ID, text, { parse_mode: 'HTML', disable_web_page_preview: true });
+      return new Response(JSON.stringify({ ok: !!r.ok }), { status: r.ok ? 200 : 502, headers: { 'content-type': 'application/json' } });
+    }
     if (url.pathname === '/setup') return new Response(JSON.stringify(await setup(env, url.origin), null, 2), { headers: { 'content-type': 'application/json' } });
     if (request.method === 'POST' && url.pathname === '/hook') {
       if (request.headers.get('x-telegram-bot-api-secret-token') !== (await webhookSecret(env))) return new Response('forbidden', { status: 403 });

@@ -2,10 +2,14 @@ name = "rtv-monitor"
 main = "worker.js"
 compatibility_date = "2026-08-15"
 
+[[services]]
+binding = "BOT"
+service = "russia-bot-worker"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "rtv-monitor"
 database_id = "__DB_ID__"
 
 [triggers]
-crons = ["17 3 * * *"]
+crons = ["17 3 * * *", "0 6 * * *"]

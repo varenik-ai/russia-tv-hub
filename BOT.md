@@ -66,3 +66,5 @@ Webhook защищён: Telegram присылает заголовок `X-Telegr
 ## Воркер russia-tv-pair
 
 `russia-tv-pair-worker.js` связывает телефон и телевизор: `POST /code`, `/pair`, `/play`, WebSocket `/ws`. Адрес `https://pair.russian-tv.com`, хранилище Durable Objects (класс `PairDO`, SQLite), видео через него не идёт. Деплой: `wrangler deploy` с привязкой `PAIR` и миграцией `new_sqlite_classes = ["PairDO"]`. Секретов нет.
+
+**Служебный маршрут `/notify` (16.11.2026):** `POST /notify` с заголовком `x-notify-key` (секрет `NOTIFY_KEY`) и телом `{"text":"…"}` отправляет сообщение администратору (`ADMIN_ID`, HTML). Им пользуется воркер `rtv-monitor` для ежедневного отчёта по запуску каналов (см. `monitor/README.md`); без ключа ответ 403.

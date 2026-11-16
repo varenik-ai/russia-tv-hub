@@ -48,6 +48,33 @@ async function api(url, env) {
   return { days, src: src || "", ch: ch || "", daily, channels, problems, geo, errors, drops, ttf, now: new Date().toISOString() };
 }
 
+// ---- ежедневный отчёт администратору в Telegram (через /notify бота) ----
+const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const pc = (f, n) => (n ? Math.round((f * 1000) / n) / 10 : 0);
+async function buildReport(env) {
+  const d = await api(new URL("https://x/api?days=7"), env);
+  const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  const yd = d.daily.find((x) => x.day === y) || { n: 0, fail: 0 };
+  const week = d.daily.reduce((a, x) => ({ n: a.n + x.n, fail: a.fail + x.fail }), { n: 0, fail: 0 });
+  const errs = (await env.DB.prepare("SELECT code, host, SUM(n) n FROM ev WHERE day = ? AND kind = 's' AND ok = 0 GROUP BY code, host ORDER BY SUM(n) DESC LIMIT 5").bind(y).all()).results;
+  let t = `📊 <b>Мониторинг каналов</b>\nЗа ${y}: попыток запуска <b>${yd.n}</b>, не пошло <b>${yd.fail}</b> (${pc(yd.fail, yd.n)}%)\nЗа 7 дней: ${week.n} попыток, не пошло ${week.fail} (${pc(week.fail, week.n)}%)\n`;
+  if (!week.n) return t + "\nДанных за неделю нет (посетители не запускали каналы или скрипт не отправляет отчёты).";
+  if (d.problems.length) {
+    t += "\n⚠️ <b>Где не работает</b> (за 7 дней, неудач от 50%, от 3 попыток):\n";
+    t += d.problems.slice(0, 10).map((x) => `• ${esc(x.ch)} — ${esc(x.cc)}, ${esc((x.org || "AS" + x.asn).slice(0, 28))}: не пошло ${x.fail} из ${x.n}`).join("\n") + "\n";
+  } else t += "\n✅ Проблемных сочетаний канал × страна × провайдер нет.\n";
+  const bad = d.channels.filter((x) => x.n >= 10 && x.fail * 100 >= x.n * 30).slice(0, 8);
+  if (bad.length) t += "\n📉 <b>Каналы с долей неудач от 30%</b> (от 10 попыток):\n" + bad.map((x) => `• ${esc(x.ch)}: ${pc(x.fail, x.n)}% (${x.fail} из ${x.n})`).join("\n") + "\n";
+  if (errs.length) t += "\n🔧 <b>Ошибки вчера:</b>\n" + errs.map((x) => `• ${esc(x.code)}${x.host ? " @ " + esc(x.host) : ""} — ${x.n}`).join("\n") + "\n";
+  return t + `\n<a href="https://rtv-monitor.dyaltd.workers.dev/stats?k=${env.STATS_KEY}">Открыть статистику</a>`;
+}
+async function sendReport(env) {
+  const text = await buildReport(env);
+  const r = await env.BOT.fetch("https://bot.internal/notify", {   // сервисная привязка: воркер на workers.dev не может вызвать другой воркер по публичному адресу (ошибка 1042)
+     method: "POST", headers: { "content-type": "application/json", "x-notify-key": env.NOTIFY_KEY }, body: JSON.stringify({ text }) });
+  return { status: r.status, text };
+}
+
 const PAGE = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Мониторинг каналов</title>
 <style>:root{color-scheme:dark}body{margin:0;background:#0b0b14;color:#e8e8f2;font:14px/1.4 -apple-system,Segoe UI,Roboto,sans-serif}header{position:sticky;top:0;background:#12121f;border-bottom:1px solid #26263a;padding:10px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;z-index:5}
 h1{font-size:16px;margin:0 8px 0 0}select,button{background:#1b1b30;color:#e8e8f2;border:1px solid #33334d;border-radius:8px;padding:6px 10px;font:inherit}main{padding:14px;max-width:1200px;margin:auto}
@@ -91,10 +118,12 @@ export default {
     if (url.pathname === "/r" && request.method === "POST") return record(request, env);
     const okKey = env.STATS_KEY && url.searchParams.get("k") === env.STATS_KEY;
     if (url.pathname === "/stats") return okKey ? new Response(PAGE, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } }) : new Response("Not found", { status: 404 });
+    if (url.pathname === "/report") return okKey ? new Response(JSON.stringify(await sendReport(env)), { headers: { "Content-Type": "application/json" } }) : new Response("Not found", { status: 404 });
     if (url.pathname === "/api") return okKey ? new Response(JSON.stringify(await api(url, env)), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } }) : new Response("Not found", { status: 404 });
     return new Response("rtv-monitor", { status: 200 });
   },
   async scheduled(event, env) {
+    if (event.cron === "0 6 * * *") { await sendReport(env); return; }
     await env.DB.prepare("DELETE FROM ev WHERE day < ?").bind(new Date(Date.now() - KEEP_DAYS * 864e5).toISOString().slice(0, 10)).run();
   },
 };
