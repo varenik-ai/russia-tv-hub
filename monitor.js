@@ -1,6 +1,6 @@
 /* Мониторинг запуска каналов + автоматическое переключение источника.
    1) После каждой попытки запуска шлёт на rtv-monitor результат (пошёл / не пошёл), код ошибки, хост, тип устройства и браузер.
-      Без cookie, без идентификатора посетителя, без IP (страну и провайдера определяет Cloudflare). Уважает «Не отслеживать» (DNT).
+      Без cookie, без идентификатора посетителя, без IP (страну и провайдера определяет Cloudflare). Уважает «Не отслеживать» (DNT); на сайте отправляет данные только после «Согласен» (assets/consent.js).
    2) Если канал не пошёл (фатальная ошибка hls.js, ошибка встроенного плеера или 40 секунд без кадра) или оборвался, просит у воркера следующий запасной
       источник (?alt=N, цепочки ALT_CHAINS в russia-worker.js) и запоминает рабочий (после удачного запуска) в localStorage (rtv_alt) на 6 часов. Не больше 4 переключений на страницу.
    Работает с hls.js (патч Hls.prototype.loadSource) и со встроенным плеером Apple (события video).
@@ -17,8 +17,9 @@
   var DEV = /SmartTV|SMART-TV|Tizen|Web0S|WebOS|HbbTV|NetCast|AppleTV|BRAVIA/i.test(UA) ? 'tv' : /iPhone|iPad|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : /Android/.test(UA) ? 'android' : 'desktop';
   var tg = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== 'unknown';
   var BR = tg ? 'tg' : /Edg\//.test(UA) ? 'edge' : /Firefox|FxiOS/.test(UA) ? 'firefox' : /Chrome|CriOS/.test(UA) ? 'chrome' : /Safari/.test(UA) ? 'safari' : 'other';
+  function consented() { if (SRC === 'app') return true; try { return localStorage.getItem('rtv_consent') === '1'; } catch (e) { return false; } }   // на сайте — только после «Согласен» (с 19.11.2026); в мини-аппе окна согласия нет
   function send(p) {
-    if (DNT || sent >= MAX_REPORTS) return; sent++;
+    if (DNT || sent >= MAX_REPORTS || !consented()) return; sent++;
     p.s = SRC; p.d = DEV; p.b = BR;
     var body = JSON.stringify(p);
     try { if (navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'text/plain' }))) return; } catch (e) {}
