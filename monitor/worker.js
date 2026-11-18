@@ -118,6 +118,10 @@ export default {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(request.headers.get("Origin") || "") });
     if (url.pathname === "/r" && request.method === "POST") return record(request, env);
+    if (url.pathname === "/geo") {   // страна посетителя (cf.country) для рекламы по странам (assets/ads.js); ничего не сохраняется
+      const o = request.headers.get("Origin") || "";
+      return new Response(JSON.stringify({ cc: (request.cf && request.cf.country) || "XX" }), { headers: { ...cors(o), "Content-Type": "application/json", "Cache-Control": "private, max-age=3600" } });
+    }
     const okKey = env.STATS_KEY && url.searchParams.get("k") === env.STATS_KEY;
     if (url.pathname === "/stats") return okKey ? new Response(PAGE, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } }) : new Response("Not found", { status: 404 });
     if (url.pathname === "/report") return okKey ? new Response(JSON.stringify(await sendReport(env)), { headers: { "Content-Type": "application/json" } }) : new Response("Not found", { status: 404 });
