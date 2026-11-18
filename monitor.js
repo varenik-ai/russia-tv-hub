@@ -17,7 +17,7 @@
   var DEV = /SmartTV|SMART-TV|Tizen|Web0S|WebOS|HbbTV|NetCast|AppleTV|BRAVIA/i.test(UA) ? 'tv' : /iPhone|iPad|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : /Android/.test(UA) ? 'android' : 'desktop';
   var tg = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== 'unknown';
   var BR = tg ? 'tg' : /Edg\//.test(UA) ? 'edge' : /Firefox|FxiOS/.test(UA) ? 'firefox' : /Chrome|CriOS/.test(UA) ? 'chrome' : /Safari/.test(UA) ? 'safari' : 'other';
-  function consented() { if (SRC === 'app') return true; try { return localStorage.getItem('rtv_consent') === '1'; } catch (e) { return false; } }   // на сайте — только после «Согласен» (с 19.11.2026); в мини-аппе окна согласия нет
+  function consented() { if (SRC === 'app') return true; if (window.rtvConsentGranted) return !!window.rtvConsentGranted(); try { return localStorage.getItem('rtv_consent') === '1'; } catch (e) { return false; } }   // на сайте — только после «Согласен» (с 18.11.2026); в мини-аппе окна согласия нет
   function send(p) {
     if (DNT || sent >= MAX_REPORTS || !consented()) return; sent++;
     p.s = SRC; p.d = DEV; p.b = BR;
