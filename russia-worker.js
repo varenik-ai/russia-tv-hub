@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.42.0";
+var VERSION = "82.43.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -128,6 +128,8 @@ function isEuRequest(request, url) {
 // monitor.js на странице при сбое сам просит следующий источник. ["ts", id] — streaming.thestream.cyou/live/<id>.m3u8, ["cin", путь] — cinerama.uz.
 var ALT_CHAINS = {
   perviy: [["url", "https://fs.uplink.kz/perviy_kanal_sng/mono.m3u8?token=onlinetv"]],   // 19.11.2026: «Первый канал СНГ» (fs.uplink.kz, тот же CDN, что у Карусели и ТНТ4); основной источник thestream у зрителей из Швейцарии, США, Японии даёт ~2% неудач
+  spb: [["dir", "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=5690000,AVERAGE-BANDWIDTH=4550000,RESOLUTION=1280x720,CODECS=\"avc1.4d402a,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v2a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n#EXT-X-STREAM-INF:BANDWIDTH=2970000,AVERAGE-BANDWIDTH=2370000,RESOLUTION=640x360,CODECS=\"avc1.4d401f,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v3a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n"]],   // 19.11.2026: официальный поток телеканала (плеер на tvspb.ru/live, cdnvideo); воркер отдаёт готовый мастер с прямыми ссылками: из дата-центров Cloudflare cdnvideo отвечает 403, зритель берёт плейлисты и сегменты напрямую (CORS открыт, хеш hls_proxy_host постоянный)
+  muzykaPervogo: [["url", "https://fs.uplink.kz/muzyka_pervogo/mono.m3u8?token=onlinetv"]],   // 19.11.2026: запасной источник (тот же CDN, что у Карусели и ТНТ4)
   rossiya1: [["ts", 211], ["cin", "1020/tracks-v1a1/mono.m3u8"]],
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
   ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
@@ -189,7 +191,7 @@ var index_default = {
       const altN = parseInt(url.searchParams.get("alt") || "0", 10);
       if (altN > 0 && ALT_CHAINS[channel] && ALT_CHAINS[channel][altN - 1]) {
         const [at, av] = ALT_CHAINS[channel][altN - 1];
-        const ar = at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : at === "url" ? await fetchPlaylistOnly(av, url.origin) : await fetchCinerama(av, url.origin, EU_MIRRORS);
+        const ar = at === "dir" ? new Response(av, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } }) : at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : at === "url" ? await fetchPlaylistOnly(av, url.origin) : await fetchCinerama(av, url.origin, EU_MIRRORS);
         if (ar.ok) return ar;
       }
       if (EU_ALT_STREAM[channel] && isEuRequest(request, url)) {
