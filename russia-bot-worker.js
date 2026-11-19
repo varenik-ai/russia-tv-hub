@@ -6,7 +6,7 @@
 const CHANNEL = '@RussiaTV_Hub_Live';
 const BOT_USERNAME = 'RussiaTVHub_bot';
 const APP_URL = 'https://t.me/RussiaTVHub_bot/russiatv';
-const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=14';
+const WEB_URL = 'https://varenik-ai.github.io/russia-tv-hub/?v=15';
 const SITE_URL = 'https://russian-tv.com/';
 const TOTAL = 57;
 const STARS = [25, 100, 500];
