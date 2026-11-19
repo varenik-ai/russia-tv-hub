@@ -96,6 +96,9 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 <div id="tv-modal"><div class="sheet"><h3 id="tv-title"></h3><p id="tv-hint"></p><input id="tv-code" inputmode="numeric" maxlength="6" autocomplete="off"><button id="tv-go" type="button"></button><div id="tv-err"></div><button id="tv-chrome" type="button"></button><button class="close" id="tv-close" type="button">✕</button></div></div>
 <div id="donate-modal"><div class="sheet"><h3 id="donate-title"></h3><div class="amounts" id="donate-amounts"></div><button class="close" id="donate-close" type="button">✕</button></div></div>
 <script>
+/* самообновление (19.11.2026): Telegram и браузеры могут держать старую копию страницы; при запуске сверяем версию с version.json и один раз перезагружаемся на новую */
+var APPV='@@VER@@';
+(function(){try{if(sessionStorage.getItem('rtv_upd'))return;fetch('version.json?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.v&&j.v!==APPV){try{sessionStorage.setItem('rtv_upd','1')}catch(e){}location.replace(location.pathname+'?v='+encodeURIComponent(j.v)+(location.hash||''))}}).catch(function(){})}catch(e){}})();
 var D=@@D@@, CATS=@@CATS@@, SITE='https://russian-tv.com', BOT_API='https://russia-bot-worker.dyaltd.workers.dev';
 var PROXIES=['https://stream.russian-tv.com','https://birch-creek.dyaltd.workers.dev','https://oak-valley.dyaltd.workers.dev'];
 var PREEMPTIVE=@@PRE@@; /* каналы cinerama.uz: источник обрывает сессию через 10-12 минут, поэтому поток перезапускается раз в 6 минут */
@@ -246,6 +249,9 @@ try{
 }catch(e){}
 </script></body></html>
 '''
-html=html.replace('@@D@@',json.dumps(D,ensure_ascii=False,separators=(',',':'))).replace('@@CATS@@',json.dumps(CATS,ensure_ascii=False,separators=(',',':'))).replace('@@PRE@@',json.dumps(PRE))
+import time
+VER=time.strftime('%Y%m%d%H%M%S',time.gmtime())
+html=html.replace('@@D@@',json.dumps(D,ensure_ascii=False,separators=(',',':'))).replace('@@CATS@@',json.dumps(CATS,ensure_ascii=False,separators=(',',':'))).replace('@@PRE@@',json.dumps(PRE)).replace('@@VER@@',VER)
 open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','index.html'),'w',encoding='utf8').write(html)
 print(len(html))
+open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','version.json'),'w').write(json.dumps({'v':VER}))
