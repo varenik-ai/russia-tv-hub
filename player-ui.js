@@ -1,7 +1,7 @@
 /* Русское ТВ (мини-апп) — панель плеера (взята из tv-indonesia.com и доработана: русский язык, уровни без высоты — по битрейту) для HLS-каналов: выбор качества (авто + ручной) и трансляция на ТВ.
    Подключается из app.js вместе с hls.js. Для YouTube-каналов не нужен: у YouTube свой плеер.
    - Качество: «Auto» = адаптивный выбор hls.js (с учётом размера плеера), либо фиксированная высота.
-     Выбор хранится в localStorage (rtv_quality). Если у потока один уровень, кнопки нет.
+     Выбор не сохраняется между каналами: при запуске канала всегда «Авто». Если у потока один уровень, кнопки нет.
    - Chromium (Chrome, Edge, Opera; ПК и Android): Google Cast. Телевизор сам берёт поток по ссылке владельца,
      устройство остаётся свободным. Скрипт Google подгружается лениво.
    - iPhone/iPad (нативный HLS): AirPlay. */
@@ -11,9 +11,12 @@
   var T = EN
     ? { q: 'Quality', auto: 'Auto', rec: 'recommended', cast: 'Cast to TV', air: 'AirPlay', on: 'Casting to', tv: 'TV', stop: 'Stop casting', fail: 'Could not send this channel to the TV. Try again.', slow: 'Video stuttering?', lower: 'Lower quality', mbps: 'Mbit/s' }
     : { q: 'Качество', auto: 'Авто', rec: 'рекомендуется', cast: 'Показать на ТВ', air: 'AirPlay', on: 'Идёт на', tv: 'ТВ', stop: 'Остановить', fail: 'Не удалось отправить канал на ТВ. Попробуйте ещё раз.', slow: 'Видео тормозит?', lower: 'Снизить качество', mbps: 'Мбит/с' };
-  var KEY = 'rtv_quality';
-  function get() { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } }
-  function set(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  /* 19.11.2026: качество при запуске любого канала — «Авто». Ручной выбор действует только на этот канал в этом сеансе (не сохраняется в localStorage,
+     при смене канала снова «Авто»); переподключение того же канала выбор сохраняет. */
+  var prefMem = 'auto', prefCh = null;
+  function get() { return prefMem; }
+  function set(v) { prefMem = v; }
+  function chOf(u) { var m = /[?&]channel=([^&#]+)/.exec(u || ''); return m ? m[1] : String(u || ''); }
   var UA = navigator.userAgent || '';
   var isIOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   var chromium = !!window.chrome && !isIOS && !/Firefox|FxiOS/.test(UA);
@@ -24,7 +27,7 @@
   css.textContent =
     '.pui{position:absolute;top:10px;right:10px;z-index:51;display:flex;gap:6px;align-items:flex-start;transition:opacity .2s}' +
     '.player .pui{opacity:0}.player:hover .pui,.player .pui:focus-within,.player.pui-open .pui,.player.casting .pui{opacity:1}' +
-    '@media (hover:none){.player .pui{opacity:1}}' +
+    '@media (hover:none){.player .pui{opacity:0;pointer-events:none}.player.pui-show .pui,.player.pui-open .pui,.player.casting .pui{opacity:1;pointer-events:auto}}' +
     '.pui-btn{background:rgba(0,0,0,.68);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:8px;height:34px;padding:0 11px;font:600 12px/32px Inter,system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}' +
     '.pui-btn:hover{background:rgba(0,0,0,.92)}.pui-btn:focus-visible{outline:2px solid #6ea8ff}.pui-btn svg{width:18px;height:18px;fill:currentColor}.pui-btn.on{background:#e11d2e;border-color:#e11d2e}' +
     '.pui-menu{position:absolute;top:40px;right:0;background:#12121f;border:1px solid #2a2a40;border-radius:10px;padding:6px;min-width:190px;box-shadow:0 8px 28px rgba(0,0,0,.55);font:13px/1.3 Inter,system-ui,sans-serif;color:#e8e8f0}' +
@@ -103,7 +106,18 @@
     Array.prototype.forEach.call(box.querySelectorAll('.pui,.pui-toast,.pui-cast'), function (n) { n.parentNode.removeChild(n); });
     box.classList.remove('casting', 'pui-open');
   }
-  function mountBar(box) { clean(box); var bar = el('div', 'pui'); box.appendChild(bar); return bar; }
+  /* на телефоне (нет наведения) панель появляется по касанию плеера и прячется через 3,5 с; пока открыто меню качества — не прячется */
+  function touchReveal(box) {
+    if (box.__puiTouch) return; box.__puiTouch = true;
+    var t = 0;
+    function show() {
+      box.classList.add('pui-show'); clearTimeout(t);
+      t = setTimeout(function () { if (box.classList.contains('pui-open')) return show(); box.classList.remove('pui-show'); }, 3500);
+    }
+    box.addEventListener('touchstart', show, { passive: true });
+    box.addEventListener('click', show);
+  }
+  function mountBar(box) { clean(box); var bar = el('div', 'pui'); box.appendChild(bar); touchReveal(box); return bar; }
 
   function addCastButtons(bar, video) {
     if (chromium) {
@@ -126,6 +140,7 @@
   /* hls.js: качество + трансляция */
   function attach(box, video, hls, url) {
     var bar = mountBar(box), qbtn = null, menu = null, stalls = [], toast = null;
+    var chId = chOf(url); if (chId !== prefCh) { prefCh = chId; prefMem = 'auto'; }   // новый канал — качество «Авто»
     cur = { box: box, video: video, hls: hls, url: url, name: box.getAttribute('data-name') || '' };
     function close() { if (menu) { menu.parentNode.removeChild(menu); menu = null; } box.classList.remove('pui-open'); }
     function applyPref() {
