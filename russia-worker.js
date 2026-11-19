@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.40.0";
+var VERSION = "82.41.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -123,6 +123,7 @@ function isEuRequest(request, url) {
 // Мониторинг (rtv-monitor) показал, что у части зрителей из Германии, Греции, Эстонии, Болгарии и Македонии основной источник не открывается;
 // monitor.js на странице при сбое сам просит следующий источник. ["ts", id] — streaming.thestream.cyou/live/<id>.m3u8, ["cin", путь] — cinerama.uz.
 var ALT_CHAINS = {
+  perviy: [["url", "https://fs.uplink.kz/perviy_kanal_sng/mono.m3u8?token=onlinetv"]],   // 19.11.2026: «Первый канал СНГ» (fs.uplink.kz, тот же CDN, что у Карусели и ТНТ4); основной источник thestream у зрителей из Швейцарии, США, Японии даёт ~2% неудач
   rossiya1: [["ts", 211], ["cin", "1020/tracks-v1a1/mono.m3u8"]],
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
   ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
