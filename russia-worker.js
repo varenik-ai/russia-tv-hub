@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.39.0";
+var VERSION = "82.40.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -94,7 +94,9 @@ var CINERAMA_PATH = {
   zdorovoe: "1428/tracks-v1a1/mono.m3u8",
   fonmusic: "1272/tracks-v1a1/mono.m3u8",
   tracesport: "1274/tracks-v1a1/mono.m3u8",
-  rossiya24: "1021/tracks-v1a1/mono.m3u8"
+  rossiya24: "1021/tracks-v1a1/mono.m3u8",
+  // 19.11.2026: основной источник ТВЦ (tvc-hls.cdnvideo.ru) отдаёт 503 на плейлисты ступеней и из дата-центров, и с домашнего адреса (мониторинг: 48% неудач, 109 из 225 запусков) — основной теперь cinerama
+  tvc: "1025/tracks-v1a1/mono.m3u8"
 };
 // 13.11.2026: в Болгарии (cf.country = BG) не открывается stream.smotrim.ru (проверено из браузера зрителя на /diag/), поэтому для этих каналов там отдаём
 // запасной источник cinerama (один поток без ступеней). Только Болгария: из Нидерландов cinerama отдаёт 64-134 КБ/с при нужных ~340 КБ/с, а smotrim быстрый (0,6 с на сегмент).
@@ -124,7 +126,9 @@ var ALT_CHAINS = {
   rossiya1: [["ts", 211], ["cin", "1020/tracks-v1a1/mono.m3u8"]],
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
   ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
-  tvc: [["cin", "1025/tracks-v1a1/mono.m3u8"]],
+  tvc: [["url", "https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8"]],   // прежний основной источник: вернётся, если cdnvideo оживёт
+  rtrEuro: [["ts", 211]],   // 19.11.2026: 22% неудач (smotrim не открывается у части провайдеров Эстонии и др.); 211 — международная версия «Россия РТР» на thestream
+  rtrUsa: [["ts", 211]],
   kultura: [["cin", "1048/tracks-v1a1/mono.m3u8"]],
   karusel: [["ts", 232]],
   domkino: [["ts", 44]],
@@ -180,7 +184,7 @@ var index_default = {
       const altN = parseInt(url.searchParams.get("alt") || "0", 10);
       if (altN > 0 && ALT_CHAINS[channel] && ALT_CHAINS[channel][altN - 1]) {
         const [at, av] = ALT_CHAINS[channel][altN - 1];
-        const ar = at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : await fetchCinerama(av, url.origin, EU_MIRRORS);
+        const ar = at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : at === "url" ? await fetchPlaylistOnly(av, url.origin) : await fetchCinerama(av, url.origin, EU_MIRRORS);
         if (ar.ok) return ar;
       }
       if (EU_ALT_STREAM[channel] && isEuRequest(request, url)) {
