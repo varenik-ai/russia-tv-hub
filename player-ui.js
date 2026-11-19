@@ -6,6 +6,11 @@
      устройство остаётся свободным. Скрипт Google подгружается лениво.
    - iPhone/iPad (нативный HLS): AirPlay. */
 (function () {
+  /* Свой приёмник Google Cast (19.11.2026): на ТВ открывается страница stream.russian-tv.com/receiver, она сама играет поток и держит соотношение сторон
+     (стандартный приёмник Chromecast игнорирует SAR, и СТС, РЕН ТВ, Пятница! выглядят как 4:3). Пока App ID пустой, используется стандартный приёмник.
+     После регистрации приложения в Google Cast SDK Console (CAST_GUIDE.md, раздел «Свой приёмник») впишите сюда App ID (8 символов) во всех трёх файлах:
+     site assets/cast.js, hub player-ui.js (в мини-аппе тот же код). */
+  var RTV_CAST_APP = '', RTV_CAST_NS = 'urn:x-cast:com.russian-tv.cast';
   'use strict';
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
   var T = EN
@@ -57,7 +62,7 @@
       if (!ok) return;
       try {
         var ctx = cast.ctx = window.cast.framework.CastContext.getInstance();
-        ctx.setOptions({ receiverApplicationId: window.chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID, autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED });
+        ctx.setOptions({ receiverApplicationId: RTV_CAST_APP || window.chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID, autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED });
         ctx.addEventListener(window.cast.framework.CastContextEventType.CAST_STATE_CHANGED, function () { cast.subs.forEach(function (f) { f(); }); });
         ctx.addEventListener(window.cast.framework.CastContextEventType.SESSION_STATE_CHANGED, function (e) {
           var S = window.cast.framework.SessionState;
@@ -88,6 +93,13 @@
     var s = cast.ctx.getCurrentSession(); if (!s) return;
     try { cur.video.pause(); } catch (e) {}
     var url = new URL(cur.url, location.href).href;
+    if (RTV_CAST_APP) {   // свой приёмник (см. комментарий вверху файла)
+      showCastOverlay(false);
+      var msg = { cmd: 'play', url: url, name: cur.name };
+      var send = function (last) { s.sendMessage(RTV_CAST_NS, msg).catch(function () { if (last) showCastOverlay(true); }); };
+      send(false); setTimeout(function () { send(false); }, 2500); setTimeout(function () { send(true); }, 6000);
+      return;
+    }
     var mi = new window.chrome.cast.media.MediaInfo(url, 'application/x-mpegURL');
     mi.streamType = window.chrome.cast.media.StreamType.LIVE;
     var md = new window.chrome.cast.media.GenericMediaMetadata(); md.title = cur.name; md.images = [new window.chrome.cast.Image('https://russian-tv.com/og-image.jpg')]; mi.metadata = md;
