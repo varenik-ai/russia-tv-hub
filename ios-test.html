@@ -15,10 +15,13 @@ pre{white-space:pre-wrap;word-break:break-word;background:#14141f;border:1px sol
 <p>Нажмите кнопку и подождите около минуты, не закрывая страницу. Потом сделайте скриншот результата ниже и пришлите.</p>
 <select id="ch"><option value="sts">СТС</option><option value="rentv">РЕН ТВ</option><option value="pyatnica">Пятница!</option><option value="matchtv">Матч ТВ (прогрессивный, обычный SAR)</option><option value="karuselIntl">Карусель Intl (чересстрочный, обычный SAR)</option><option value="perviy">Первый канал (контроль, звук AAC)</option></select><br>
 <button id="go">▶ Запустить тест</button>
+<button id="goC" style="background:#2e7d32">▶ Тест В: СТС со звуком (через WebAudio)</button><br>
 <button id="goB" style="background:#1565c0">▶ Тест Б: готовые файлы (AAC / без звука / mp2)</button>
 <video id="v" muted playsinline webkit-playsinline controls></video>
 <pre id="out">Ожидание…</pre>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script src="mp2-decoder.js?v=1"></script>
+<script src="mp2-audio.js?v=2"></script>
 <script>
 var B='https://stream.russian-tv.com', out=document.getElementById('out'), v=document.getElementById('v'), lines=[];
 function log(t,cls){lines.push((cls?('<span class="'+cls+'">'+t+'</span>'):t));out.innerHTML=lines.join('\n')}
@@ -71,5 +74,21 @@ document.getElementById('goB').onclick=async function(){
     }
   }catch(e){log('Сбой теста: '+e,'bad')}
   log('\nГотово. Сделайте скриншот (можно в два экрана).'); this.disabled=false;
+};
+document.getElementById('goC').onclick=async function(){
+  this.disabled=true; lines=[]; var ch=document.getElementById('ch').value;
+  log('Тест В: канал '+ch+', видео через hls.js, звук mp2 вырезается и играет через WebAudio.\nУвеличьте громкость телефона и слушайте: звук должен быть и совпадать с картинкой.\n');
+  reset(); v.muted=false; v.volume=1;
+  if(!window.MP2Audio||!window.Hls||!Hls.isSupported()){log('Нет hls.js или MediaSource','bad');this.disabled=false;return}
+  var okA=MP2Audio.attach(v); log('AudioContext: '+(okA?'создан':'НЕТ')+', '+JSON.stringify(MP2Audio.info()));
+  var errs=[], h=new Hls({lowLatencyMode:false,fLoader:MP2Audio.loader(Hls)});
+  h.on(Hls.Events.ERROR,function(e,d){errs.push((d.fatal?'FATAL ':'')+d.type+'/'+d.details)});
+  h.loadSource(B+'/stream?channel='+ch); h.attachMedia(v);
+  h.on(Hls.Events.MANIFEST_PARSED,function(){var p=v.play();if(p&&p.catch)p.catch(function(){})});
+  var peak=0;
+  for(var i=0;i<30;i++){ await wait(1000); var l=MP2Audio.level(); if(l>peak)peak=l; if(i==9||i==19||i==29){ log('  через '+(i+1)+' с: видео time='+v.currentTime.toFixed(1)+' ready='+v.readyState+' err='+(v.error?v.error.code:'нет')+' | звук: '+JSON.stringify(MP2Audio.stats)+' '+JSON.stringify(MP2Audio.info())+' пик='+peak) } }
+  var fine=v.currentTime>5&&!v.error&&MP2Audio.stats.decoded>0;
+  log('\nИтог: видео+декодирование '+verdict(fine)+'; пик громкости на выходе='+peak+(peak>3?' (звук есть)':' (тишина)')+'\nОшибки hls.js: '+(errs.length?errs.slice(0,5).join('; '):'нет')+'\nСлышали ли вы звук и совпадал ли он с картинкой?');
+  try{h.destroy()}catch(e){} MP2Audio.detach(); reset(); this.disabled=false;
 };
 </script></body></html>

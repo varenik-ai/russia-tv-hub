@@ -12,6 +12,8 @@ html=r'''<!doctype html>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
 <script src="player-ui.js?v=3"></script>
+<script src="mp2-decoder.js?v=1"></script>
+<script src="mp2-audio.js?v=2"></script>
 <script src="monitor.js?v=7"></script>
 <script>
 /* Меньше запросов к воркерам: hls.js обновляет плейлист прямо у источника, а не через воркер (/playlist?url=...).
@@ -112,8 +114,9 @@ var thankText=THANK[lc]||THANK.ru;
 var $=function(i){return document.getElementById(i)},cat='',hls=null,cur=null,vidEl=null,pxi=0,pxFail={},preT=0,NAT=false,TVON=false;
 $('q').placeholder=T.s;
 var IOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
-/* 20.11.2026: у СТС, РЕН ТВ, Пятницы!, Матч ТВ (fs.uplink.kz) звук MPEG Audio Layer II (mp2), а не AAC. На iPhone/iPad встроенный плеер (AVPlayer) его играет,
-   а hls.js через ManagedMediaSource в Telegram зависает без ошибки (таймаут, «Не удалось загрузить поток»). Поэтому на iOS эти каналы идут встроенным плеером. */
+/* 20.11.2026: у СТС, РЕН ТВ, Пятницы!, Матч ТВ (fs.uplink.kz) звук MPEG Audio Layer II (mp2), а не AAC. iPhone/iPad (и встроенный плеер, и MediaSource) его не декодируют:
+   видео идёт ~6 с, затем «Media failed to decode» (тест на iPhone, ios-test.html). Поэтому на iOS эти каналы идут через hls.js без звуковой дорожки,
+   а звук mp2 декодируется на JS и играет через WebAudio (mp2-audio.js, mp2-decoder.js). */
 var MP2=['sts','rentv','pyatnica','matchtv'],IOSX=IOS||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function ext(u){if(tg&&tg.openLink){try{tg.openLink(u);return}catch(e){}}window.open(u,'_blank')}
 function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},4500)}
@@ -128,7 +131,7 @@ $('q').addEventListener('input',render);
 $('chips').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;cat=b.dataset.c;[].forEach.call(document.querySelectorAll('.chip'),function(x){x.classList.toggle('on',x===b)});render()});
 $('list').addEventListener('click',function(e){var r=e.target.closest('.row');if(r)open(r.dataset.id)});
 function loadJs(src){return new Promise(function(ok,no){if(document.querySelector('script[src="'+src+'"]'))return ok();var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
-function stop(){clearTimeout(preT);if(hls){try{hls.destroy()}catch(e){}hls=null}vidEl=null;$('box').innerHTML=''}
+function stop(){clearTimeout(preT);if(window.MP2Audio)MP2Audio.detach();if(hls){try{hls.destroy()}catch(e){}hls=null}vidEl=null;$('box').innerHTML=''}
 function streamUrl(c){return PROXIES[pxi%PROXIES.length]+'/stream?channel='+c.i}
 function nextProxy(){pxFail[pxi%PROXIES.length]=Date.now();for(var i=1;i<=PROXIES.length;i++){var j=(pxi+i)%PROXIES.length;if(!pxFail[j]||Date.now()-pxFail[j]>90000){pxi+=i;return}}pxi++}
 function err(box){var o=document.createElement('div');o.className='ov';o.innerHTML='<div style="font-size:30px">⚠</div><div></div><button type="button"></button>';o.children[1].textContent=T.err;o.children[2].textContent=T.retry;o.children[2].onclick=function(){start(cur)};box.appendChild(o)}
@@ -141,8 +144,11 @@ function start(c,tries){
   function ok(){if(done)return;done=true;clearTimeout(t);ld.remove();if(PREEMPTIVE.indexOf(c.i)>=0){preT=setTimeout(function(){if(cur===c&&vidEl===v&&v.readyState>=3)start(c)},6*60*1000)}}
   function bad(retry){if(done)return;if(retry&&tries<PROXIES.length-1&&cur===c){clearTimeout(t);nextProxy();return start(c,tries+1)}done=true;clearTimeout(t);ld.remove();try{v.pause()}catch(e){}if(hls){try{hls.destroy()}catch(e){}hls=null}err(box)}
   v.addEventListener('playing',ok);v.addEventListener('error',function(){bad(true)});
-  if(!NAT&&!(IOSX&&MP2.indexOf(c.i)>=0)&&window.Hls&&Hls.isSupported()){
-    hls=new Hls({lowLatencyMode:false,maxBufferLength:20,capLevelToPlayerSize:true,startLevel:0,manifestLoadingTimeOut:8000,manifestLoadingMaxRetry:1,levelLoadingTimeOut:8000,levelLoadingMaxRetry:2});
+  var M2=IOSX&&MP2.indexOf(c.i)>=0&&window.MP2Audio&&window.MP2Decoder;
+  if(!NAT&&window.Hls&&Hls.isSupported()){
+    var hcfg={lowLatencyMode:false,maxBufferLength:20,capLevelToPlayerSize:true,startLevel:0,manifestLoadingTimeOut:8000,manifestLoadingMaxRetry:1,levelLoadingTimeOut:8000,levelLoadingMaxRetry:2};
+    if(M2){hcfg.fLoader=MP2Audio.loader(Hls);MP2Audio.attach(v)}
+    hls=new Hls(hcfg);
     hls.loadSource(url);hls.attachMedia(v);
     hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
     hls.on(Hls.Events.ERROR,function(e,d){if(!d.fatal)return;if(d.type===Hls.ErrorTypes.NETWORK_ERROR){if(!done&&++fails>1)bad(true);else if(!done)hls.startLoad();else hls.startLoad()}else if(d.type===Hls.ErrorTypes.MEDIA_ERROR){if(++fails>3)bad(false);else hls.recoverMediaError()}else bad(true)});
