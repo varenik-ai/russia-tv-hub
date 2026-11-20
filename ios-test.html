@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Тест iPhone</title>
+<style>
+body{margin:0;padding:14px;font:16px/1.4 -apple-system,Helvetica,Arial,sans-serif;background:#0b0b14;color:#eee}
+h1{font-size:20px;margin:0 0 8px}
+button{font:700 18px/1 inherit;padding:14px 22px;border:0;border-radius:12px;background:#d52b1e;color:#fff;margin:8px 0}
+video{width:100%;max-height:30vh;background:#000;border-radius:8px}
+pre{white-space:pre-wrap;word-break:break-word;background:#14141f;border:1px solid #2a2a40;border-radius:8px;padding:10px;font-size:15px}
+.ok{color:#5fd38a}.bad{color:#ff7b7b}
+</style></head><body>
+<h1>Тест воспроизведения (iPhone)</h1>
+<p>Нажмите кнопку и подождите около минуты, не закрывая страницу. Потом сделайте скриншот результата ниже и пришлите.</p>
+<select id="ch"><option value="sts">СТС</option><option value="rentv">РЕН ТВ</option><option value="pyatnica">Пятница!</option><option value="perviy">Первый канал (контроль, звук AAC)</option></select><br>
+<button id="go">▶ Запустить тест</button>
+<video id="v" muted playsinline webkit-playsinline controls></video>
+<pre id="out">Ожидание…</pre>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script>
+var B='https://stream.russian-tv.com', out=document.getElementById('out'), v=document.getElementById('v'), lines=[];
+function log(t,cls){lines.push((cls?('<span class="'+cls+'">'+t+'</span>'):t));out.innerHTML=lines.join('\n')}
+function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function reset(){try{v.pause()}catch(e){}v.removeAttribute('src');try{v.load()}catch(e){}}
+function snap(t0){return 'time='+v.currentTime.toFixed(1)+' ready='+v.readyState+' size='+v.videoWidth+'x'+v.videoHeight+' err='+(v.error?v.error.code+(v.error.message?(' '+v.error.message):''):'нет')+' ('+Math.round((Date.now()-t0)/1000)+' с)'}
+function verdict(ok){return ok?'<span class="ok">РАБОТАЕТ</span>':'<span class="bad">НЕ РАБОТАЕТ</span>'}
+async function native(name,url){
+  reset(); var t0=Date.now(), ev=[];
+  ['loadstart','loadedmetadata','loadeddata','canplay','playing','waiting','stalled','error','ended'].forEach(function(e){v.addEventListener(e,function(){ev.push(e)},{once:false})});
+  v.src=url; var p=v.play(); if(p&&p.catch)p.catch(function(e){ev.push('play-rejected:'+e.name)});
+  await wait(10000);
+  var ok=v.currentTime>2&&!v.error;
+  log(name+': '+verdict(ok)+'\n   '+snap(t0)+'\n   события: '+ev.filter(function(x,i,a){return a.indexOf(x)===i}).join(', '));
+  reset();
+}
+async function mse(name,url){
+  reset(); var t0=Date.now(), errs=[];
+  if(!window.Hls){log(name+': hls.js не загрузился','bad');return}
+  var sup=Hls.isSupported(); log(name+': Hls.isSupported='+sup+', ManagedMediaSource='+(typeof ManagedMediaSource!=='undefined')+', MediaSource='+(typeof MediaSource!=='undefined'));
+  if(!sup){return}
+  var h=new Hls({lowLatencyMode:false});
+  h.on(Hls.Events.ERROR,function(e,d){errs.push((d.fatal?'FATAL ':'')+d.type+'/'+d.details)});
+  h.loadSource(url); h.attachMedia(v);
+  h.on(Hls.Events.MANIFEST_PARSED,function(){var p=v.play();if(p&&p.catch)p.catch(function(){})});
+  await wait(12000);
+  var ok=v.currentTime>2&&!v.error;
+  log('   '+verdict(ok)+'  '+snap(t0)+'\n   ошибки hls.js: '+(errs.length?errs.slice(0,6).join('; '):'нет'));
+  try{h.destroy()}catch(e){} reset();
+}
+document.getElementById('go').onclick=async function(){
+  this.disabled=true; lines=[]; var ch=document.getElementById('ch').value;
+  log('Канал: '+ch+'\nУстройство: '+navigator.userAgent.replace(/\(.*?\)/,function(m){return m.slice(0,60)})+'\n');
+  try{
+    log('1) Встроенный плеер iPhone, прямая ссылка (так сейчас в мини-аппе):'); await native('   ',B+'/stream?channel='+ch);
+    log('\n2) Встроенный плеер, мастер-плейлист «только видео» (без заявленного звука):'); await native('   ',B+'/stream?channel='+ch+'&vonly=1');
+    log('\n3) hls.js через MediaSource (как в мини-аппе на новых iPhone):'); await mse('   ',B+'/stream?channel='+ch);
+  }catch(e){log('Сбой теста: '+e,'bad')}
+  log('\nГотово. Сделайте скриншот.'); this.disabled=false;
+};
+</script></body></html>

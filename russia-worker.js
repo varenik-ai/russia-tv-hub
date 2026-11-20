@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.44.1";
+var VERSION = "82.45.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -194,6 +194,9 @@ var index_default = {
     }
     if (path === "/stream") {
       const channel = url.searchParams.get("channel");
+      if (url.searchParams.get("vonly") === "1") {   // 20.11.2026: тест для iPhone — мастер-плейлист, где заявлено только видео (CODECS без звука); потоки со звуком mp2 (fs.uplink.kz) iPhone не декодирует
+        return new Response("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1024x576,CODECS=\"avc1.64001e\"\n" + url.origin + "/stream?channel=" + encodeURIComponent(channel || "") + "\n", { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
+      }
       const altN = parseInt(url.searchParams.get("alt") || "0", 10);
       if (altN > 0 && ALT_CHAINS[channel] && ALT_CHAINS[channel][altN - 1]) {
         const [at, av] = ALT_CHAINS[channel][altN - 1];
