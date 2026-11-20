@@ -112,6 +112,9 @@ var thankText=THANK[lc]||THANK.ru;
 var $=function(i){return document.getElementById(i)},cat='',hls=null,cur=null,vidEl=null,pxi=0,pxFail={},preT=0,NAT=false,TVON=false;
 $('q').placeholder=T.s;
 var IOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
+/* 20.11.2026: у СТС, РЕН ТВ, Пятницы!, Матч ТВ (fs.uplink.kz) звук MPEG Audio Layer II (mp2), а не AAC. На iPhone/iPad встроенный плеер (AVPlayer) его играет,
+   а hls.js через ManagedMediaSource в Telegram зависает без ошибки (таймаут, «Не удалось загрузить поток»). Поэтому на iOS эти каналы идут встроенным плеером. */
+var MP2=['sts','rentv','pyatnica','matchtv'],IOSX=IOS||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function ext(u){if(tg&&tg.openLink){try{tg.openLink(u);return}catch(e){}}window.open(u,'_blank')}
 function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},4500)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -138,7 +141,7 @@ function start(c,tries){
   function ok(){if(done)return;done=true;clearTimeout(t);ld.remove();if(PREEMPTIVE.indexOf(c.i)>=0){preT=setTimeout(function(){if(cur===c&&vidEl===v&&v.readyState>=3)start(c)},6*60*1000)}}
   function bad(retry){if(done)return;if(retry&&tries<PROXIES.length-1&&cur===c){clearTimeout(t);nextProxy();return start(c,tries+1)}done=true;clearTimeout(t);ld.remove();try{v.pause()}catch(e){}if(hls){try{hls.destroy()}catch(e){}hls=null}err(box)}
   v.addEventListener('playing',ok);v.addEventListener('error',function(){bad(true)});
-  if(!NAT&&window.Hls&&Hls.isSupported()){
+  if(!NAT&&!(IOSX&&MP2.indexOf(c.i)>=0)&&window.Hls&&Hls.isSupported()){
     hls=new Hls({lowLatencyMode:false,maxBufferLength:20,capLevelToPlayerSize:true,startLevel:0,manifestLoadingTimeOut:8000,manifestLoadingMaxRetry:1,levelLoadingTimeOut:8000,levelLoadingMaxRetry:2});
     hls.loadSource(url);hls.attachMedia(v);
     hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
