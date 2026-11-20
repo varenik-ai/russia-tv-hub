@@ -15,6 +15,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#14141f;border:1px sol
 <p>Нажмите кнопку и подождите около минуты, не закрывая страницу. Потом сделайте скриншот результата ниже и пришлите.</p>
 <select id="ch"><option value="sts">СТС</option><option value="rentv">РЕН ТВ</option><option value="pyatnica">Пятница!</option><option value="matchtv">Матч ТВ (прогрессивный, обычный SAR)</option><option value="karuselIntl">Карусель Intl (чересстрочный, обычный SAR)</option><option value="perviy">Первый канал (контроль, звук AAC)</option></select><br>
 <button id="go">▶ Запустить тест</button>
+<button id="goB" style="background:#1565c0">▶ Тест Б: готовые файлы (AAC / без звука / mp2)</button>
 <video id="v" muted playsinline webkit-playsinline controls></video>
 <pre id="out">Ожидание…</pre>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
@@ -57,5 +58,18 @@ document.getElementById('go').onclick=async function(){
     log('\n3) hls.js через MediaSource (как в мини-аппе на новых iPhone):'); await mse('   ',B+'/stream?channel='+ch);
   }catch(e){log('Сбой теста: '+e,'bad')}
   log('\nГотово. Сделайте скриншот.'); this.disabled=false;
+};
+document.getElementById('goB').onclick=async function(){
+  this.disabled=true; lines=[]; log('Тест Б: 12-секундные куски Матч ТВ, видео не тронуто, меняется только звук\n');
+  var base=location.href.replace(/[^\/]*$/,'')+'ios-test-media/';
+  var sets=[['aac','звук AAC (iPhone должен играть)'],['noaudio','без звука'],['mp2','звук mp2, как у источника']];
+  try{
+    for(var i=0;i<sets.length;i++){
+      log('\n'+(i+1)+') '+sets[i][1]+':');
+      log('   встроенный плеер:'); await native('   ',base+sets[i][0]+'/index.m3u8');
+      log('   hls.js:'); await mse('   ',base+sets[i][0]+'/index.m3u8');
+    }
+  }catch(e){log('Сбой теста: '+e,'bad')}
+  log('\nГотово. Сделайте скриншот (можно в два экрана).'); this.disabled=false;
 };
 </script></body></html>
