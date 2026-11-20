@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.45.0";
+var VERSION = "82.45.2";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -319,10 +319,19 @@ async function fetchPlaylistOnly(streamUrl, workerOrigin) {
   let res;
   try {
     const referer = streamUrl.includes("cinerama.uz") ? "https://russian-tv.com/" : new URL(streamUrl).origin + "/";
-    res = await fetch(streamUrl, {
-      headers: { "User-Agent": UA, "Referer": referer },
-      cf: { cacheTtl: 0, cacheEverything: false }
-    });
+    // 20.11.2026: fs.uplink.kz иногда не отвечает больше 12 с (3 из 40 запросов к «Пятнице», у СТС и Матча тоже): таймаут 2,5 с и до четырёх попыток (ошибка сети, 5xx или 404)
+    const tries = streamUrl.includes("fs.uplink.kz") ? 4 : 1;
+    let lastErr = null;
+    for (let a = 0; a < tries; a++) {
+      try {
+        const init = { headers: { "User-Agent": UA, "Referer": referer }, cf: { cacheTtl: 0, cacheEverything: false } };
+        if (tries > 1) init.signal = AbortSignal.timeout(2500);
+        const r = await fetch(streamUrl, init);
+        if (r.ok || a === tries - 1 || (r.status !== 404 && r.status < 500)) { res = r; lastErr = null; break; }
+        res = r;
+      } catch (e2) { lastErr = e2; }
+    }
+    if (!res && lastErr) throw lastErr;
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message }), {
       status: 502,

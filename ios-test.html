@@ -16,6 +16,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#14141f;border:1px sol
 <select id="ch"><option value="sts">СТС</option><option value="rentv">РЕН ТВ</option><option value="pyatnica">Пятница!</option><option value="matchtv">Матч ТВ (прогрессивный, обычный SAR)</option><option value="karuselIntl">Карусель Intl (чересстрочный, обычный SAR)</option><option value="perviy">Первый канал (контроль, звук AAC)</option></select><br>
 <button id="go">▶ Запустить тест</button>
 <button id="goC" style="background:#2e7d32">▶ Тест В: СТС со звуком (через WebAudio)</button><br>
+<button id="goG" style="background:#6a1b9a">▶ Тест Г: Пятница! (видео как есть, звук AAC)</button><br>
 <button id="goB" style="background:#1565c0">▶ Тест Б: готовые файлы (AAC / без звука / mp2)</button>
 <video id="v" muted playsinline webkit-playsinline controls></video>
 <pre id="out">Ожидание…</pre>
@@ -90,5 +91,11 @@ document.getElementById('goC').onclick=async function(){
   var fine=v.currentTime>5&&!v.error&&MP2Audio.stats.decoded>0;
   log('\nИтог: видео+декодирование '+verdict(fine)+'; пик громкости на выходе='+peak+(peak>3?' (звук есть)':' (тишина)')+'\nОшибки hls.js: '+(errs.length?errs.slice(0,5).join('; '):'нет')+'\nСлышали ли вы звук и совпадал ли он с картинкой?');
   try{h.destroy()}catch(e){} MP2Audio.detach(); reset(); this.disabled=false;
+};
+document.getElementById('goG').onclick=async function(){
+  this.disabled=true; lines=[]; log('Тест Г: 12 с Пятницы!, видео не тронуто (чересстрочное, поля), звук заменён на AAC.\nСмотрите на видео над результатом: зелёная картинка и рывки или нормально?\n');
+  var u=location.href.replace(/[^\/]*$/,'')+'ios-test-media/pyat_aac/index.m3u8';
+  try{ log('1) встроенный плеер:'); await native('   ',u); log('2) hls.js:'); await mse('   ',u); }catch(e){log('Сбой: '+e,'bad')}
+  log('\nГотово. Напишите: картинка зелёная/дёргается или нормальная (отдельно для 1 и 2).'); this.disabled=false;
 };
 </script></body></html>
