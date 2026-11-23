@@ -65,6 +65,21 @@
     send({ c: a.ch, o: 0, k: 's', e: code, h: http, x: host, w: a.w });
     if (cur === a) switchAlt(a);
   }
+  // 23.11.2026: «зависание» без ошибки — видео идёт (не на паузе), но кадр не двигается STALL_S секунд (бесконечная буферизация).
+  // Раньше переключение было только при фатальной ошибке hls.js; теперь: есть запасной источник — переключаемся, нет — перезапуск загрузки с живой точки.
+  var STALL_S = 14, stLast = -1, stSec = 0;
+  setInterval(function () {
+    var a = cur; if (!a || !a.played || a.dropped) { stLast = -1; stSec = 0; return; }
+    var v = a.video || (a.hls && a.hls.media) || document.querySelector('video');
+    if (!v || v.paused || v.ended || document.hidden) { stLast = -1; stSec = 0; return; }
+    if (v.currentTime !== stLast) { stLast = v.currentTime; stSec = 0; return; }
+    stSec += 2; if (stSec < STALL_S) return;
+    stSec = 0; stLast = -1;
+    if (ALTS[a.ch]) { fail(a, 'stall', 0, a.fh || ''); return; }   // отчёт об обрыве + следующий источник
+    a.dropped = true; send({ c: a.ch, o: 0, k: 'd', e: 'stall', h: 0, x: a.fh || '', w: a.w });
+    try { if (a.hls) { a.hls.stopLoad(); a.hls.startLoad(-1); } else { v.load(); var p = v.play(); if (p && p.catch) p.catch(function () {}); } } catch (e) {}
+    setTimeout(function () { if (cur === a) a.dropped = false; }, 30000);   // следующий перезапуск — не раньше чем через 30 с
+  }, 2000);
   // первый кадр (loadeddata) или playing любого video на странице
   ['loadeddata', 'playing'].forEach(function (ev) { document.addEventListener(ev, function (e) { if (e.target && e.target.tagName === 'VIDEO') ok(cur); }, true); });
   // встроенный плеер Apple: источник — прямой адрес воркера (не blob:)

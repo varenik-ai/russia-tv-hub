@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.46.1";
+var VERSION = "82.47.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -65,7 +65,7 @@ var SYNTH_MASTERS = {
   karusel: { dir: "hls2/karusel", ladder: [[1, 717], [2, 1304], [3, 1971]] },
   soloviev: { dir: "hls/solovievlive", ladder: [[1, 741], [2, 1372], [3, 2022], [4, 3067], [6, 8324]] }
 };
-var CINERAMA_MIRRORS = ["stream1", "stream3", "stream8"];
+var CINERAMA_MIRRORS = ["stream8", "stream1", "stream3"];   // 23.11.2026: порядок предпочтения для зрителя (см. fetchCinerama)
 var CINERAMA_PATH = {
   t24: "1037/tracks-v1a1/mono.m3u8",
   istoriya: "1266/tracks-v1a1/mono.m3u8",
@@ -112,7 +112,7 @@ var EU_ALT = {
   tvc: "1025/tracks-v1a1/mono.m3u8",
   kultura: "1048/tracks-v1a1/mono.m3u8"
 };
-var EU_MIRRORS = ["stream1", "stream8", "stream3"];
+var EU_MIRRORS = ["stream8", "stream1", "stream3"];
 // 15.11.2026: для Болгарии сначала thestream.cyou (тот же источник, что у Первого и НТВ, у мамы в Варне открывается), потом cinerama.
 // Россия 1 (id 211) у них идёт как международная версия «Россия РТР»; Россия 24 (30), Карусель (232).
 var EU_ALT_STREAM = {
@@ -133,7 +133,7 @@ var ALT_CHAINS = {
   rossiya1: [["ts", 211], ["cin", "1020/tracks-v1a1/mono.m3u8"]],
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
   ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
-  tvc: [["cin", "1025/tracks-v1a1/mono.m3u8", ["stream8", "stream3", "stream1"]]],   // 23.11.2026: cdnvideo (tvc-hls.cdnvideo.ru) всю неделю 17-23.11 отдаёт 503 на плейлисты ступеней — запасным теперь та же cinerama, но с другим порядком зеркал (основной берёт stream1 первым)
+  tvc: [["cin", "1025/tracks-v1a1/mono.m3u8", ["stream1", "stream3", "stream8"]]],   // 23.11.2026: cdnvideo (tvc-hls.cdnvideo.ru) всю неделю 17-23.11 отдаёт 503 на плейлисты ступеней — запасным теперь та же cinerama, но с другим порядком зеркал (основной берёт stream1 первым)
   rtrEuro: [["ts", 211]],   // 19.11.2026: 22% неудач (smotrim не открывается у части провайдеров Эстонии и др.); 211 — международная версия «Россия РТР» на thestream
   rtrUsa: [["ts", 211]],
   kultura: [["cin", "1048/tracks-v1a1/mono.m3u8"]],
@@ -203,7 +203,8 @@ var index_default = {
         return new Response("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1024x576,CODECS=\"avc1.64001e\"\n" + url.origin + "/stream?channel=" + encodeURIComponent(channel || "") + "\n", { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
       }
       let altN = parseInt(url.searchParams.get("alt") || "0", 10);
-      if (!altN && GEO_ALT_FIRST_CH[channel] && request.cf && GEO_ALT_FIRST_CC.includes(request.cf.country)) altN = 1;   // 23.11.2026: см. GEO_ALT_FIRST_CC
+      let geoMain = false;   // 23.11.2026 (82.47.0): в EE/FR/UA alt=0 — первый запасной, alt=1 — основной источник (раньше alt=1 давал тот же запасной и переключения не было)
+      if (GEO_ALT_FIRST_CH[channel] && request.cf && GEO_ALT_FIRST_CC.includes(request.cf.country)) { if (altN === 0) altN = 1; else if (altN === 1) { altN = 0; geoMain = true; } }
       if (altN > 0 && ALT_CHAINS[channel] && ALT_CHAINS[channel][altN - 1]) {
         const [at, av] = ALT_CHAINS[channel][altN - 1];
         const ar = at === "dir" ? new Response(av, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } }) : at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : at === "url" ? await fetchPlaylistOnly(av, url.origin) : await fetchCinerama(av, url.origin, ALT_CHAINS[channel][altN - 1][2] || EU_MIRRORS);
@@ -444,25 +445,22 @@ async function probeCineramaMirror(host, path) {
 }
 __name(probeCineramaMirror, "probeCineramaMirror");
 async function fetchCinerama(path, workerOrigin, mirrors) {
-  // Пробы всех зеркал стартуют сразу, но ответ отдаётся, как только готово первое «хорошее» зеркало в порядке предпочтения
-  // (не ждём самое медленное: из Болгарии stream3 отвечает 4+ с и не отдаёт сегменты, 82.37.7).
-  const list = mirrors || CINERAMA_MIRRORS;
-  const probes = list.map((h) => probeCineramaMirror(h, path));
-  const results = [];
-  for (const pr of probes) {
-    const r = await pr;
-    results.push(r);
-    if (r.state === "good") return buildPlaylistResponse(r.body, r.streamUrl, workerOrigin);
+  // 23.11.2026 (82.47.0): зритель получает мастер-плейлист со ссылкой ПРЯМО на плейлист зеркала (у cinerama есть CORS), а не копию от воркера.
+  // Причина: 23.11 stream1 отвечает 502, stream8 для адресов дата-центров Cloudflare отдаёт заглушку /blocked/, и воркер выдавал медленный stream3
+  // (6-секундный сегмент грузится 6-11 с — постоянные остановки), хотя с домашних адресов stream8 быстрый (сегмент за ~1 с).
+  // Порядок предпочтения: stream8 (если воркер видит только заглушку для дата-центров — считаем рабочим для зрителя), stream1, stream3.
+  // Зеркала с ошибкой HTTP/сети отбрасываются. Второе зеркало добавлено как резервный вариант (hls.js и Safari переключаются на него при ошибке).
+  const pref = mirrors || CINERAMA_MIRRORS;
+  const results = await Promise.all(pref.map((h) => probeCineramaMirror(h, path)));
+  const usable = (r) => r.state === "good" || r.state === "unprobed" || (r.state === "stale" && r.age < 5 * 60 * 1e3) || (r.err && /blocked/.test(r.err.error || ""));
+  const ok = results.filter(usable).map((r) => r.host);
+  if (!ok.length) {
+    const lastError = results.map((r) => r.err).filter(Boolean).pop() || null;
+    return new Response(JSON.stringify({ error: "All cinerama.uz mirrors blocked, unavailable or stale", path, lastError }), { status: 502, headers: { ...CORS, "Content-Type": "application/json" } });
   }
-  const unprobed = results.find((r) => r.state === "unprobed");
-  if (unprobed) return buildPlaylistResponse(unprobed.body, unprobed.streamUrl, workerOrigin);
-  const stale = results.filter((r) => r.state === "stale").sort((a, b) => a.age - b.age)[0];
-  if (stale && stale.age < 5 * 60 * 1e3) return buildPlaylistResponse(stale.body, stale.streamUrl, workerOrigin);
-  const lastError = results.map((r) => r.err).filter(Boolean).pop() || null;
-  return new Response(
-    JSON.stringify({ error: "All cinerama.uz mirrors blocked, unavailable or stale", path, lastError }),
-    { status: 502, headers: { ...CORS, "Content-Type": "application/json" } }
-  );
+  const lines = ["#EXTM3U"];
+  ok.slice(0, 2).forEach((h, k) => { lines.push(`#EXT-X-STREAM-INF:BANDWIDTH=1500000`, `https://${h}.cinerama.uz/${path}`); });
+  return new Response(lines.join("\n") + "\n", { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
 }
 __name(fetchCinerama, "fetchCinerama");
 function firstVariantUri(b) { var l = b.split("\n").map(function (x) { return x.trim(); }).filter(Boolean); var i = l.findIndex(function (x) { return x.startsWith("#EXT-X-STREAM-INF"); }); if (i === -1) return null; var v = l[i + 1]; if (!v || v.startsWith("#")) return null; return v; } async function fetchStitchedMaster(masterUrl, workerOrigin) { const H = { headers: { "User-Agent": UA, "Referer": new URL(masterUrl).origin + "/" }, cf: { cacheTtl: 0, cacheEverything: false } }; const J = { ...CORS, "Content-Type": "application/json" }; let res; try { res = await fetch(masterUrl, H); } catch (e) { return new Response(JSON.stringify({ error: e.message, masterUrl }), { status: 502, headers: J }); } if (!res.ok) return new Response("Source returned " + res.status, { status: res.status, headers: CORS }); const variantUri = firstVariantUri(await res.text()); if (!variantUri) return new Response(JSON.stringify({ error: "No variant found in master playlist", masterUrl }), { status: 502, headers: J }); const variantUrl = resolveUrl(baseDir(masterUrl), variantUri); let vres; try { vres = await fetch(variantUrl, H); } catch (e) { return new Response(JSON.stringify({ error: e.message, variantUrl }), { status: 502, headers: J }); } if (!vres.ok) return new Response("Variant source returned " + vres.status, { status: vres.status, headers: CORS }); const body = await vres.text(); const latestMs = latestProgramDateTimeMs(body); if (latestMs !== null && Date.now() - latestMs > STALE_THRESHOLD_MS) return new Response(JSON.stringify({ error: "Stale playlist", variantUrl }), { status: 502, headers: J }); return buildPlaylistResponse(body, variantUrl, workerOrigin); } export {
