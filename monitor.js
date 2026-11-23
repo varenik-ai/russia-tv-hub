@@ -10,7 +10,7 @@
   if (window.__rtvMon) return; window.__rtvMon = 1;
   var DNT = navigator.doNotTrack === '1' || window.doNotTrack === '1';
   var ENDPOINT = 'https://rtv-monitor.dyaltd.workers.dev/r', TIMEOUT_MS = 40000, ALT_TIMEOUT_MS = 25000, MAX_REPORTS = 8, sent = 0;
-  var ALTS = { perviy: 1, spb: 1, muzykaPervogo: 1, rossiya1: 2, rossiya24: 2, ntv: 1, tvc: 1, kultura: 1, karusel: 1, domkino: 1, zvezda: 1, muztv: 1, rtrEuro: 1, rtrUsa: 1 };   // число запасных источников (как в ALT_CHAINS воркера)
+  var ALTS = { perviy: 1, spb: 1, muzykaPervogo: 1, rossiya1: 1, rossiya24: 2, ntv: 1, tvc: 1, kultura: 1, karusel: 1, domkino: 1, zvezda: 1, muztv: 1, rtrEuro: 1, rtrUsa: 1 };   // число запасных источников (как в ALT_CHAINS воркера)
   var KEYA = 'rtv_alt', TTL = 6 * 3600e3, MAX_SW = 4, sw = 0;
   var UA = navigator.userAgent || '';
   var SRC = /github\.io$/.test(location.hostname) ? 'app' : 'site';

@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.47.0";
+var VERSION = "82.48.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -116,7 +116,6 @@ var EU_MIRRORS = ["stream8", "stream1", "stream3"];
 // 15.11.2026: для Болгарии сначала thestream.cyou (тот же источник, что у Первого и НТВ, у мамы в Варне открывается), потом cinerama.
 // Россия 1 (id 211) у них идёт как международная версия «Россия РТР»; Россия 24 (30), Карусель (232).
 var EU_ALT_STREAM = {
-  rossiya1: "https://streaming.thestream.cyou/live/211.m3u8",
   rossiya24: "https://streaming.thestream.cyou/live/30.m3u8",
   karusel: "https://streaming.thestream.cyou/live/232.m3u8"
 };
@@ -130,7 +129,7 @@ var ALT_CHAINS = {
   perviy: [["url", "https://fs.uplink.kz/perviy_kanal_sng/mono.m3u8?token=onlinetv"]],   // 19.11.2026: «Первый канал СНГ» (fs.uplink.kz, тот же CDN, что у Карусели и ТНТ4); основной источник thestream у зрителей из Швейцарии, США, Японии даёт ~2% неудач
   spb: [["dir", "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=5690000,AVERAGE-BANDWIDTH=4550000,RESOLUTION=1280x720,CODECS=\"avc1.4d402a,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v2a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n#EXT-X-STREAM-INF:BANDWIDTH=2970000,AVERAGE-BANDWIDTH=2370000,RESOLUTION=640x360,CODECS=\"avc1.4d401f,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v3a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n"]],   // 19.11.2026: официальный поток телеканала (плеер на tvspb.ru/live, cdnvideo); воркер отдаёт готовый мастер с прямыми ссылками: из дата-центров Cloudflare cdnvideo отвечает 403, зритель берёт плейлисты и сегменты напрямую (CORS открыт, хеш hls_proxy_host постоянный)
   muzykaPervogo: [["url", "https://fs.uplink.kz/muzyka_pervogo/mono.m3u8?token=onlinetv"]],   // 19.11.2026: запасной источник (тот же CDN, что у Карусели и ТНТ4)
-  rossiya1: [["ts", 211], ["cin", "1020/tracks-v1a1/mono.m3u8"]],
+  rossiya1: [["cin", "1020/tracks-v1a1/mono.m3u8"]],   // 23.11.2026: убран thestream 211 — это международная «Россия РТР» (другой эфир и логотип), а не «Россия 1»; cinerama 1020 — тот же эфир «Россия 1»
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
   ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
   tvc: [["cin", "1025/tracks-v1a1/mono.m3u8", ["stream1", "stream3", "stream8"]]],   // 23.11.2026: cdnvideo (tvc-hls.cdnvideo.ru) всю неделю 17-23.11 отдаёт 503 на плейлисты ступеней — запасным теперь та же cinerama, но с другим порядком зеркал (основной берёт stream1 первым)

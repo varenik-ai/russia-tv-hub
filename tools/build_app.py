@@ -14,7 +14,7 @@ html=r'''<!doctype html>
 <script src="player-ui.js?v=3"></script>
 <script src="mp2-decoder.js?v=1"></script>
 <script src="mp2-audio.js?v=2"></script>
-<script src="monitor.js?v=9"></script>
+<script src="monitor.js?v=10"></script>
 <script>
 /* Меньше запросов к воркерам: hls.js обновляет плейлист прямо у источника, а не через воркер (/playlist?url=...).
    Только для источников с открытым CORS. v3: при ошибке или зависании источник отключается на 2 минуты, потом снова пробуем;
