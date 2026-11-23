@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.45.2";
+var VERSION = "82.46.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -133,7 +133,7 @@ var ALT_CHAINS = {
   rossiya1: [["ts", 211], ["cin", "1020/tracks-v1a1/mono.m3u8"]],
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
   ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
-  tvc: [["url", "https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221.smil/playlist.m3u8"]],   // прежний основной источник: вернётся, если cdnvideo оживёт
+  tvc: [["cin", "1025/tracks-v1a1/mono.m3u8", ["stream8", "stream3", "stream1"]]],   // 23.11.2026: cdnvideo (tvc-hls.cdnvideo.ru) всю неделю 17-23.11 отдаёт 503 на плейлисты ступеней — запасным теперь та же cinerama, но с другим порядком зеркал (основной берёт stream1 первым)
   rtrEuro: [["ts", 211]],   // 19.11.2026: 22% неудач (smotrim не открывается у части провайдеров Эстонии и др.); 211 — международная версия «Россия РТР» на thestream
   rtrUsa: [["ts", 211]],
   kultura: [["cin", "1048/tracks-v1a1/mono.m3u8"]],
@@ -142,6 +142,11 @@ var ALT_CHAINS = {
   zvezda: [["ts", 748]],
   muztv: [["ts", 618]]
 };
+// 23.11.2026: в этих странах stream.smotrim.ru у большинства зрителей не открывается (мониторинг 17-23.11, каналы smotrim: основной источник / запасной):
+// Эстония 14% / 93% успешных запусков, Франция 58% / 98%, Украина 79% / 93%. Там сразу отдаём первый запасной источник из ALT_CHAINS (как при ?alt=1),
+// чтобы зритель не ждал провала основного. В остальных странах (Германия 96% / 86%, Литва 98% / 95%, Молдова 94% / 97%) порядок прежний.
+var GEO_ALT_FIRST_CC = ["EE", "FR", "UA"];
+var GEO_ALT_FIRST_CH = { rossiya1: 1, rossiya24: 1, rtrEuro: 1, rtrUsa: 1, kultura: 1, karusel: 1 };
 var STITCHED_MASTERS = {  };
 var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 // <receiver-html>
@@ -197,10 +202,11 @@ var index_default = {
       if (url.searchParams.get("vonly") === "1") {   // 20.11.2026: тест для iPhone — мастер-плейлист, где заявлено только видео (CODECS без звука); потоки со звуком mp2 (fs.uplink.kz) iPhone не декодирует
         return new Response("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1024x576,CODECS=\"avc1.64001e\"\n" + url.origin + "/stream?channel=" + encodeURIComponent(channel || "") + "\n", { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } });
       }
-      const altN = parseInt(url.searchParams.get("alt") || "0", 10);
+      let altN = parseInt(url.searchParams.get("alt") || "0", 10);
+      if (!altN && GEO_ALT_FIRST_CH[channel] && request.cf && GEO_ALT_FIRST_CC.includes(request.cf.country)) altN = 1;   // 23.11.2026: см. GEO_ALT_FIRST_CC
       if (altN > 0 && ALT_CHAINS[channel] && ALT_CHAINS[channel][altN - 1]) {
         const [at, av] = ALT_CHAINS[channel][altN - 1];
-        const ar = at === "dir" ? new Response(av, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } }) : at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : at === "url" ? await fetchPlaylistOnly(av, url.origin) : await fetchCinerama(av, url.origin, EU_MIRRORS);
+        const ar = at === "dir" ? new Response(av, { headers: { ...CORS, "Content-Type": "application/vnd.apple.mpegurl", "Cache-Control": "no-store" } }) : at === "ts" ? await fetchPlaylistOnly(`https://streaming.thestream.cyou/live/${av}.m3u8`, url.origin) : at === "url" ? await fetchPlaylistOnly(av, url.origin) : await fetchCinerama(av, url.origin, ALT_CHAINS[channel][altN - 1][2] || EU_MIRRORS);
         if (ar.ok) return ar;
       }
       if (EU_ALT_STREAM[channel] && isEuRequest(request, url)) {

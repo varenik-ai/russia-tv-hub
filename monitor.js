@@ -9,7 +9,7 @@
   'use strict';
   if (window.__rtvMon) return; window.__rtvMon = 1;
   var DNT = navigator.doNotTrack === '1' || window.doNotTrack === '1';
-  var ENDPOINT = 'https://rtv-monitor.dyaltd.workers.dev/r', TIMEOUT_MS = 40000, MAX_REPORTS = 8, sent = 0;
+  var ENDPOINT = 'https://rtv-monitor.dyaltd.workers.dev/r', TIMEOUT_MS = 40000, ALT_TIMEOUT_MS = 25000, MAX_REPORTS = 8, sent = 0;
   var ALTS = { perviy: 1, spb: 1, muzykaPervogo: 1, rossiya1: 2, rossiya24: 2, ntv: 1, tvc: 1, kultura: 1, karusel: 1, domkino: 1, zvezda: 1, muztv: 1, rtrEuro: 1, rtrUsa: 1 };   // число запасных источников (как в ALT_CHAINS воркера)
   var KEYA = 'rtv_alt', TTL = 6 * 3600e3, MAX_SW = 4, sw = 0;
   var UA = navigator.userAgent || '';
@@ -40,7 +40,7 @@
     if (cur && cur.timer) clearTimeout(cur.timer);
     var alt = altOf(url);
     var a = cur = { ch: ch, url: url, alt: alt, w: hostOf(url) + (alt ? ':a' + alt : ''), hls: hls || null, video: video || null, t0: Date.now(), done: false, played: false, dropped: false, fh: '' };
-    a.timer = setTimeout(function () { fail(a, 'timeout', 0, ''); }, TIMEOUT_MS);
+    a.timer = setTimeout(function () { fail(a, 'timeout', 0, ''); }, ALTS[ch] ? ALT_TIMEOUT_MS : TIMEOUT_MS);   // 23.11.2026: где есть запасной источник, ждём 25 с, а не 40: средний первый кадр 4-9 с, а за 40 с зритель уходит
   }
   function ok(a) {
     if (!a || a.done) return; a.done = true; a.played = true; clearTimeout(a.timer);
