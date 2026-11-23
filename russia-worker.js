@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.46.0";
+var VERSION = "82.46.1";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -34,7 +34,7 @@ var STREAMS = {
   bober: "https://fs.uplink.kz/bober/mono.m3u8?token=onlinetv",
   stranafm: "https://live-stranafm.cdnvideo.ru/stranafm/smil:stranafm.smil/playlist.m3u8",
   vestifm: "https://stream.smotrim.ru/hls2/vesti_fm/playlist_4.m3u8",
-  tnt: "https://fs.uplink.kz/tnt4/mono.m3u8?token=onlinetv",
+  tnt: "https://streaming.thestream.cyou/live/38.m3u8",   // 23.11.2026: ТНТ (основной, не ТНТ4) — тот же источник, что у Первого и НТВ; прежний fs.uplink.kz/tnt4 отвечает 403
   sts: "https://fs.uplink.kz/sts/mono.m3u8?token=onlinetv",   // 19.11.2026: СТС, РЕН ТВ, Матч ТВ, Пятница! — международные версии на том же CDN, что ТНТ4 и Карусель
   rentv: "https://fs.uplink.kz/ren/mono.m3u8?token=onlinetv",
   matchtv: "https://fs.uplink.kz/match/mono.m3u8?token=onlinetv",
