@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.49.0";
+var VERSION = "82.50.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -65,7 +65,7 @@ var SYNTH_MASTERS = {
   karusel: { dir: "hls2/karusel", ladder: [[1, 717], [2, 1304], [3, 1971]] },
   soloviev: { dir: "hls/solovievlive", ladder: [[1, 741], [2, 1372], [3, 2022], [4, 3067], [6, 8324]] }
 };
-var CINERAMA_MIRRORS = ["stream8", "stream1", "stream3"];   // 23.11.2026: порядок предпочтения для зрителя (см. fetchCinerama)
+var CINERAMA_MIRRORS = ["cache1", "stream3", "stream1", "stream8"];   // 24.11.2026: stream8 переадресует на заглушку cache1/blocked и для домашних адресов; cache1 отдаёт каналы напрямую и быстро   // 23.11.2026: порядок предпочтения для зрителя (см. fetchCinerama)
 var CINERAMA_PATH = {
   t24: "1037/tracks-v1a1/mono.m3u8",
   istoriya: "1266/tracks-v1a1/mono.m3u8",
@@ -100,7 +100,8 @@ var CINERAMA_PATH = {
   tracesport: "1274/tracks-v1a1/mono.m3u8",
   rossiya24: "1021/tracks-v1a1/mono.m3u8",
   // 19.11.2026: основной источник ТВЦ (tvc-hls.cdnvideo.ru) отдаёт 503 на плейлисты ступеней и из дата-центров, и с домашнего адреса (мониторинг: 48% неудач, 109 из 225 запусков) — основной теперь cinerama
-  tvc: "1025/tracks-v1a1/mono.m3u8"
+  tvc: "1025/tracks-v1a1/mono.m3u8",
+  tv3: "1435/tracks-v1a1/mono.m3u8"   // 24.11.2026: ТВ-3 (кадр проверен); запасной — ТВ-3 International 1446
 };
 // 13.11.2026: в Болгарии (cf.country = BG) не открывается stream.smotrim.ru (проверено из браузера зрителя на /diag/), поэтому для этих каналов там отдаём
 // запасной источник cinerama (один поток без ступеней). Только Болгария: из Нидерландов cinerama отдаёт 64-134 КБ/с при нужных ~340 КБ/с, а smotrim быстрый (0,6 с на сегмент).
@@ -112,7 +113,7 @@ var EU_ALT = {
   tvc: "1025/tracks-v1a1/mono.m3u8",
   kultura: "1048/tracks-v1a1/mono.m3u8"
 };
-var EU_MIRRORS = ["stream8", "stream1", "stream3"];
+var EU_MIRRORS = ["cache1", "stream3", "stream1", "stream8"];
 // 15.11.2026: для Болгарии сначала thestream.cyou (тот же источник, что у Первого и НТВ, у мамы в Варне открывается), потом cinerama.
 // Россия 1 (id 211) у них идёт как международная версия «Россия РТР»; Россия 24 (30), Карусель (232).
 var EU_ALT_STREAM = {
@@ -126,14 +127,15 @@ function isEuRequest(request, url) {
 // Мониторинг (rtv-monitor) показал, что у части зрителей из Германии, Греции, Эстонии, Болгарии и Македонии основной источник не открывается;
 // monitor.js на странице при сбое сам просит следующий источник. ["ts", id] — streaming.thestream.cyou/live/<id>.m3u8, ["cin", путь] — cinerama.uz.
 var ALT_CHAINS = {
-  perviy: [["url", "https://fs.uplink.kz/perviy_kanal_sng/mono.m3u8?token=onlinetv"]],   // 19.11.2026: «Первый канал СНГ» (fs.uplink.kz, тот же CDN, что у Карусели и ТНТ4); основной источник thestream у зрителей из Швейцарии, США, Японии даёт ~2% неудач
+  perviy: [["cin", "1214/tracks-v1a1/mono.m3u8"], ["url", "https://fs.uplink.kz/perviy_kanal_sng/mono.m3u8?token=onlinetv"]],   // 24.11.2026: + Первый канал HD на cinerama (кадр проверен) первым; «Первый канал СНГ» на fs.uplink.kz (с 23.11 403) вторым
   spb: [["dir", "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=5690000,AVERAGE-BANDWIDTH=4550000,RESOLUTION=1280x720,CODECS=\"avc1.4d402a,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v2a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n#EXT-X-STREAM-INF:BANDWIDTH=2970000,AVERAGE-BANDWIDTH=2370000,RESOLUTION=640x360,CODECS=\"avc1.4d401f,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v3a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n"]],   // 19.11.2026: официальный поток телеканала (плеер на tvspb.ru/live, cdnvideo); воркер отдаёт готовый мастер с прямыми ссылками: из дата-центров Cloudflare cdnvideo отвечает 403, зритель берёт плейлисты и сегменты напрямую (CORS открыт, хеш hls_proxy_host постоянный)
   muzykaPervogo: [["url", "https://fs.uplink.kz/muzyka_pervogo/mono.m3u8?token=onlinetv"]],   // 19.11.2026: запасной источник (тот же CDN, что у Карусели и ТНТ4)
   rossiya1: [["cin", "1020/tracks-v1a1/mono.m3u8"]],
-  sts: [["url", "https://fs.uplink.kz/sts/mono.m3u8?token=onlinetv"]],   // 24.11.2026: прежний основной (международная версия, 720x576), если оживёт   // 23.11.2026: убран thestream 211 — это международная «Россия РТР» (другой эфир и логотип), а не «Россия 1»; cinerama 1020 — тот же эфир «Россия 1»
+  sts: [["url", "https://fs.uplink.kz/sts/mono.m3u8?token=onlinetv"]],   // 24.11.2026: прежний основной (международная версия, 720x576), если оживёт
+  tv3: [["cin", "1446/tracks-v1a1/mono.m3u8"]],   // ТВ-3 International   // 23.11.2026: убран thestream 211 — это международная «Россия РТР» (другой эфир и логотип), а не «Россия 1»; cinerama 1020 — тот же эфир «Россия 1»
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
-  ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
-  tvc: [["cin", "1025/tracks-v1a1/mono.m3u8", ["stream1", "stream3", "stream8"]]],   // 23.11.2026: cdnvideo (tvc-hls.cdnvideo.ru) всю неделю 17-23.11 отдаёт 503 на плейлисты ступеней — запасным теперь та же cinerama, но с другим порядком зеркал (основной берёт stream1 первым)
+  ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"], ["cin", "1434/tracks-v1a1/mono.m3u8"]],   // 24.11.2026: + НТВ Мир (международная версия, сетка может отличаться) — последним
+  tvc: [["cin", "1281/tracks-v1a1/mono.m3u8"]],   // 24.11.2026: второй поток ТВЦ на cinerama (кадр проверен)   // 23.11.2026: cdnvideo (tvc-hls.cdnvideo.ru) всю неделю 17-23.11 отдаёт 503 на плейлисты ступеней — запасным теперь та же cinerama, но с другим порядком зеркал (основной берёт stream1 первым)
   rtrEuro: [["ts", 211]],   // 19.11.2026: 22% неудач (smotrim не открывается у части провайдеров Эстонии и др.); 211 — международная версия «Россия РТР» на thestream
   rtrUsa: [["ts", 211]],
   kultura: [["cin", "1048/tracks-v1a1/mono.m3u8"]],
@@ -452,8 +454,10 @@ async function fetchCinerama(path, workerOrigin, mirrors) {
   // Зеркала с ошибкой HTTP/сети отбрасываются. Второе зеркало добавлено как резервный вариант (hls.js и Safari переключаются на него при ошибке).
   const pref = mirrors || CINERAMA_MIRRORS;
   const results = await Promise.all(pref.map((h) => probeCineramaMirror(h, path)));
-  const usable = (r) => r.state === "good" || r.state === "unprobed" || (r.state === "stale" && r.age < 5 * 60 * 1e3) || (r.err && /blocked/.test(r.err.error || ""));
-  const ok = results.filter(usable).map((r) => r.host);
+  // 24.11.2026: заглушка /blocked/ — рабочим зеркалом не считается (stream8 стал отдавать её и зрителям); только если других нет совсем
+  const usable = (r) => r.state === "good" || r.state === "unprobed" || (r.state === "stale" && r.age < 5 * 60 * 1e3);
+  let ok = results.filter(usable).map((r) => r.host);
+  if (!ok.length) ok = results.filter((r) => r.err && /blocked/.test(r.err.error || "")).map((r) => r.host);
   if (!ok.length) {
     const lastError = results.map((r) => r.err).filter(Boolean).pop() || null;
     return new Response(JSON.stringify({ error: "All cinerama.uz mirrors blocked, unavailable or stale", path, lastError }), { status: 502, headers: { ...CORS, "Content-Type": "application/json" } });
