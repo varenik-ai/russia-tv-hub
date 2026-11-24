@@ -4,7 +4,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // index.js
-var VERSION = "82.48.0";
+var VERSION = "82.49.0";
 var CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -35,7 +35,7 @@ var STREAMS = {
   stranafm: "https://live-stranafm.cdnvideo.ru/stranafm/smil:stranafm.smil/playlist.m3u8",
   vestifm: "https://stream.smotrim.ru/hls2/vesti_fm/playlist_4.m3u8",
   tnt: "https://streaming.thestream.cyou/live/38.m3u8",   // 23.11.2026: ТНТ (основной, не ТНТ4) — тот же источник, что у Первого и НТВ; прежний fs.uplink.kz/tnt4 отвечает 403
-  sts: "https://fs.uplink.kz/sts/mono.m3u8?token=onlinetv",   // 19.11.2026: СТС, РЕН ТВ, Матч ТВ, Пятница! — международные версии на том же CDN, что ТНТ4 и Карусель
+  sts: "https://streaming.thestream.cyou/live/296.m3u8",   // 24.11.2026: СТС на thestream (кадр проверен, логотип СТС; 640x360, звук AAC — на iPhone без mp2-обхода); fs.uplink.kz с 23.11 отвечает 403 — оставлен запасным (ALT_CHAINS)   // 19.11.2026: СТС, РЕН ТВ, Матч ТВ, Пятница! — международные версии на том же CDN, что ТНТ4 и Карусель
   rentv: "https://fs.uplink.kz/ren/mono.m3u8?token=onlinetv",
   matchtv: "https://fs.uplink.kz/match/mono.m3u8?token=onlinetv",
   pyatnica: "https://fs.uplink.kz/bolshaya_pyatnica/mono.m3u8?token=onlinetv",
@@ -129,7 +129,8 @@ var ALT_CHAINS = {
   perviy: [["url", "https://fs.uplink.kz/perviy_kanal_sng/mono.m3u8?token=onlinetv"]],   // 19.11.2026: «Первый канал СНГ» (fs.uplink.kz, тот же CDN, что у Карусели и ТНТ4); основной источник thestream у зрителей из Швейцарии, США, Японии даёт ~2% неудач
   spb: [["dir", "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=5690000,AVERAGE-BANDWIDTH=4550000,RESOLUTION=1280x720,CODECS=\"avc1.4d402a,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v2a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n#EXT-X-STREAM-INF:BANDWIDTH=2970000,AVERAGE-BANDWIDTH=2370000,RESOLUTION=640x360,CODECS=\"avc1.4d401f,mp4a.40.2\"\nhttps://live-topspb-geo.cdnvideo.ru/topspb-m4f/m4f-stream/tracks-v3a1/mono.ts.m3u8?hls_proxy_host=e4d0b9ee2560c8d72aceda831ebde9ea\n"]],   // 19.11.2026: официальный поток телеканала (плеер на tvspb.ru/live, cdnvideo); воркер отдаёт готовый мастер с прямыми ссылками: из дата-центров Cloudflare cdnvideo отвечает 403, зритель берёт плейлисты и сегменты напрямую (CORS открыт, хеш hls_proxy_host постоянный)
   muzykaPervogo: [["url", "https://fs.uplink.kz/muzyka_pervogo/mono.m3u8?token=onlinetv"]],   // 19.11.2026: запасной источник (тот же CDN, что у Карусели и ТНТ4)
-  rossiya1: [["cin", "1020/tracks-v1a1/mono.m3u8"]],   // 23.11.2026: убран thestream 211 — это международная «Россия РТР» (другой эфир и логотип), а не «Россия 1»; cinerama 1020 — тот же эфир «Россия 1»
+  rossiya1: [["cin", "1020/tracks-v1a1/mono.m3u8"]],
+  sts: [["url", "https://fs.uplink.kz/sts/mono.m3u8?token=onlinetv"]],   // 24.11.2026: прежний основной (международная версия, 720x576), если оживёт   // 23.11.2026: убран thestream 211 — это международная «Россия РТР» (другой эфир и логотип), а не «Россия 1»; cinerama 1020 — тот же эфир «Россия 1»
   rossiya24: [["ts", 30], ["cin", "1021/tracks-v1a1/mono.m3u8"]],
   ntv: [["cin", "1023/tracks-v1a1/mono.m3u8"]],
   tvc: [["cin", "1025/tracks-v1a1/mono.m3u8", ["stream1", "stream3", "stream8"]]],   // 23.11.2026: cdnvideo (tvc-hls.cdnvideo.ru) всю неделю 17-23.11 отдаёт 503 на плейлисты ступеней — запасным теперь та же cinerama, но с другим порядком зеркал (основной берёт stream1 первым)

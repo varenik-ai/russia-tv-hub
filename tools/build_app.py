@@ -14,7 +14,7 @@ html=r'''<!doctype html>
 <script src="player-ui.js?v=3"></script>
 <script src="mp2-decoder.js?v=1"></script>
 <script src="mp2-audio.js?v=2"></script>
-<script src="monitor.js?v=10"></script>
+<script src="monitor.js?v=11"></script>
 <script>
 /* Меньше запросов к воркерам: hls.js обновляет плейлист прямо у источника, а не через воркер (/playlist?url=...).
    Только для источников с открытым CORS. v3: при ошибке или зависании источник отключается на 2 минуты, потом снова пробуем;
@@ -117,7 +117,7 @@ var IOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
 /* 20.11.2026: у СТС, РЕН ТВ, Пятницы!, Матч ТВ (fs.uplink.kz) звук MPEG Audio Layer II (mp2), а не AAC. iPhone/iPad (и встроенный плеер, и MediaSource) его не декодируют:
    видео идёт ~6 с, затем «Media failed to decode» (тест на iPhone, ios-test.html). Поэтому на iOS эти каналы идут через hls.js без звуковой дорожки,
    а звук mp2 декодируется на JS и играет через WebAudio (mp2-audio.js, mp2-decoder.js). */
-var MP2=['sts','rentv','pyatnica','matchtv'],IOSX=IOS||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var MP2=['rentv','pyatnica','matchtv'],IOSX=IOS||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function ext(u){if(tg&&tg.openLink){try{tg.openLink(u);return}catch(e){}}window.open(u,'_blank')}
 function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},4500)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
