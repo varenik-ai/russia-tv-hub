@@ -32,7 +32,10 @@
   css.textContent =
     '.pui{position:absolute;top:10px;right:10px;z-index:51;display:flex;gap:6px;align-items:flex-start;transition:opacity .2s}' +
     '.player .pui{opacity:0}.player:hover .pui,.player .pui:focus-within,.player.pui-open .pui,.player.casting .pui{opacity:1}' +
-    '@media (hover:none){.player .pui{opacity:0;pointer-events:none}.player.pui-show .pui,.player.pui-open .pui,.player.casting .pui{opacity:1;pointer-events:auto}}' +
+    /* 25.11.2026: на сенсорном экране после касания :hover и :focus-within «залипают» и держали панель качества включённой навсегда (правила с :hover и :focus-within
+       сильнее прежнего .player .pui). Теперь на сенсорных экранах панель показывает только класс pui-show (3,5 с после касания) и pui-open (меню качества открыто). */
+    '@media (hover:none),(pointer:coarse){.player .pui,.player:hover .pui,.player .pui:focus-within{opacity:0;pointer-events:none}.player.pui-show .pui,.player.pui-show:hover .pui,.player.pui-open .pui,.player.pui-open:hover .pui,.player.casting .pui{opacity:1;pointer-events:auto}}' +
+    'body.fs .pui{right:62px}' +
     '.pui-btn{background:rgba(0,0,0,.68);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:8px;height:34px;padding:0 11px;font:600 12px/32px Inter,system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}' +
     '.pui-btn:hover{background:rgba(0,0,0,.92)}.pui-btn:focus-visible{outline:2px solid #6ea8ff}.pui-btn svg{width:18px;height:18px;fill:currentColor}.pui-btn.on{background:#e11d2e;border-color:#e11d2e}' +
     '.pui-menu{position:absolute;top:40px;right:0;background:#12121f;border:1px solid #2a2a40;border-radius:10px;padding:6px;min-width:190px;box-shadow:0 8px 28px rgba(0,0,0,.55);font:13px/1.3 Inter,system-ui,sans-serif;color:#e8e8f0}' +

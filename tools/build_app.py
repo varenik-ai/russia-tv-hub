@@ -11,7 +11,7 @@ html=r'''<!doctype html>
 <link rel="icon" href="https://russian-tv.com/favicon.svg" type="image/svg+xml">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
-<script src="player-ui.js?v=3"></script>
+<script src="player-ui.js?v=4"></script>
 <script src="mp2-decoder.js?v=1"></script>
 <script src="mp2-audio.js?v=2"></script>
 <script src="monitor.js?v=12"></script>
