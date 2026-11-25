@@ -90,7 +90,10 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 #donate-modal .amounts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 #donate-modal .amounts button{padding:14px 0;border-radius:12px;border:1px solid #3a3a2a;background:#1f1d12;color:#ffd54a;font-size:15px;font-weight:800;cursor:pointer}
 #donate-modal .close{margin-top:12px;background:none;border:none;color:#666;font-size:14px;cursor:pointer}
-</style></head><body>
+body.fs{overflow:hidden}body.fs #pl{position:fixed;inset:0;z-index:9999;display:block!important;background:#000}body.fs .box{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto}body.fs .bar,body.fs .acts{display:none}
+.box:fullscreen,.box:-webkit-full-screen{aspect-ratio:auto;width:100%;height:100%}
+#fsx{display:none;position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;z-index:10000;width:42px;height:42px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:20px}body.fs #fsx{display:block}
+</style></head><body><button id="fsx" type="button" aria-label="Выйти из полного экрана">✕</button>
 <div id="pl"><div class="box player" id="box"></div><div class="bar"><div class="t"><h1 id="vn"></h1><p id="vd"></p></div><button class="x" id="x" type="button" aria-label="Закрыть">✕</button></div><div class="acts" id="acts"></div></div>
 <div class="top" id="top"><div class="brand"><i></i>Русское <span>ТВ</span><button class="thank" id="thank-btn" type="button"></button></div><input class="q" id="q" type="search" placeholder="" autocomplete="off"></div>
 <div class="cw"><div class="chips" id="chips"></div></div>
@@ -158,6 +161,34 @@ function start(c,tries){
     v.src=nurl;v.play().catch(function(){});if(window.tvPlayerUI)tvPlayerUI.attachNative(box,v,nurl)
   }
 }
+/* Полный экран (25.11.2026): на Android в Telegram requestFullscreen на <video> молча не срабатывал, запасного пути не было. Теперь: на контейнер плеера (панель качества остаётся),
+   если браузер не вошёл в полный экран за 0,7 с или метода нет — «псевдо-полный экран» (класс body.fs: плеер на весь экран поверх страницы, кнопка ✕, системная «Назад» сначала выходит из него);
+   в Telegram дополнительно tg.requestFullscreen() (убирает шапку), на Android блокировка альбомной ориентации. iPhone с нативным плеером — по-прежнему webkitEnterFullscreen. */
+function fsOn(){return document.body.classList.contains('fs')||document.fullscreenElement||document.webkitFullscreenElement}
+function fsOff(){
+  if(document.fullscreenElement||document.webkitFullscreenElement){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
+  document.body.classList.remove('fs');
+  try{if(tg&&tg.exitFullscreen&&tg.isFullscreen)tg.exitFullscreen()}catch(e){}
+  try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}
+  setTimeout(plh,50)
+}
+function fsLandscape(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(function(){})}catch(e){}}
+function fsCss(){
+  document.body.classList.add('fs');
+  try{if(tg&&tg.requestFullscreen&&!tg.isFullscreen)tg.requestFullscreen()}catch(e){}
+  fsLandscape()
+}
+function fsToggle(){
+  var x=vidEl;if(!x)return;
+  if(fsOn()){fsOff();return}
+  if(x.webkitEnterFullscreen&&!x.requestFullscreen){try{x.webkitEnterFullscreen()}catch(e){}return}
+  var box=$('box'),rq=box.requestFullscreen||box.webkitRequestFullscreen;
+  if(!rq){fsCss();return}
+  var done=false;
+  function chk(){if(done)return;done=true;if(!(document.fullscreenElement||document.webkitFullscreenElement))fsCss()}
+  try{var p=rq.call(box);if(p&&p.then)p.then(function(){done=true;fsLandscape()},chk)}catch(e){chk();return}
+  setTimeout(chk,700)
+}
 function acts(c){
   var a=$('acts');a.innerHTML='';
   function add(label,cls,fn){var b=document.createElement('button');b.type='button';b.className='btn'+(cls?' '+cls:'');b.textContent=label;b.onclick=fn;a.appendChild(b)}
@@ -177,7 +208,7 @@ function acts(c){
         if(x.requestPictureInPicture){x.requestPictureInPicture().catch(fb);return}
       }catch(e){fb();return}
       fb()});
-  add('⛶ '+T.full,'',function(){var x=vidEl;if(!x)return;try{if(x.webkitEnterFullscreen&&!x.requestFullscreen)x.webkitEnterFullscreen();else (x.requestFullscreen||x.webkitRequestFullscreen).call(x)}catch(e){}});
+  add('⛶ '+T.full,'',fsToggle);
   add('📺 '+T.tv,'p',function(){tvAction(c,link,this)});
   if(link)add('🌐 '+T.site,'',function(){ext(link)});
   add('↗ '+T.share,'',function(){var u='https://t.me/share/url?url='+encodeURIComponent(link||'https://t.me/RussiaTVHub_bot/russiatv?startapp='+c.i)+'&text='+encodeURIComponent(c.n+' — '+T.live);if(tg&&tg.openTelegramLink)tg.openTelegramLink(u);else ext(u)});
@@ -227,9 +258,11 @@ function open(id){
   if(tg&&tg.BackButton)tg.BackButton.show();
   try{history.replaceState(null,'','#'+id)}catch(e){}
 }
-function closePl(){stop();cur=null;$('pl').style.display='none';plh();[].forEach.call($('list').querySelectorAll('.row.on'),function(r){r.classList.remove('on')});if(tg&&tg.BackButton)tg.BackButton.hide();try{history.replaceState(null,'',location.pathname)}catch(e){}}
+function closePl(){fsOff();stop();cur=null;$('pl').style.display='none';plh();[].forEach.call($('list').querySelectorAll('.row.on'),function(r){r.classList.remove('on')});if(tg&&tg.BackButton)tg.BackButton.hide();try{history.replaceState(null,'',location.pathname)}catch(e){}}
 $('x').onclick=closePl;
-if(tg&&tg.BackButton)tg.BackButton.onClick(closePl);
+if(tg&&tg.BackButton)tg.BackButton.onClick(function(){if(document.body.classList.contains('fs')){fsOff();return}closePl()});
+$('fsx').onclick=fsOff;
+document.addEventListener('fullscreenchange',function(){if(!document.fullscreenElement){try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}}});
 window.addEventListener('resize',plh);
 /* Благодарность через Telegram Stars: окно выбора суммы, оплата tg.openInvoice (счёт создаёт russia-bot-worker, /invoice?amount=N) */
 var donateModal=$('donate-modal');
